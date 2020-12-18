@@ -1,0 +1,59 @@
+.ionian {
+  color: var(--ionian);
+}
+
+.dorian {
+  color: var(--dorian);
+}
+
+.phrygian {
+  color: var(--phrygian);
+}
+
+.lydian {
+  color: var(--lydian);
+}
+
+.mixolydian {
+  color: var(--mixolydian);
+}
+
+.aeolian {
+  color: var(--aeolian);
+}
+
+.locrian {
+  color: var(--locrian);
+}
+
+.white {
+  color: #fff;
+}
+
+.bg-ionian {
+  background-color: var(--ionian);
+}
+
+.bg-dorian {
+  background-color: var(--dorian);
+}
+
+.bg-phrygian {
+  background-color: var(--phrygian);
+}
+
+.bg-lydian {
+  background-color: var(--lydian);
+}
+
+.bg-mixolydian {
+  background-color: var(--mixolydian);
+}
+
+.bg-aeolian {
+  background-color: var(--aeolian);
+}
+
+.bg-locrian {
+  background-color: var(--locrian);
+}

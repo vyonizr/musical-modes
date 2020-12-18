@@ -1,18 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 
 :root {
-  --ionian: #6a2e35;
-  --dorian: #586a6a;
-  --phrygian: #f2b202;
-  --lydian: #ef959d;
-  --mixolydian: #48639c;
-  --aeolian: #2d7dd2;
-  --locrian: #f46036;
+  --ionian: #f94144;
+  --dorian: #fe5d26;
+  --phrygian: #ffd801;
+  --lydian: #43aa8b;
+  --mixolydian: #2d7dd2;
+  --aeolian: #3f37c9;
+  --locrian: #7251b5;
 }
 
 body {
   font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: #f8f9fa;
 }
 
 main {
@@ -28,69 +29,14 @@ a {
   text-decoration: none;
 }
 
+a:hover {
+  text-decoration: underline;
+}
+
 .bold {
   font-weight: 700;
 }
 
-.ionian {
-  color: var(--ionian);
-}
-
-.dorian {
-  color: var(--dorian);
-}
-
-.phrygian {
-  color: var(--phrygian);
-}
-
-.lydian {
-  color: var(--lydian);
-}
-
-.mixolydian {
-  color: var(--mixolydian);
-}
-
-.aeolian {
-  color: var(--aeolian);
-}
-
-.locrian {
-  color: var(--locrian);
-}
-
-.white {
-  color: #fff;
-}
-
-.bg-ionian {
-  background-color: var(--ionian);
-}
-
-.bg-dorian {
-  background-color: var(--dorian);
-}
-
-.bg-phrygian {
-  background-color: var(--phrygian);
-}
-
-.bg-lydian {
-  background-color: var(--lydian);
-}
-
-.bg-mixolydian {
-  background-color: var(--mixolydian);
-}
-
-.bg-aeolian {
-  background-color: var(--aeolian);
-}
-
-.bg-locrian {
-  background-color: var(--locrian);
-}
 
 .max-content {
   width: max-content;
@@ -100,6 +46,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  margin-bottom: 2em;
 }
 
 .legends-items {
@@ -117,4 +64,16 @@ a {
 .highlighted {
   box-shadow: 0 0 2px 1px #007bff;
   transition: ease 0.25s;
+}
+
+table {
+  table-layout: fixed;
+  width: 95%;
+  max-width: 515px;
+  margin-bottom: 1em;
+}
+
+td {
+  text-align: center;
+  width: (100%/7);
 }
