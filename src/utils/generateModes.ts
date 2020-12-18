@@ -2,17 +2,17 @@ import isStringInArray from './isStringInArray'
 import modulo from './modulo'
 import { Mode } from './types'
 
-import { KEYS, CHORDS_QUALITY, MODES_DEGREE } from './constants'
+import { KEYS, MODES_LIST } from './constants'
 
 const generateModes = (scale: string = 'C') => {
   const ionianShifter = (mode = 'ionian') => {
     const intervals = ['W', 'W', 'H', 'W', 'W', 'W', 'H']
 
-    if (mode === 'Ionian') {
+    if (mode === 'ionian') {
       return intervals
     }
 
-    for (let i = 0; i < MODES_DEGREE[mode]; i++) {
+    for (let i = 0; i < MODES_LIST[mode].degree; i++) {
       intervals.push(intervals[0])
       intervals.shift()
     }
@@ -49,8 +49,8 @@ const generateModes = (scale: string = 'C') => {
     return numeral
   }
 
-  const generateRomanNumerals = (currentMode = 'Ionian'): string[] => {
-    const usedMode = CHORDS_QUALITY[currentMode]
+  const generateRomanNumerals = (currentMode = 'ionian'): string[] => {
+    const usedMode = MODES_LIST[currentMode].chords_quality
     const romanNumerals = []
 
     for (let i = 0; i < usedMode.length; i++) {
@@ -95,7 +95,7 @@ const generateModes = (scale: string = 'C') => {
     return finalKey
   }
 
-  const generateChords = (usedScale = 'C', mode = 'Ionian'): string[] => {
+  const generateChords = (usedScale = 'C', mode = 'ionian'): string[] => {
     const length = {
       H: 1,
       W: 2,
@@ -109,7 +109,7 @@ const generateModes = (scale: string = 'C') => {
     for (let i = 0; i < intervals.length; i++) {
       const interval = intervals[i]
       const currentKey = KEYS[modulo(currentIndex, KEYS.length)]
-      const usedMode = CHORDS_QUALITY[mode]
+      const usedMode = MODES_LIST[mode].chords_quality
       const chord = parserKey(
         usedMode[modulo(i, usedMode.length)].split(' '),
         currentKey
@@ -131,7 +131,7 @@ const generateModes = (scale: string = 'C') => {
     }
   }
 
-  const modeNames = Object.keys(CHORDS_QUALITY)
+  const modeNames = Object.keys(MODES_LIST)
   const modes = []
 
   for (let i = 0; i < modeNames.length; i++) {

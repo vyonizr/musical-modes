@@ -13,75 +13,94 @@ export const KEYS = [
   'B',
 ]
 
-export const CHORDS_QUALITY = {
-  ionian: ['major', 'minor', 'minor', 'major', 'major', 'minor', 'diminished'],
-  dorian: [
-    'minor',
-    'minor',
-    'flat major',
-    'major',
-    'minor',
-    'diminished',
-    'flat major',
-  ],
-  phrygian: [
-    'minor',
-    'flat major',
-    'flat major',
-    'minor',
-    'diminished',
-    'flat major',
-    'flat minor',
-  ],
-  lydian: [
-    'major',
-    'major',
-    'minor',
-    'sharp diminished',
-    'major',
-    'minor',
-    'minor',
-  ],
-  mixolydian: [
-    'major',
-    'minor',
-    'diminished',
-    'major',
-    'minor',
-    'minor',
-    'flat major',
-  ],
-  aeolian: [
-    'minor',
-    'diminished',
-    'flat major',
-    'minor',
-    'minor',
-    'flat major',
-    'flat major',
-  ],
-  locrian: [
-    'diminished',
-    'flat major',
-    'flat minor',
-    'minor',
-    'flat major',
-    'flat major',
-    'flat minor',
-  ],
+export const MODES_LIST = {
+  ionian: {
+    degree: 0,
+    chords_quality: [
+      'major',
+      'minor',
+      'minor',
+      'major',
+      'major',
+      'minor',
+      'diminished',
+    ],
+  },
+  dorian: {
+    degree: 1,
+    chords_quality: [
+      'minor',
+      'minor',
+      'flat major',
+      'major',
+      'minor',
+      'diminished',
+      'flat major',
+    ],
+  },
+  phrygian: {
+    degree: 2,
+    chords_quality: [
+      'minor',
+      'flat major',
+      'flat major',
+      'minor',
+      'diminished',
+      'flat major',
+      'flat minor',
+    ],
+  },
+  lydian: {
+    degree: 3,
+    chords_quality: [
+      'major',
+      'major',
+      'minor',
+      'sharp diminished',
+      'major',
+      'minor',
+      'minor',
+    ],
+  },
+  mixolydian: {
+    degree: 4,
+    chords_quality: [
+      'major',
+      'minor',
+      'diminished',
+      'major',
+      'minor',
+      'minor',
+      'flat major',
+    ],
+  },
+  aeolian: {
+    degree: 5,
+    chords_quality: [
+      'minor',
+      'diminished',
+      'flat major',
+      'minor',
+      'minor',
+      'flat major',
+      'flat major',
+    ],
+  },
+  locrian: {
+    degree: 6,
+    chords_quality: [
+      'diminished',
+      'flat major',
+      'flat minor',
+      'minor',
+      'flat major',
+      'flat major',
+      'flat minor',
+    ],
+  },
 }
 
-export const MODES_DEGREE = {
-  ionian: 0,
-  dorian: 1,
-  phrygian: 2,
-  lydian: 3,
-  mixolydian: 4,
-  aeolian: 5,
-  locrian: 6,
-}
-
-export const TABLE_VIEW_OPTIONS = ['Chords', 'Numerals', 'Intervals']
+export const TABLE_VIEW_OPTIONS = ['Chords', 'Numerals']
 
 export const COLOR_CLASSNAMES = [
   'ionian',
