@@ -5,7 +5,12 @@ import Document, {
   Main,
   NextScript,
 } from 'next/document'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from '../utils/env'
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_IMAGE,
+} from '../utils/env'
 
 class MyDocument extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -18,6 +23,7 @@ class MyDocument extends Document {
     return (
       <Html lang='en'>
         <Head>
+          <meta charSet='utf-8' />
           <meta
             name='keywords'
             content='music theory mode scale scale key vyonizr'
@@ -26,10 +32,12 @@ class MyDocument extends Document {
           <meta property='og:site_name' content={SITE_NAME} />
           <meta property='og:title' content={SITE_TITLE} />
           <meta property='og:description' content={SITE_DESCRIPTION} />
-          <meta name='twitter:card' content='summary_large_image' />
+          <meta property='og:image' content={SITE_IMAGE} />
+          <meta name='twitter:card' content={SITE_DESCRIPTION} />
           <meta name='twitter:site' content={SITE_NAME} />
           <meta name='twitter:title' content={SITE_TITLE} />
           <meta name='twitter:description' content={SITE_DESCRIPTION} />
+          <meta property='twitter:image' content={SITE_IMAGE} />
 
           <link rel='preconnect' href='https://fonts.gstatic.com' />
           <link
