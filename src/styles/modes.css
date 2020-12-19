@@ -40,6 +40,7 @@
 
 .bg-phrygian {
   background-color: var(--phrygian);
+  color: var(--black);
 }
 
 .bg-lydian {
@@ -56,4 +57,45 @@
 
 .bg-locrian {
   background-color: var(--locrian);
+}
+
+.legends-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2em;
+}
+
+.legends-items {
+  padding: 8px;
+  margin: 4px 4px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.legends-items:hover {
+  transition: ease 0.25s;
+  box-shadow: 0 0 1px 2px #007bff;
+}
+
+.highlighted {
+  box-shadow: 0 0 2px 1px #007bff;
+  transition: ease 0.25s;
+}
+
+table {
+  table-layout: fixed;
+  width: 95%;
+  max-width: 515px;
+  margin-bottom: 0.75em;
+}
+
+td {
+  text-align: center;
+  width: (100%/7);
+}
+
+.mode-select {
+  text-align: center;
+  margin-bottom: 0.75em;
 }
