@@ -58,7 +58,6 @@ export default function Home() {
           <select
             value={selectedScale}
             name='modes'
-            id='modes'
             onChange={(event: React.ChangeEvent<{ value: string }>) =>
               handleSelectChange(event)
             }
