@@ -100,14 +100,4 @@ export const MODES_LIST = {
   },
 }
 
-export const TABLE_VIEW_OPTIONS = ['Chords', 'Numerals']
-
-export const COLOR_CLASSNAMES = [
-  'ionian',
-  'dorian',
-  'phrygian',
-  'lydian',
-  'mixolydian',
-  'aeolian',
-  'locrian',
-]
+export const COLOR_CLASSNAMES = Object.keys(MODES_LIST)

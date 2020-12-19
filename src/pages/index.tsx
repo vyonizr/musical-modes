@@ -9,7 +9,7 @@ import TableContent from '../components/TableContent'
 
 export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
-  const [highlighted, setHighlighed] = useState('ionian')
+  const [highlighted, setHighlighed] = useState('')
 
   const handleSelectChange = (
     event: React.ChangeEvent<{ value: string }>
@@ -42,6 +42,17 @@ export default function Home() {
             />
           ))}
         </table>
+        <div className='legends-wrapper'>
+          {COLOR_CLASSNAMES.map((modeName: string) => (
+            <div
+              className={`bg-${modeName} white legends-items max-content`}
+              onMouseOver={() => highlightMode(modeName)}
+              onMouseLeave={() => highlightMode('')}
+            >
+              {modeName}
+            </div>
+          ))}
+        </div>
         <div className='mode-select black'>
           <h3>Select Key</h3>
           <select
@@ -58,17 +69,6 @@ export default function Home() {
               </option>
             ))}
           </select>
-        </div>
-        <div className='legends-wrapper'>
-          {COLOR_CLASSNAMES.map((modeName: string) => (
-            <div
-              className={`bg-${modeName} white legends-items max-content`}
-              onMouseOver={() => highlightMode(modeName)}
-              onMouseLeave={() => highlightMode('')}
-            >
-              {modeName}
-            </div>
-          ))}
         </div>
         <footer>
           © {new Date().getFullYear()}{' '}

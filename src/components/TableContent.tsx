@@ -17,7 +17,16 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
         }`}
       >
         {mode.chords.map((chord: string, index: number) => (
-          <td key={index}>{chord}</td>
+          <td key={index}>
+            <div className='relative'>
+              <span>{chord}</span>
+              {highlighted && (
+                <span className='roman-appear'>
+                  {mode.romanNumerals[index]}
+                </span>
+              )}
+            </div>
+          </td>
         ))}
       </tr>
     </Fragment>

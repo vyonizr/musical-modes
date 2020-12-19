@@ -63,7 +63,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 2em;
+  margin-bottom: 1em;
 }
 
 .legends-items {
@@ -87,7 +87,7 @@ table {
   table-layout: fixed;
   width: 95%;
   max-width: 515px;
-  margin-bottom: 0.75em;
+  margin-bottom: 0.5em;
 }
 
 td {
@@ -97,5 +97,30 @@ td {
 
 .mode-select {
   text-align: center;
-  margin-bottom: 0.75em;
+  margin-bottom: 2.5em;
+}
+
+.relative {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translate(-50%, 50%);
+  }
+  to {
+    transform: translate(-50%, -50%);
+  }
+}
+
+.roman-appear {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  animation: slide-in 0.25s ease;
+  animation-fill-mode: forwards;
+  background-color: #f8f9fa;
 }
