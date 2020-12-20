@@ -51,3 +51,9 @@ h3 {
 .title {
   text-align: center;
 }
+
+label {
+  font-size: 1.17em;
+  font-weight: bold;
+  display: block;
+}

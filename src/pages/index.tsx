@@ -57,10 +57,11 @@ export default function Home() {
           ))}
         </div>
         <div className='mode-select black'>
-          <h3>Select Key</h3>
+          <label htmlFor='modes'>Select Key</label>
           <select
             value={selectedScale}
             name='modes'
+            id='modes'
             onChange={(event: React.ChangeEvent<{ value: string }>) =>
               handleSelectChange(event)
             }
