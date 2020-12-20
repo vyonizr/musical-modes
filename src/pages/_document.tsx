@@ -30,6 +30,7 @@ class MyDocument extends Document {
             name='keywords'
             content='music theory mode scale scale key vyonizr'
           />
+          <meta name='Description' content={SITE_DESCRIPTION}></meta>
           <meta property='og:type' content='website' />
           <meta property='og:site_name' content={SITE_NAME} />
           <meta property='og:title' content={SITE_TITLE} />
