@@ -9,19 +9,21 @@ import TableContent from '../components/TableContent'
 
 export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
-  const [highlighted, setHighlighed] = useState('')
+  const [highlighted, setHighlighed] = useState({
+    current: null,
+    previous: null,
+  })
 
   const handleSelectChange = (
     event: React.ChangeEvent<{ value: string }>
   ): void => {
     setSelectedScale(event.target.value)
   }
-  const highlightMode = (modeName: string): void => {
-    if (highlighted === modeName) {
-      setHighlighed(null)
-    } else {
-      setHighlighed(modeName)
-    }
+  const highlightMode = (modeName: string | null): void => {
+    setHighlighed({
+      current: modeName,
+      previous: highlighted.current,
+    })
   }
 
   return (
@@ -35,19 +37,20 @@ export default function Home() {
         <table>
           {generateModes(selectedScale).map((mode: Mode, index: number) => (
             <TableContent
-              highlighted={highlighted === mode.name}
+              key={index}
+              highlighted={highlighted}
               mode={mode}
               index={index}
-              key={index}
             />
           ))}
         </table>
         <div className='legends-wrapper'>
-          {COLOR_CLASSNAMES.map((modeName: string) => (
+          {COLOR_CLASSNAMES.map((modeName: string, index: number) => (
             <div
+              key={index}
               className={`bg-${modeName} white legends-items max-content`}
               onMouseOver={() => highlightMode(modeName)}
-              onMouseLeave={() => highlightMode('')}
+              onMouseLeave={() => highlightMode(null)}
             >
               {modeName}
             </div>
