@@ -78,3 +78,7 @@ label {
   -ms-user-select: none;
   user-select: none;
 }
+
+.mode-row {
+  height: 48px;
+}

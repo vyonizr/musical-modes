@@ -16,7 +16,7 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
   return (
     <tbody>
       <tr
-        className={`${COLOR_CLASSNAMES[index]} bold ${
+        className={`mode-row ${COLOR_CLASSNAMES[index]} bold ${
           highlighted.current == mode.name ? 'highlighted' : ''
         }`}
       >
