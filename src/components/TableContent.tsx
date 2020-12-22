@@ -23,7 +23,7 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
         {mode.chords.map((chord: string, index: number) => (
           <td
             key={index}
-            className='pointer noselect'
+            className='pointer noselect playable-chord'
             onClick={() => playChord(chord)}
           >
             <div className='relative'>
