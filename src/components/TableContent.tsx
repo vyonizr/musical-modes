@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
-import { Mode } from '../utils/types'
-import { COLOR_CLASSNAMES } from '../utils/constants'
+import { Mode } from 'src/utils/types'
+import { COLOR_CLASSNAMES } from 'src/utils/constants'
+import { playChord } from 'src/utils/chords'
 
 interface IProps {
   highlighted: {
@@ -20,7 +21,11 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
         }`}
       >
         {mode.chords.map((chord: string, index: number) => (
-          <td key={index}>
+          <td
+            key={index}
+            className='pointer noselect'
+            onClick={() => playChord(chord)}
+          >
             <div className='relative'>
               <span>{chord}</span>
               {highlighted.current == mode.name && (

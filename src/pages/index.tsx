@@ -48,7 +48,7 @@ export default function Home() {
           {COLOR_CLASSNAMES.map((modeName: string, index: number) => (
             <div
               key={index}
-              className={`bg-${modeName} white legends-items max-content`}
+              className={`bg-${modeName} white legends-items max-content pointer noselect`}
               onMouseOver={() => highlightMode(modeName)}
               onMouseLeave={() => highlightMode(null)}
             >
