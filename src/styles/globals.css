@@ -15,12 +15,22 @@ body {
   background-color: #f8f9fa;
 }
 
-main {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+@media (min-width: 481px) {
+  main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 a {
