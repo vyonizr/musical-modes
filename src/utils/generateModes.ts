@@ -5,7 +5,7 @@ import { Mode } from './types'
 import { KEYS, MODES_LIST } from './constants'
 
 const generateModes = (scale: string = 'C') => {
-  const ionianShifter = (mode = 'ionian') => {
+  const ionianShifter = (mode = 'ionian'): string[] => {
     const intervals = ['W', 'W', 'H', 'W', 'W', 'W', 'H']
 
     if (mode === 'ionian') {
@@ -20,7 +20,7 @@ const generateModes = (scale: string = 'C') => {
     return intervals
   }
 
-  const sharpOrFlat = (property: string[] = []) => {
+  const sharpOrFlat = (property: string[] = []): string => {
     let result = ''
     if (isStringInArray(property, 'flat')) {
       result += '♭'
@@ -30,7 +30,7 @@ const generateModes = (scale: string = 'C') => {
     return result
   }
 
-  const parserNumeral = (property: string[] = [], index = 0) => {
+  const parserNumeral = (property: string[] = [], index = 0): string => {
     const romanKeys = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii']
     let numeral = ''
 
