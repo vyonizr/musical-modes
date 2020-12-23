@@ -126,8 +126,12 @@ const chordsSwitch = (chordName = 'C'): string => {
 }
 
 const playChord = (chordName = 'C'): void => {
-  const audio = new Audio(chordsSwitch(chordName))
-  audio.play()
+  const audio = <HTMLAudioElement>document.getElementById(`audio-${chordName}`)
+  if (audio.paused) {
+    audio.play()
+  } else {
+    audio.currentTime = 0
+  }
 }
 
-export { playChord }
+export { chordsSwitch, playChord }
