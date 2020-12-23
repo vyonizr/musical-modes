@@ -16,7 +16,7 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
   return (
     <tbody>
       <tr
-        className={`mode-row ${COLOR_CLASSNAMES[index]} bold ${
+        className={`${COLOR_CLASSNAMES[index]} bold ${
           highlighted.current == mode.name ? 'highlighted' : ''
         }`}
       >
@@ -31,17 +31,17 @@ const TableContent = ({ highlighted, mode, index }: IProps) => {
               src={chordsSwitch(chord)}
               preload='auto'
             />
-            <div className='relative'>
+            <div className='relative chord-container'>
               <span>{chord}</span>
               {highlighted.current == mode.name && (
-                <span className='roman-appear'>
-                  {mode.romanNumerals[index]}
-                </span>
+                <div className='roman-appear'>
+                  <span>{mode.romanNumerals[index]}</span>
+                </div>
               )}
               {highlighted.previous == mode.name && (
-                <span className='roman-disappear'>
-                  {mode.romanNumerals[index]}
-                </span>
+                <div className='roman-disappear'>
+                  <span>{mode.romanNumerals[index]}</span>
+                </div>
               )}
             </div>
           </td>

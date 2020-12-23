@@ -7,7 +7,8 @@
   --aeolian: #3f37c9;
   --locrian: #7251b5;
   --black: #161a1d;
-  --primary: #007bff;
+  --primary: #4285f4;
+  --light-gray: #f8f9fa;
 }
 
 body {
@@ -76,8 +77,4 @@ label {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-
-.mode-row {
-  height: 48px;
 }
