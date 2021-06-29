@@ -34,6 +34,23 @@ export default function Home() {
       </Head>
       <main>
         <h1 className='title black'>Musical Modes</h1>
+        <div className='mode-select black'>
+          <label htmlFor='modes'>Select Key:</label>
+          <select
+            value={selectedScale}
+            name='modes'
+            id='modes'
+            onChange={(event: React.ChangeEvent<{ value: string }>) =>
+              handleSelectChange(event)
+            }
+          >
+            {KEYS.map((pianoKey: string, index: number) => (
+              <option key={index} value={pianoKey}>
+                {pianoKey}
+              </option>
+            ))}
+          </select>
+        </div>
         <table>
           {generateModes(selectedScale).map((mode: Mode, index: number) => (
             <TableContent
@@ -55,23 +72,6 @@ export default function Home() {
               {modeName}
             </div>
           ))}
-        </div>
-        <div className='mode-select black'>
-          <label htmlFor='modes'>Select Key</label>
-          <select
-            value={selectedScale}
-            name='modes'
-            id='modes'
-            onChange={(event: React.ChangeEvent<{ value: string }>) =>
-              handleSelectChange(event)
-            }
-          >
-            {KEYS.map((pianoKey: string, index: number) => (
-              <option key={index} value={pianoKey}>
-                {pianoKey}
-              </option>
-            ))}
-          </select>
         </div>
         <footer>
           © {new Date().getFullYear()}{' '}
