@@ -1,3 +1,5 @@
+import { getOS } from '../utils/getOS'
+
 const withBasePath = (fileName: string): string => {
   return `/assets/audio/${fileName}`
 }
@@ -126,11 +128,17 @@ const chordsSwitch = (chordName = 'C'): string => {
 }
 
 const playChord = (chordName = 'C'): void => {
-  const audio = <HTMLAudioElement>document.getElementById(`audio-${chordName}`)
-  if (audio.paused) {
-    audio.play()
+  if (getOS() === 'iOS') {
+    alert(`Sorry, you currently cannot play the chords on ${getOS()} ☹️`)
   } else {
-    audio.currentTime = 0
+    const audio = <HTMLAudioElement>(
+      document.getElementById(`audio-${chordName}`)
+    )
+    if (audio.paused) {
+      audio.play()
+    } else {
+      audio.currentTime = 0
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import { Mode } from 'src/utils/types'
 import { COLOR_CLASSNAMES } from 'src/utils/constants'
 import { chordsSwitch, playChord } from 'src/utils/chords'
