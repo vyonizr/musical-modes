@@ -4,45 +4,42 @@ import { COLOR_CLASSNAMES } from 'src/utils/constants'
 import { chordsSwitch, playChord } from 'src/utils/chords'
 
 interface IProps {
-  highlighted: {
-    current: string | null
-    previous: string | null
-  }
+  isRomanMode: boolean
   index: number
   mode: Mode
 }
 
-const TableContent = ({ highlighted, mode, index }: IProps) => {
+const TableContent = ({ isRomanMode, mode, index }: IProps) => {
+  const handleChordDisplay = (
+    isRomanMode: boolean,
+    romanNumeral: string,
+    chord: string
+  ): string => {
+    return isRomanMode ? romanNumeral : chord
+  }
+
   return (
     <tbody>
-      <tr
-        className={`mode-row ${COLOR_CLASSNAMES[index]} bold ${
-          highlighted.current == mode.name ? 'highlighted' : ''
-        }`}
-      >
+      <tr className={`mode-row ${COLOR_CLASSNAMES[index]} bold`}>
         {mode.chords.map((chord: string, index: number) => (
           <td
             key={index}
             className='pointer noselect playable-chord'
-            onClick={() => playChord(chord)}
+            onMouseDown={() => playChord(chord)}
           >
             <audio
               id={`audio-${chord}`}
               src={chordsSwitch(chord)}
               preload='auto'
             />
-            <div className='relative chord-container'>
-              <span>{chord}</span>
-              {highlighted.current == mode.name && (
-                <div className='roman-appear'>
-                  <span>{mode.romanNumerals[index]}</span>
-                </div>
-              )}
-              {highlighted.previous == mode.name && (
-                <div className='roman-disappear'>
-                  <span>{mode.romanNumerals[index]}</span>
-                </div>
-              )}
+            <div className='chord-container'>
+              <span>
+                {handleChordDisplay(
+                  isRomanMode,
+                  mode.romanNumerals[index],
+                  chord
+                )}
+              </span>
             </div>
           </td>
         ))}
