@@ -73,10 +73,12 @@ export default function Home() {
         </div>
         <div className='table-container'>
           {activeModes.length === 0 ? (
-            <h3>Nothing to play ☹️</h3>
+            <h3>Nothing to play 😕</h3>
           ) : (
             <Fragment>
-              <p className='black'>Tap to play the chords</p>
+              <p className='black' style={{ marginTop: '0.5rem' }}>
+                Tap to play the chords
+              </p>
               <table>
                 {generateModes(selectedScale).map(
                   (mode: Mode, index: number) => (
@@ -95,6 +97,9 @@ export default function Home() {
             </Fragment>
           )}
         </div>
+        <p className='black' style={{ marginTop: '1rem' }}>
+          Toggle modes
+        </p>
         <div className='legends-wrapper'>
           {COLOR_CLASSNAMES.map((modeName: string, index: number) => (
             <div

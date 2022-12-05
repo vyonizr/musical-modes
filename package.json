@@ -1,6 +1,6 @@
 {
   "name": "musical-modes",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development next dev",
@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "10.0.2",
+    "next": "12.3.4",
     "next-pwa": "^5.0.0",
     "react": "17.0.1",
     "react-dom": "17.0.1"
@@ -17,6 +17,6 @@
     "@types/node": "^14.14.9",
     "@types/react": "^17.0.0",
     "prettier": "2.2.0",
-    "typescript": "^4.1.2"
+    "typescript": "^4.9.3"
   }
 }
