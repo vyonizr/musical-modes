@@ -11,7 +11,7 @@ import Slider from '../components/Slider'
 export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
   const [isRomanMode, setIsRomanMode] = useState(false)
-  const [activeModes, setActiveModes] = useState(COLOR_CLASSNAMES)
+  const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]])
 
   const handleSelectChange = (
     event: React.ChangeEvent<{ value: string }>
@@ -121,6 +121,14 @@ export default function Home() {
             rel='noopener noreferrer'
           >
             vyonizr
+          </a>{' '}
+          |{' '}
+          <a
+            href='https://github.com/vyonizr/musical-modes'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            Github
           </a>
         </footer>
       </main>
