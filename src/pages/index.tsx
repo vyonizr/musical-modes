@@ -1,5 +1,6 @@
-import { Fragment, useState, useEffect, useRef } from 'react'
+import { Fragment, useState, useEffect, useRef, useCallback } from 'react'
 import Head from 'next/head'
+import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 
 import { generateModes } from '../utils'
 import { KEYS, COLOR_CLASSNAMES } from '../utils/constants'
@@ -14,6 +15,29 @@ const KEY_ROWS = [
   ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
 ]
 
+const TOUR_STEPS: Step[] = [
+  {
+    target: '#modes',
+    content: 'Pick a root key. All chords on the page will update to match.',
+    skipBeacon: true,
+  },
+  {
+    target: '.legends-wrapper',
+    content:
+      'Toggle which modes are shown. Each coloured button is a different musical mode.',
+  },
+  {
+    target: 'table',
+    content:
+      'Tap any chord to play it. On desktop, you can hold it down to sustain.',
+  },
+  {
+    target: 'table',
+    content:
+      'Your keyboard maps to the chords too — Q through U for the top row, A through J for the second, Z through M for the third.',
+  },
+]
+
 function isTextInput(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false
   const tag = target.tagName.toLowerCase()
@@ -26,12 +50,22 @@ export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]])
 
+  const [tourRun, setTourRun] = useState(false)
+  const [tourStepIndex, setTourStepIndex] = useState(0)
+
   const selectedScaleRef = useRef(selectedScale)
   const activeModesRef = useRef(activeModes)
   const [keyboardPressedChords, setKeyboardPressedChords] = useState<string[]>(
     []
   )
   const pressedChordsRef = useRef(new Set<string>())
+
+  useEffect(() => {
+    if (!localStorage.getItem('musical-modes-tour-seen')) {
+      setTourRun(true)
+      setTourStepIndex(0)
+    }
+  }, [])
 
   useEffect(() => {
     selectedScaleRef.current = selectedScale
@@ -130,6 +164,22 @@ export default function Home() {
     return activeModes.some((activeMode) => activeMode === modeName)
   }
 
+  const handleJoyrideEvent = useCallback((data: EventData) => {
+    const { action, index, status, type } = data
+    if (type === EVENTS.STEP_AFTER) {
+      setTourStepIndex(index + 1)
+    }
+    if (status === STATUS.FINISHED || action === 'skip') {
+      setTourRun(false)
+      localStorage.setItem('musical-modes-tour-seen', 'true')
+    }
+  }, [])
+
+  const restartTour = () => {
+    setTourRun(true)
+    setTourStepIndex(0)
+  }
+
   return (
     <div>
       <Head>
@@ -215,9 +265,36 @@ export default function Home() {
             rel='noopener noreferrer'
           >
             Github
-          </a>
+          </a>{' '}
+          |{' '}
+          <span
+            className='pointer noselect'
+            onClick={restartTour}
+            style={{ textDecoration: 'underline' }}
+          >
+            ?
+          </span>
         </footer>
       </main>
+      <Joyride
+        steps={TOUR_STEPS}
+        run={tourRun}
+        stepIndex={tourStepIndex}
+        continuous
+        onEvent={handleJoyrideEvent}
+        options={{
+          overlayClickAction: false,
+          buttons: ['back', 'close', 'primary', 'skip'],
+          closeButtonAction: 'skip',
+          primaryColor: '#4285f4',
+          zIndex: 10000,
+        }}
+        locale={{
+          next: 'Next',
+          skip: 'Skip',
+          last: 'Done',
+        }}
+      />
     </div>
   )
 }
