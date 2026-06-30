@@ -111,6 +111,7 @@ export default function Home() {
     event: React.ChangeEvent<{ value: string }>
   ): void => {
     setSelectedScale(event.target.value)
+    ;(document.activeElement as HTMLElement)?.blur()
   }
 
   const toggleActiveMode = (modeName: string): void => {
@@ -144,7 +145,10 @@ export default function Home() {
             <Slider
               name='isRomanMode'
               isChecked={isRomanMode}
-              onClick={() => setIsRomanMode((currentState) => !currentState)}
+              onClick={() => {
+                setIsRomanMode((currentState) => !currentState)
+                ;(document.activeElement as HTMLElement)?.blur()
+              }}
             />
           </div>
           <div className='key-select'>
