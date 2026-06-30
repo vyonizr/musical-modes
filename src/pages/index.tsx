@@ -3,17 +3,16 @@ import Head from 'next/head'
 import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 
 import { generateModes } from '../utils'
-import { KEYS, COLOR_CLASSNAMES } from '../utils/constants'
+import { KEYS, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
 import { Mode } from '../utils/types'
-import { triggerAttackChord, triggerReleaseChord } from '../utils/chords'
+import {
+  triggerAttackChord,
+  triggerReleaseChord,
+  SeventhFlavor,
+  display7thChordName,
+} from '../utils/chords'
 
 import TableContent from '../components/TableContent'
-
-const KEY_ROWS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-]
 
 const TOUR_STEPS: Step[] = [
   {
@@ -55,10 +54,14 @@ export default function Home() {
 
   const selectedScaleRef = useRef(selectedScale)
   const activeModesRef = useRef(activeModes)
+  const sevenFlavourRef = useRef<SeventhFlavor | undefined>(undefined)
+  const [activeFlavour, setActiveFlavour] = useState<SeventhFlavor | undefined>(undefined)
   const [keyboardPressedChords, setKeyboardPressedChords] = useState<string[]>(
     []
   )
-  const pressedChordsRef = useRef(new Set<string>())
+  const pressedChordsRef = useRef(
+    new Map<string, SeventhFlavor | undefined>()
+  )
 
   useEffect(() => {
     if (!localStorage.getItem('musical-modes-tour-seen')) {
@@ -66,6 +69,29 @@ export default function Home() {
       setTourStepIndex(0)
     }
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    const urlKey = params.get('key')
+    if (urlKey) {
+      const matched = KEYS.find(k => k.replace('♭', 'b') === urlKey)
+      if (matched) setSelectedScale(matched)
+    }
+
+    const urlModes = params.get('modes')
+    if (urlModes) {
+      const parsed = urlModes.split(',').filter(m => COLOR_CLASSNAMES.includes(m))
+      if (parsed.length > 0) setActiveModes(parsed)
+    }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    params.set('key', selectedScale.replace('♭', 'b'))
+    params.set('modes', activeModes.join(','))
+    history.replaceState(null, '', '?' + params.toString())
+  }, [selectedScale, activeModes])
 
   useEffect(() => {
     selectedScaleRef.current = selectedScale
@@ -77,6 +103,18 @@ export default function Home() {
       if (e.repeat) return
       if (isTextInput(e.target)) return
 
+      const rawKey = e.key
+      if (rawKey === ',') {
+        sevenFlavourRef.current = 'flat7'
+        setActiveFlavour('flat7')
+        return
+      }
+      if (rawKey === '.') {
+        sevenFlavourRef.current = 'maj7'
+        setActiveFlavour('maj7')
+        return
+      }
+
       const key = e.key.toUpperCase()
       const modes = generateModes(selectedScaleRef.current)
       const activeModeNames = activeModesRef.current
@@ -92,16 +130,23 @@ export default function Home() {
           col < activeModesData[row].chords.length
         ) {
           const chordName = activeModesData[row].chords[col]
-          triggerReleaseChord(chordName)
-          pressedChordsRef.current.add(chordName)
+          const flavour = sevenFlavourRef.current
+          pressedChordsRef.current.set(chordName, flavour)
           setKeyboardPressedChords((prev) => [...prev, chordName])
-          triggerAttackChord(chordName)
+          triggerAttackChord(chordName, flavour)
           return
         }
       }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      const rawKey = e.key
+      if (rawKey === ',' || rawKey === '.') {
+        sevenFlavourRef.current = undefined
+        setActiveFlavour(undefined)
+        return
+      }
+
       const key = e.key.toUpperCase()
       const modes = generateModes(selectedScaleRef.current)
       const activeModeNames = activeModesRef.current
@@ -117,11 +162,12 @@ export default function Home() {
           col < activeModesData[row].chords.length
         ) {
           const chordName = activeModesData[row].chords[col]
+          const flavour = pressedChordsRef.current.get(chordName)
           pressedChordsRef.current.delete(chordName)
           setKeyboardPressedChords((prev) =>
             prev.filter((c) => c !== chordName)
           )
-          triggerReleaseChord(chordName)
+          triggerReleaseChord(chordName, flavour)
           return
         }
       }
@@ -133,8 +179,8 @@ export default function Home() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('keyup', handleKeyUp)
-      pressedChordsRef.current.forEach((chordName) =>
-        triggerReleaseChord(chordName)
+      pressedChordsRef.current.forEach((flavour, chordName) =>
+        triggerReleaseChord(chordName, flavour)
       )
       pressedChordsRef.current.clear()
     }
@@ -216,19 +262,24 @@ export default function Home() {
                 Tap or use keyboard to play the chords
               </p>
               <table>
-                {generateModes(selectedScale).map(
-                  (mode: Mode, index: number) => (
-                    <Fragment key={index}>
-                      {isModeActive(mode.name) && (
-                        <TableContent
-                          mode={mode}
-                          index={index}
-                          keyboardPressedChords={keyboardPressedChords}
-                        />
-                      )}
-                    </Fragment>
+                {(() => {
+                  let activeRowCount = 0
+                  return generateModes(selectedScale).map(
+                    (mode: Mode, index: number) => (
+                      <Fragment key={index}>
+                        {isModeActive(mode.name) && (
+                          <TableContent
+                            mode={mode}
+                            index={index}
+                            activeRowIndex={activeRowCount++}
+                            keyboardPressedChords={keyboardPressedChords}
+                            activeFlavour={activeFlavour}
+                          />
+                        )}
+                      </Fragment>
+                    )
                   )
-                )}
+                })()}
               </table>
             </Fragment>
           )}
