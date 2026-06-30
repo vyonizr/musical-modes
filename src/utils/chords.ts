@@ -1,86 +1,123 @@
-import * as Tone from 'tone'
+import * as Tone from "tone";
 
 const ROOT_TO_SEMITONE: Record<string, number> = {
-  'C': 0, 'C♯': 1, 'D♭': 1,
-  'D': 2, 'D♯': 3, 'E♭': 3,
-  'E': 4,
-  'F': 5, 'F♯': 6, 'G♭': 6,
-  'G': 7, 'G♯': 8, 'A♭': 8,
-  'A': 9, 'A♯': 10, 'B♭': 10,
-  'B': 11,
-}
+  C: 0,
+  "C♯": 1,
+  "D♭": 1,
+  D: 2,
+  "D♯": 3,
+  "E♭": 3,
+  E: 4,
+  F: 5,
+  "F♯": 6,
+  "G♭": 6,
+  G: 7,
+  "G♯": 8,
+  "A♭": 8,
+  A: 9,
+  "A♯": 10,
+  "B♭": 10,
+  B: 11,
+};
 
-const SEMITONE_TO_NOTE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const SEMITONE_TO_NOTE = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+];
 
-function parseChord(chordName: string): { root: string; quality: 'maj' | 'min' | 'dim' } {
-  const match = chordName.match(/^([A-G])([♭♯])?(dim|m)?$/)
+// Roots E2–B2 (MIDI 40–47): open-position span, 2 octaves
+const GUITAR_VOICING: Record<"maj" | "min" | "dim", number[]> = {
+  maj: [0, 7, 12, 16, 19, 24], // R 5 R 3 5 R
+  min: [0, 7, 12, 15, 19, 24], // R 5 R m3 5 R
+  dim: [0, 3, 6, 12, 15, 18], // R m3 b5 R m3 b5
+};
+
+// Roots C3–D#3 (MIDI 48–51): below guitar low-E in octave 2, so bumped up; narrower span to stay balanced
+const GUITAR_VOICING_COMPACT: Record<"maj" | "min" | "dim", number[]> = {
+  maj: [0, 4, 7, 12, 16, 19], // R 3 5 R 3 5
+  min: [0, 3, 7, 12, 15, 19], // R m3 5 R m3 5
+  dim: [0, 3, 6, 12, 15, 18], // same as standard dim
+};
+
+// Velocity per string: bass string louder, upper strings softer
+const STRUM_VELOCITIES = [0.55, 0.7, 0.65, 0.6, 0.6, 0.55];
+
+const STRUM_DELAY_S = 0.005; // 5ms between strings
+
+function parseChord(chordName: string): {
+  root: string;
+  quality: "maj" | "min" | "dim";
+} {
+  const match = chordName.match(/^([A-G])([♭♯])?(dim|m)?$/);
   if (!match) {
-    throw new Error(`Invalid chord name: ${chordName}`)
+    throw new Error(`Invalid chord name: ${chordName}`);
   }
-  const root = match[1] + (match[2] || '')
-  const suffix = match[3]
-  const quality = suffix === 'dim' ? 'dim' : suffix === 'm' ? 'min' : 'maj'
-  return { root, quality }
+  const root = match[1] + (match[2] || "");
+  const suffix = match[3];
+  const quality = suffix === "dim" ? "dim" : suffix === "m" ? "min" : "maj";
+  return { root, quality };
 }
 
 function midiToNote(midi: number): string {
-  const octave = Math.floor(midi / 12) - 1
-  const noteIndex = ((midi % 12) + 12) % 12
-  return SEMITONE_TO_NOTE[noteIndex] + octave
+  const octave = Math.floor(midi / 12) - 1;
+  const noteIndex = ((midi % 12) + 12) % 12;
+  return SEMITONE_TO_NOTE[noteIndex] + octave;
 }
 
 export function chordToNotes(chordName: string): string[] {
-  const { root, quality } = parseChord(chordName)
-  const rootSemitone = ROOT_TO_SEMITONE[root]
-
-  const intervals =
-    quality === 'maj' ? [0, 4, 7] : quality === 'min' ? [0, 3, 7] : [0, 3, 6]
-
-  const rootMidi = rootSemitone + 60
-  const n0 = rootMidi + intervals[0]
-  const n1 = rootMidi + intervals[1]
-  const n2 = rootMidi + intervals[2]
-
-  let midiNotes: number[]
-  if (rootSemitone >= 0 && rootSemitone <= 4) {
-    midiNotes = [n0, n1, n2]
-  } else if (rootSemitone >= 5 && rootSemitone <= 7) {
-    midiNotes = [n2 - 12, n0, n1]
-  } else {
-    midiNotes = [n1 - 12, n2 - 12, n0]
-  }
-
-  return midiNotes.map(midiToNote)
+  const { root, quality } = parseChord(chordName);
+  let rootMidi = ROOT_TO_SEMITONE[root] + 36;
+  const compact = rootMidi < 40; // C, C#, D, D# fall below guitar low-E string
+  if (compact) rootMidi += 12;
+  return (compact ? GUITAR_VOICING_COMPACT : GUITAR_VOICING)[quality].map(
+    (offset) => midiToNote(rootMidi + offset)
+  );
 }
 
-let synth: Tone.PolySynth | null = null
-const activeChords = new Set<string>()
+let synth: Tone.PolySynth | null = null;
+let reverb: Tone.Reverb | null = null;
+const activeChords = new Set<string>();
 
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
+    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).toDestination();
     synth = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.005, decay: 0.3, sustain: 0.2, release: 0.5 },
-    })
-    synth.maxPolyphony = 18
-    synth.toDestination()
+      oscillator: { type: "triangle" },
+      envelope: { attack: 0.002, decay: 0.8, sustain: 0.4, release: 1.2 },
+    });
+    synth.maxPolyphony = 18;
+    synth.connect(reverb);
   }
-  return synth
+  return synth;
 }
 
 export function triggerAttackChord(chordName: string): void {
-  const notes = chordToNotes(chordName)
+  const notes = chordToNotes(chordName);
+  const s = ensureSynth();
 
   if (activeChords.has(chordName)) {
-    ensureSynth().triggerRelease(notes)
+    s.triggerRelease(notes);
   }
 
-  activeChords.add(chordName)
-  ensureSynth().triggerAttack(notes)
+  activeChords.add(chordName);
+  const now = Tone.now();
+  notes.forEach((note, i) => {
+    s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
+  });
 }
 
 export function triggerReleaseChord(chordName: string): void {
-  const notes = chordToNotes(chordName)
-  activeChords.delete(chordName)
-  ensureSynth().triggerRelease(notes)
+  const notes = chordToNotes(chordName);
+  activeChords.delete(chordName);
+  ensureSynth().triggerRelease(notes);
 }
