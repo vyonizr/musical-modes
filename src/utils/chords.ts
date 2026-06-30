@@ -54,6 +54,7 @@ export function chordToNotes(chordName: string): string[] {
 }
 
 let synth: Tone.PolySynth | null = null
+const activeChords = new Set<string>()
 
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
@@ -69,10 +70,17 @@ function ensureSynth(): Tone.PolySynth {
 
 export function triggerAttackChord(chordName: string): void {
   const notes = chordToNotes(chordName)
+
+  if (activeChords.has(chordName)) {
+    ensureSynth().triggerRelease(notes)
+  }
+
+  activeChords.add(chordName)
   ensureSynth().triggerAttack(notes)
 }
 
 export function triggerReleaseChord(chordName: string): void {
   const notes = chordToNotes(chordName)
+  activeChords.delete(chordName)
   ensureSynth().triggerRelease(notes)
 }
