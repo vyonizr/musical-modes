@@ -4,32 +4,22 @@ import { COLOR_CLASSNAMES } from 'src/utils/constants'
 import { triggerAttackChord, triggerReleaseChord } from 'src/utils/chords'
 
 interface IProps {
-  isRomanMode: boolean
   index: number
   mode: Mode
   keyboardPressedChords: string[]
 }
 
 const TableContent = ({
-  isRomanMode,
   mode,
   index,
   keyboardPressedChords,
 }: IProps) => {
-  const handleChordDisplay = (
-    isRomanMode: boolean,
-    romanNumeral: string,
-    chord: string
-  ): string => {
-    return isRomanMode ? romanNumeral : chord
-  }
-
   return (
     <tbody>
       <tr className={`mode-row ${COLOR_CLASSNAMES[index]} bold`}>
-        {mode.chords.map((chord: string, index: number) => (
+        {mode.chords.map((chord: string, chordIndex: number) => (
           <td
-            key={index}
+            key={chordIndex}
             className={`pointer noselect playable-chord${
               keyboardPressedChords.includes(chord) ? ' keyboard-active' : ''
             }`}
@@ -38,13 +28,8 @@ const TableContent = ({
             onMouseLeave={() => triggerReleaseChord(chord)}
           >
             <div className='chord-container'>
-              <span>
-                {handleChordDisplay(
-                  isRomanMode,
-                  mode.romanNumerals[index],
-                  chord
-                )}
-              </span>
+              <span>{chord}</span>
+              <span className='roman-label'>{mode.romanNumerals[chordIndex]}</span>
             </div>
           </td>
         ))}

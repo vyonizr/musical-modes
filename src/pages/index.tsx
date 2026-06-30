@@ -7,7 +7,6 @@ import { Mode } from '../utils/types'
 import { triggerAttackChord, triggerReleaseChord } from '../utils/chords'
 
 import TableContent from '../components/TableContent'
-import Slider from '../components/Slider'
 
 const KEY_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U'],
@@ -25,7 +24,6 @@ function isTextInput(target: EventTarget | null): boolean {
 
 export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
-  const [isRomanMode, setIsRomanMode] = useState(false)
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]])
 
   const selectedScaleRef = useRef(selectedScale)
@@ -141,17 +139,6 @@ export default function Home() {
       <main>
         <h1 className='title black'>Musical Modes</h1>
         <div className='mode-select black'>
-          <div className='roman-select'>
-            <label htmlFor='isRomanMode'>Roman Numerals</label>
-            <Slider
-              name='isRomanMode'
-              isChecked={isRomanMode}
-              onClick={() => {
-                setIsRomanMode((currentState) => !currentState)
-                ;(document.activeElement as HTMLElement)?.blur()
-              }}
-            />
-          </div>
           <div className='key-select'>
             <label htmlFor='modes'>Root Key</label>
             <select
@@ -184,7 +171,6 @@ export default function Home() {
                     <Fragment key={index}>
                       {isModeActive(mode.name) && (
                         <TableContent
-                          isRomanMode={isRomanMode}
                           mode={mode}
                           index={index}
                           keyboardPressedChords={keyboardPressedChords}

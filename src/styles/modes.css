@@ -155,6 +155,7 @@ td {
 .roman-appear,
 .roman-disappear {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
@@ -162,6 +163,13 @@ td {
 
 .chord-container span {
   height: max-content;
+  line-height: 1.1;
+}
+
+.roman-label {
+  font-size: 0.75em;
+  opacity: 0.9;
+  font-weight: normal;
 }
 
 .pointer {
