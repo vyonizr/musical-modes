@@ -87,7 +87,7 @@ label {
 
 .table-container {
   margin-bottom: 0.5em;
-  height: 376px;
+  min-height: 376px;
   display: flex;
   flex-direction: column;
   justify-content: center;

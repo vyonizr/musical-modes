@@ -3,17 +3,11 @@ import Head from 'next/head'
 import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 
 import { generateModes } from '../utils'
-import { KEYS, COLOR_CLASSNAMES } from '../utils/constants'
+import { KEYS, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
 import { Mode } from '../utils/types'
 import { triggerAttackChord, triggerReleaseChord } from '../utils/chords'
 
 import TableContent from '../components/TableContent'
-
-const KEY_ROWS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-]
 
 const TOUR_STEPS: Step[] = [
   {
@@ -216,19 +210,23 @@ export default function Home() {
                 Tap or use keyboard to play the chords
               </p>
               <table>
-                {generateModes(selectedScale).map(
-                  (mode: Mode, index: number) => (
-                    <Fragment key={index}>
-                      {isModeActive(mode.name) && (
-                        <TableContent
-                          mode={mode}
-                          index={index}
-                          keyboardPressedChords={keyboardPressedChords}
-                        />
-                      )}
-                    </Fragment>
+                {(() => {
+                  let activeRowCount = 0
+                  return generateModes(selectedScale).map(
+                    (mode: Mode, index: number) => (
+                      <Fragment key={index}>
+                        {isModeActive(mode.name) && (
+                          <TableContent
+                            mode={mode}
+                            index={index}
+                            activeRowIndex={activeRowCount++}
+                            keyboardPressedChords={keyboardPressedChords}
+                          />
+                        )}
+                      </Fragment>
+                    )
                   )
-                )}
+                })()}
               </table>
             </Fragment>
           )}
