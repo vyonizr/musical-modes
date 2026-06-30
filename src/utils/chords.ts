@@ -140,7 +140,6 @@ export function display7thChordName(chordName: string, seventh: SeventhFlavor): 
 
 let synth: Tone.PolySynth | null = null;
 let reverb: Tone.Reverb | null = null;
-const activeChords = new Set<string>();
 
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
@@ -149,29 +148,19 @@ function ensureSynth(): Tone.PolySynth {
       oscillator: { type: "triangle" },
       envelope: { attack: 0.002, decay: 0.8, sustain: 0.4, release: 1.2 },
     });
-    synth.maxPolyphony = 18;
+    // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
+    synth.maxPolyphony = 64;
     synth.connect(reverb);
   }
   return synth;
-}
-
-function activeChordKey(chordName: string, seventh?: SeventhFlavor): string {
-  return chordName + ":" + (seventh ?? "tri");
 }
 
 export function triggerAttackChord(
   chordName: string,
   seventh?: SeventhFlavor
 ): void {
-  const notes = chordToNotes(chordName, seventh);
   const s = ensureSynth();
-  const key = activeChordKey(chordName, seventh);
-
-  if (activeChords.has(key)) {
-    s.triggerRelease(notes);
-  }
-
-  activeChords.add(key);
+  const notes = chordToNotes(chordName, seventh);
   const now = Tone.now();
   notes.forEach((note, i) => {
     s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
@@ -182,8 +171,5 @@ export function triggerReleaseChord(
   chordName: string,
   seventh?: SeventhFlavor
 ): void {
-  const notes = chordToNotes(chordName, seventh);
-  const key = activeChordKey(chordName, seventh);
-  activeChords.delete(key);
-  ensureSynth().triggerRelease(notes);
+  ensureSynth().triggerRelease(chordToNotes(chordName, seventh));
 }

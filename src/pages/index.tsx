@@ -131,7 +131,6 @@ export default function Home() {
         ) {
           const chordName = activeModesData[row].chords[col]
           const flavour = sevenFlavourRef.current
-          triggerReleaseChord(chordName, flavour)
           pressedChordsRef.current.set(chordName, flavour)
           setKeyboardPressedChords((prev) => [...prev, chordName])
           triggerAttackChord(chordName, flavour)
