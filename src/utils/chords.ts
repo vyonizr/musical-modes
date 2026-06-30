@@ -1,145 +1,78 @@
-import { getOS } from '../utils/getOS'
+import * as Tone from 'tone'
 
-const withBasePath = (fileName: string): string => {
-  return `/assets/audio/${fileName}`
+const ROOT_TO_SEMITONE: Record<string, number> = {
+  'C': 0, 'C♯': 1, 'D♭': 1,
+  'D': 2, 'D♯': 3, 'E♭': 3,
+  'E': 4,
+  'F': 5, 'F♯': 6, 'G♭': 6,
+  'G': 7, 'G♯': 8, 'A♭': 8,
+  'A': 9, 'A♯': 10, 'B♭': 10,
+  'B': 11,
 }
 
-const CHORD_C = withBasePath('c.ogg')
-const CHORD_D_FLAT = withBasePath('d_flat.ogg')
-const CHORD_D = withBasePath('d.ogg')
-const CHORD_E_FLAT = withBasePath('e_flat.ogg')
-const CHORD_E = withBasePath('e.ogg')
-const CHORD_F = withBasePath('f.ogg')
-const CHORD_G_FLAT = withBasePath('g_flat.ogg')
-const CHORD_G = withBasePath('g.ogg')
-const CHORD_A_FLAT = withBasePath('a_flat.ogg')
-const CHORD_A = withBasePath('a.ogg')
-const CHORD_B_FLAT = withBasePath('b_flat.ogg')
-const CHORD_B = withBasePath('b.ogg')
+const SEMITONE_TO_NOTE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-const CHORD_C_MINOR = withBasePath('c_minor.ogg')
-const CHORD_D_FLAT_MINOR = withBasePath('d_flat_minor.ogg')
-const CHORD_D_MINOR = withBasePath('d_minor.ogg')
-const CHORD_E_FLAT_MINOR = withBasePath('e_flat_minor.ogg')
-const CHORD_E_MINOR = withBasePath('e_minor.ogg')
-const CHORD_F_MINOR = withBasePath('f_minor.ogg')
-const CHORD_G_FLAT_MINOR = withBasePath('g_flat_minor.ogg')
-const CHORD_G_MINOR = withBasePath('g_minor.ogg')
-const CHORD_A_FLAT_MINOR = withBasePath('a_flat_minor.ogg')
-const CHORD_A_MINOR = withBasePath('a_minor.ogg')
-const CHORD_B_FLAT_MINOR = withBasePath('b_flat_minor.ogg')
-const CHORD_B_MINOR = withBasePath('b_minor.ogg')
-
-const CHORD_C_DIM = withBasePath('c_dim.ogg')
-const CHORD_D_FLAT_DIM = withBasePath('d_flat_dim.ogg')
-const CHORD_D_DIM = withBasePath('d_dim.ogg')
-const CHORD_E_FLAT_DIM = withBasePath('e_flat_dim.ogg')
-const CHORD_E_DIM = withBasePath('e_dim.ogg')
-const CHORD_F_DIM = withBasePath('f_dim.ogg')
-const CHORD_G_FLAT_DIM = withBasePath('g_flat_dim.ogg')
-const CHORD_G_DIM = withBasePath('g_dim.ogg')
-const CHORD_A_FLAT_DIM = withBasePath('a_flat_dim.ogg')
-const CHORD_A_DIM = withBasePath('a_dim.ogg')
-const CHORD_B_FLAT_DIM = withBasePath('b_flat_dim.ogg')
-const CHORD_B_DIM = withBasePath('b_dim.ogg')
-
-const chordsSwitch = (chordName = 'C'): string => {
-  switch (chordName) {
-    case 'C':
-      return CHORD_C
-    case 'Cdim':
-      return CHORD_C_DIM
-    case 'Cm':
-      return CHORD_C_MINOR
-    case 'D♭':
-      return CHORD_D_FLAT
-    case 'C♯dim':
-    case 'D♭dim':
-      return CHORD_D_FLAT_DIM
-    case 'D♭m':
-      return CHORD_D_FLAT_MINOR
-    case 'D':
-      return CHORD_D
-    case 'Ddim':
-      return CHORD_D_DIM
-    case 'Dm':
-      return CHORD_D_MINOR
-    case 'E♭':
-      return CHORD_E_FLAT
-    case 'D♯dim':
-    case 'E♭dim':
-      return CHORD_E_FLAT_DIM
-    case 'E♭m':
-      return CHORD_E_FLAT_MINOR
-    case 'E':
-      return CHORD_E
-    case 'Edim':
-      return CHORD_E_DIM
-    case 'Em':
-      return CHORD_E_MINOR
-    case 'F':
-      return CHORD_F
-    case 'Fdim':
-      return CHORD_F_DIM
-    case 'Fm':
-      return CHORD_F_MINOR
-    case 'G♭':
-      return CHORD_G_FLAT
-    case 'F♯dim':
-    case 'G♭dim':
-      return CHORD_G_FLAT_DIM
-    case 'G♭m':
-      return CHORD_G_FLAT_MINOR
-    case 'G':
-      return CHORD_G
-    case 'Gdim':
-      return CHORD_G_DIM
-    case 'Gm':
-      return CHORD_G_MINOR
-    case 'A♭':
-      return CHORD_A_FLAT
-    case 'G♯dim':
-    case 'A♭dim':
-      return CHORD_A_FLAT_DIM
-    case 'A♭m':
-      return CHORD_A_FLAT_MINOR
-    case 'A':
-      return CHORD_A
-    case 'Adim':
-      return CHORD_A_DIM
-    case 'Am':
-      return CHORD_A_MINOR
-    case 'B♭':
-      return CHORD_B_FLAT
-    case 'A♯dim':
-    case 'B♭dim':
-      return CHORD_B_FLAT_DIM
-    case 'B♭m':
-      return CHORD_B_FLAT_MINOR
-    case 'B':
-      return CHORD_B
-    case 'Bdim':
-      return CHORD_B_DIM
-    case 'Bm':
-      return CHORD_B_MINOR
-    default:
-      return CHORD_C
+function parseChord(chordName: string): { root: string; quality: 'maj' | 'min' | 'dim' } {
+  const match = chordName.match(/^([A-G])([♭♯])?(dim|m)?$/)
+  if (!match) {
+    throw new Error(`Invalid chord name: ${chordName}`)
   }
+  const root = match[1] + (match[2] || '')
+  const suffix = match[3]
+  const quality = suffix === 'dim' ? 'dim' : suffix === 'm' ? 'min' : 'maj'
+  return { root, quality }
 }
 
-const playChord = (chordName = 'C'): void => {
-  if (getOS() === 'iOS') {
-    alert(`Sorry, you currently cannot play the chords on ${getOS()} ☹️`)
+function midiToNote(midi: number): string {
+  const octave = Math.floor(midi / 12) - 1
+  const noteIndex = ((midi % 12) + 12) % 12
+  return SEMITONE_TO_NOTE[noteIndex] + octave
+}
+
+export function chordToNotes(chordName: string): string[] {
+  const { root, quality } = parseChord(chordName)
+  const rootSemitone = ROOT_TO_SEMITONE[root]
+
+  const intervals =
+    quality === 'maj' ? [0, 4, 7] : quality === 'min' ? [0, 3, 7] : [0, 3, 6]
+
+  const rootMidi = rootSemitone + 60
+  const n0 = rootMidi + intervals[0]
+  const n1 = rootMidi + intervals[1]
+  const n2 = rootMidi + intervals[2]
+
+  let midiNotes: number[]
+  if (rootSemitone >= 0 && rootSemitone <= 4) {
+    midiNotes = [n0, n1, n2]
+  } else if (rootSemitone >= 5 && rootSemitone <= 7) {
+    midiNotes = [n2 - 12, n0, n1]
   } else {
-    const audio = <HTMLAudioElement>(
-      document.getElementById(`audio-${chordName}`)
-    )
-    if (audio.paused) {
-      audio.play()
-    } else {
-      audio.currentTime = 0
-    }
+    midiNotes = [n1 - 12, n2 - 12, n0]
   }
+
+  return midiNotes.map(midiToNote)
 }
 
-export { chordsSwitch, playChord }
+let synth: Tone.PolySynth | null = null
+
+function ensureSynth(): Tone.PolySynth {
+  if (!synth) {
+    synth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.005, decay: 0.3, sustain: 0.2, release: 0.5 },
+    })
+    synth.maxPolyphony = 6
+    synth.toDestination()
+  }
+  return synth
+}
+
+export function triggerAttackChord(chordName: string): void {
+  const notes = chordToNotes(chordName)
+  ensureSynth().triggerAttack(notes)
+}
+
+export function triggerReleaseChord(chordName: string): void {
+  const notes = chordToNotes(chordName)
+  ensureSynth().triggerRelease(notes)
+}

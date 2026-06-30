@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
     "next": "^16.2.7",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "tone": "^15.1.22"
   },
   "devDependencies": {
     "@types/node": "^20",

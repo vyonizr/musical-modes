@@ -1,15 +1,21 @@
 import React from 'react'
 import { Mode } from 'src/utils/types'
 import { COLOR_CLASSNAMES } from 'src/utils/constants'
-import { chordsSwitch, playChord } from 'src/utils/chords'
+import { triggerAttackChord, triggerReleaseChord } from 'src/utils/chords'
 
 interface IProps {
   isRomanMode: boolean
   index: number
   mode: Mode
+  keyboardPressedChords: string[]
 }
 
-const TableContent = ({ isRomanMode, mode, index }: IProps) => {
+const TableContent = ({
+  isRomanMode,
+  mode,
+  index,
+  keyboardPressedChords,
+}: IProps) => {
   const handleChordDisplay = (
     isRomanMode: boolean,
     romanNumeral: string,
@@ -24,14 +30,13 @@ const TableContent = ({ isRomanMode, mode, index }: IProps) => {
         {mode.chords.map((chord: string, index: number) => (
           <td
             key={index}
-            className='pointer noselect playable-chord'
-            onMouseDown={() => playChord(chord)}
+            className={`pointer noselect playable-chord${
+              keyboardPressedChords.includes(chord) ? ' keyboard-active' : ''
+            }`}
+            onMouseDown={() => triggerAttackChord(chord)}
+            onMouseUp={() => triggerReleaseChord(chord)}
+            onMouseLeave={() => triggerReleaseChord(chord)}
           >
-            <audio
-              id={`audio-${chord}`}
-              src={chordsSwitch(chord)}
-              preload='auto'
-            />
             <div className='chord-container'>
               <span>
                 {handleChordDisplay(

@@ -168,7 +168,8 @@ td {
   cursor: pointer;
 }
 
-.playable-chord:active {
+.playable-chord:active,
+.playable-chord.keyboard-active {
   background-color: var(--primary);
   color: white;
   transition: 0.1s ease;
