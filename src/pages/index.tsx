@@ -5,7 +5,12 @@ import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 import { generateModes } from '../utils'
 import { KEYS, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
 import { Mode } from '../utils/types'
-import { triggerAttackChord, triggerReleaseChord } from '../utils/chords'
+import {
+  triggerAttackChord,
+  triggerReleaseChord,
+  SeventhFlavor,
+  display7thChordName,
+} from '../utils/chords'
 
 import TableContent from '../components/TableContent'
 
@@ -49,10 +54,14 @@ export default function Home() {
 
   const selectedScaleRef = useRef(selectedScale)
   const activeModesRef = useRef(activeModes)
+  const sevenFlavourRef = useRef<SeventhFlavor | undefined>(undefined)
+  const [activeFlavour, setActiveFlavour] = useState<SeventhFlavor | undefined>(undefined)
   const [keyboardPressedChords, setKeyboardPressedChords] = useState<string[]>(
     []
   )
-  const pressedChordsRef = useRef(new Set<string>())
+  const pressedChordsRef = useRef(
+    new Map<string, SeventhFlavor | undefined>()
+  )
 
   useEffect(() => {
     if (!localStorage.getItem('musical-modes-tour-seen')) {
@@ -94,6 +103,18 @@ export default function Home() {
       if (e.repeat) return
       if (isTextInput(e.target)) return
 
+      const rawKey = e.key
+      if (rawKey === ',') {
+        sevenFlavourRef.current = 'flat7'
+        setActiveFlavour('flat7')
+        return
+      }
+      if (rawKey === '.') {
+        sevenFlavourRef.current = 'maj7'
+        setActiveFlavour('maj7')
+        return
+      }
+
       const key = e.key.toUpperCase()
       const modes = generateModes(selectedScaleRef.current)
       const activeModeNames = activeModesRef.current
@@ -109,16 +130,24 @@ export default function Home() {
           col < activeModesData[row].chords.length
         ) {
           const chordName = activeModesData[row].chords[col]
-          triggerReleaseChord(chordName)
-          pressedChordsRef.current.add(chordName)
+          const flavour = sevenFlavourRef.current
+          triggerReleaseChord(chordName, flavour)
+          pressedChordsRef.current.set(chordName, flavour)
           setKeyboardPressedChords((prev) => [...prev, chordName])
-          triggerAttackChord(chordName)
+          triggerAttackChord(chordName, flavour)
           return
         }
       }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      const rawKey = e.key
+      if (rawKey === ',' || rawKey === '.') {
+        sevenFlavourRef.current = undefined
+        setActiveFlavour(undefined)
+        return
+      }
+
       const key = e.key.toUpperCase()
       const modes = generateModes(selectedScaleRef.current)
       const activeModeNames = activeModesRef.current
@@ -134,11 +163,12 @@ export default function Home() {
           col < activeModesData[row].chords.length
         ) {
           const chordName = activeModesData[row].chords[col]
+          const flavour = pressedChordsRef.current.get(chordName)
           pressedChordsRef.current.delete(chordName)
           setKeyboardPressedChords((prev) =>
             prev.filter((c) => c !== chordName)
           )
-          triggerReleaseChord(chordName)
+          triggerReleaseChord(chordName, flavour)
           return
         }
       }
@@ -150,8 +180,8 @@ export default function Home() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('keyup', handleKeyUp)
-      pressedChordsRef.current.forEach((chordName) =>
-        triggerReleaseChord(chordName)
+      pressedChordsRef.current.forEach((flavour, chordName) =>
+        triggerReleaseChord(chordName, flavour)
       )
       pressedChordsRef.current.clear()
     }
@@ -244,6 +274,7 @@ export default function Home() {
                             index={index}
                             activeRowIndex={activeRowCount++}
                             keyboardPressedChords={keyboardPressedChords}
+                            activeFlavour={activeFlavour}
                           />
                         )}
                       </Fragment>

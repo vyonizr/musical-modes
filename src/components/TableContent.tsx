@@ -1,13 +1,14 @@
 import React from 'react'
 import { Mode } from 'src/utils/types'
 import { COLOR_CLASSNAMES, KEY_ROWS } from 'src/utils/constants'
-import { triggerAttackChord, triggerReleaseChord } from 'src/utils/chords'
+import { triggerAttackChord, triggerReleaseChord, SeventhFlavor, display7thChordName } from 'src/utils/chords'
 
 interface IProps {
   index: number
   mode: Mode
   activeRowIndex: number
   keyboardPressedChords: string[]
+  activeFlavour?: SeventhFlavor
 }
 
 const TableContent = ({
@@ -15,6 +16,7 @@ const TableContent = ({
   index,
   activeRowIndex,
   keyboardPressedChords,
+  activeFlavour,
 }: IProps) => {
   const capitalizedName = mode.name.charAt(0).toUpperCase() + mode.name.slice(1)
 
@@ -24,7 +26,12 @@ const TableContent = ({
         <th colSpan={7}>{capitalizedName}</th>
       </tr>
       <tr className={`mode-row ${COLOR_CLASSNAMES[index]} bold`}>
-        {mode.chords.map((chord: string, chordIndex: number) => (
+        {mode.chords.map((chord: string, chordIndex: number) => {
+          const displayName = activeFlavour ? display7thChordName(chord, activeFlavour) : chord
+          const fontSize =
+            displayName.length > 7 ? '0.65em' :
+            displayName.length > 5 ? '0.8em' : undefined
+          return (
           <td
             key={chordIndex}
             className={`pointer noselect playable-chord${
@@ -35,14 +42,15 @@ const TableContent = ({
             onMouseLeave={() => triggerReleaseChord(chord)}
           >
             <div className='chord-container'>
-              <span>{chord}</span>
+              <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>
               <span className='roman-label'>{mode.romanNumerals[chordIndex]}</span>
             </div>
             {activeRowIndex < KEY_ROWS.length && (
               <span className='key-hint'>{KEY_ROWS[activeRowIndex][chordIndex]}</span>
             )}
           </td>
-        ))}
+          )
+        })}
       </tr>
     </tbody>
   )
