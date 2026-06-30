@@ -1,14 +1,14 @@
 import React from 'react'
 import { Mode } from 'src/utils/types'
 import { COLOR_CLASSNAMES, KEY_ROWS } from 'src/utils/constants'
-import { triggerAttackChord, triggerReleaseChord, SeventhFlavor, display7thChordName } from 'src/utils/chords'
+import { triggerAttackChord, triggerReleaseChord, ChordFlavor, display7thChordName, displaySusChordName } from 'src/utils/chords'
 
 interface IProps {
   index: number
   mode: Mode
   activeRowIndex: number
   keyboardPressedChords: string[]
-  activeFlavour?: SeventhFlavor
+  activeFlavour?: ChordFlavor
 }
 
 const TableContent = ({
@@ -27,7 +27,12 @@ const TableContent = ({
       </tr>
       <tr className={`mode-row ${COLOR_CLASSNAMES[index]} bold`}>
         {mode.chords.map((chord: string, chordIndex: number) => {
-          const displayName = activeFlavour ? display7thChordName(chord, activeFlavour) : chord
+          const displayName =
+            activeFlavour === "sus4" || activeFlavour === "sus2"
+              ? displaySusChordName(chord, activeFlavour)
+              : activeFlavour
+              ? display7thChordName(chord, activeFlavour)
+              : chord
           const fontSize =
             displayName.length > 7 ? '0.65em' :
             displayName.length > 5 ? '0.8em' : undefined
@@ -37,9 +42,9 @@ const TableContent = ({
             className={`pointer noselect playable-chord${
               keyboardPressedChords.includes(chord) ? ' keyboard-active' : ''
             }`}
-            onMouseDown={() => triggerAttackChord(chord)}
-            onMouseUp={() => triggerReleaseChord(chord)}
-            onMouseLeave={() => triggerReleaseChord(chord)}
+            onMouseDown={() => triggerAttackChord(chord, activeFlavour)}
+            onMouseUp={() => triggerReleaseChord(chord, activeFlavour)}
+            onMouseLeave={() => triggerReleaseChord(chord, activeFlavour)}
           >
             <div className='chord-container'>
               <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>

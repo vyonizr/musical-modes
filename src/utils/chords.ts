@@ -35,7 +35,7 @@ const SEMITONE_TO_NOTE = [
   "B",
 ];
 
-export type SeventhFlavor = "flat7" | "maj7";
+export type ChordFlavor = "flat7" | "maj7" | "sus4" | "sus2";
 
 type QualityVoicing = Record<"maj" | "min" | "dim", number[]>;
 
@@ -46,7 +46,7 @@ const GUITAR_VOICING: QualityVoicing = {
   dim: [0, 3, 6, 12, 15, 18], // R m3 b5 R m3 b5
 };
 
-const GUITAR_VOICING_7TH: Record<SeventhFlavor, QualityVoicing> = {
+const GUITAR_VOICING_7TH: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityVoicing> = {
   flat7: {
     maj: [0, 7, 10, 16, 19, 24],
     min: [0, 7, 10, 15, 19, 24],
@@ -66,7 +66,7 @@ const GUITAR_VOICING_COMPACT: QualityVoicing = {
   dim: [0, 3, 6, 12, 15, 18], // same as standard dim
 };
 
-const GUITAR_VOICING_7TH_COMPACT: Record<SeventhFlavor, QualityVoicing> = {
+const GUITAR_VOICING_7TH_COMPACT: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityVoicing> = {
   flat7: {
     maj: [0, 4, 7, 10, 16, 19],
     min: [0, 3, 7, 10, 15, 19],
@@ -76,6 +76,32 @@ const GUITAR_VOICING_7TH_COMPACT: Record<SeventhFlavor, QualityVoicing> = {
     maj: [0, 4, 7, 11, 16, 19],
     min: [0, 3, 7, 11, 15, 19],
     dim: [0, 3, 6, 11, 15, 18],
+  },
+};
+
+const GUITAR_VOICING_SUS: Record<"sus4" | "sus2", QualityVoicing> = {
+  sus4: {
+    maj: [0, 7, 12, 17, 19, 24],
+    min: [0, 7, 12, 17, 19, 24],
+    dim: [0, 5, 6, 12, 17, 18],
+  },
+  sus2: {
+    maj: [0, 7, 12, 14, 19, 24],
+    min: [0, 7, 12, 14, 19, 24],
+    dim: [0, 2, 6, 12, 14, 18],
+  },
+};
+
+const GUITAR_VOICING_SUS_COMPACT: Record<"sus4" | "sus2", QualityVoicing> = {
+  sus4: {
+    maj: [0, 5, 7, 12, 17, 19],
+    min: [0, 5, 7, 12, 17, 19],
+    dim: [0, 5, 6, 12, 17, 18],
+  },
+  sus2: {
+    maj: [0, 2, 7, 12, 14, 19],
+    min: [0, 2, 7, 12, 14, 19],
+    dim: [0, 2, 6, 12, 14, 18],
   },
 };
 
@@ -106,18 +132,24 @@ function midiToNote(midi: number): string {
 
 export function chordToNotes(
   chordName: string,
-  seventh?: SeventhFlavor
+  flavour?: ChordFlavor
 ): string[] {
   const { root, quality } = parseChord(chordName);
   let rootMidi = ROOT_TO_SEMITONE[root] + 36;
   const compact = rootMidi < 40; // C, C#, D, D# fall below guitar low-E string
   if (compact) rootMidi += 12;
 
-  if (seventh) {
+  if (flavour === "sus4" || flavour === "sus2") {
+    const table = compact ? GUITAR_VOICING_SUS_COMPACT : GUITAR_VOICING_SUS;
+    return table[flavour][quality].map((offset) =>
+      midiToNote(rootMidi + offset)
+    );
+  }
+  if (flavour) {
     const table = compact
       ? GUITAR_VOICING_7TH_COMPACT
       : GUITAR_VOICING_7TH;
-    return table[seventh][quality].map((offset) =>
+    return table[flavour][quality].map((offset) =>
       midiToNote(rootMidi + offset)
     );
   }
@@ -127,7 +159,7 @@ export function chordToNotes(
   );
 }
 
-export function display7thChordName(chordName: string, seventh: SeventhFlavor): string {
+export function display7thChordName(chordName: string, seventh: Exclude<ChordFlavor, "sus4" | "sus2">): string {
   const { root, quality } = parseChord(chordName);
   if (quality === "dim") {
     return seventh === "flat7" ? `${root}m7b5` : `${root}dimM7`;
@@ -136,6 +168,11 @@ export function display7thChordName(chordName: string, seventh: SeventhFlavor): 
     return seventh === "flat7" ? `${chordName}7` : `${chordName}Maj7`;
   }
   return seventh === "flat7" ? `${root}7` : `${root}maj7`;
+}
+
+export function displaySusChordName(chordName: string, sus: "sus4" | "sus2"): string {
+  const { root } = parseChord(chordName);
+  return `${root}${sus}`;
 }
 
 let synth: Tone.PolySynth | null = null;
@@ -157,10 +194,10 @@ function ensureSynth(): Tone.PolySynth {
 
 export function triggerAttackChord(
   chordName: string,
-  seventh?: SeventhFlavor
+  flavour?: ChordFlavor
 ): void {
   const s = ensureSynth();
-  const notes = chordToNotes(chordName, seventh);
+  const notes = chordToNotes(chordName, flavour);
   const now = Tone.now();
   notes.forEach((note, i) => {
     s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
@@ -169,7 +206,12 @@ export function triggerAttackChord(
 
 export function triggerReleaseChord(
   chordName: string,
-  seventh?: SeventhFlavor
+  flavour?: ChordFlavor
 ): void {
-  ensureSynth().triggerRelease(chordToNotes(chordName, seventh));
+  const s = ensureSynth();
+  const notes = chordToNotes(chordName, flavour);
+  const now = Tone.now();
+  notes.forEach((note, i) => {
+    s.triggerRelease(note, now + i * STRUM_DELAY_S);
+  });
 }

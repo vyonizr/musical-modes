@@ -8,8 +8,7 @@ import { Mode } from '../utils/types'
 import {
   triggerAttackChord,
   triggerReleaseChord,
-  SeventhFlavor,
-  display7thChordName,
+  ChordFlavor,
 } from '../utils/chords'
 
 import TableContent from '../components/TableContent'
@@ -54,13 +53,13 @@ export default function Home() {
 
   const selectedScaleRef = useRef(selectedScale)
   const activeModesRef = useRef(activeModes)
-  const sevenFlavourRef = useRef<SeventhFlavor | undefined>(undefined)
-  const [activeFlavour, setActiveFlavour] = useState<SeventhFlavor | undefined>(undefined)
+  const sevenFlavourRef = useRef<ChordFlavor | undefined>(undefined)
+  const [activeFlavour, setActiveFlavour] = useState<ChordFlavor | undefined>(undefined)
   const [keyboardPressedChords, setKeyboardPressedChords] = useState<string[]>(
     []
   )
   const pressedChordsRef = useRef(
-    new Map<string, SeventhFlavor | undefined>()
+    new Map<string, ChordFlavor | undefined>()
   )
 
   useEffect(() => {
@@ -114,6 +113,16 @@ export default function Home() {
         setActiveFlavour('maj7')
         return
       }
+      if (rawKey === 'k') {
+        sevenFlavourRef.current = 'sus2'
+        setActiveFlavour('sus2')
+        return
+      }
+      if (rawKey === 'l') {
+        sevenFlavourRef.current = 'sus4'
+        setActiveFlavour('sus4')
+        return
+      }
 
       const key = e.key.toUpperCase()
       const modes = generateModes(selectedScaleRef.current)
@@ -141,7 +150,7 @@ export default function Home() {
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const rawKey = e.key
-      if (rawKey === ',' || rawKey === '.') {
+      if (rawKey === ',' || rawKey === '.' || rawKey === 'k' || rawKey === 'l') {
         sevenFlavourRef.current = undefined
         setActiveFlavour(undefined)
         return
