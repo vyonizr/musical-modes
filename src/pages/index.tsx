@@ -60,6 +60,7 @@ export default function Home() {
           col < activeModesData[row].chords.length
         ) {
           const chordName = activeModesData[row].chords[col]
+          triggerReleaseChord(chordName)
           pressedChordsRef.current.add(chordName)
           setKeyboardPressedChords((prev) => [...prev, chordName])
           triggerAttackChord(chordName)

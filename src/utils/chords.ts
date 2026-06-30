@@ -61,7 +61,7 @@ function ensureSynth(): Tone.PolySynth {
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.005, decay: 0.3, sustain: 0.2, release: 0.5 },
     })
-    synth.maxPolyphony = 6
+    synth.maxPolyphony = 18
     synth.toDestination()
   }
   return synth
