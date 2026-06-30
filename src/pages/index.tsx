@@ -62,6 +62,29 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    const urlKey = params.get('key')
+    if (urlKey) {
+      const matched = KEYS.find(k => k.replace('♭', 'b') === urlKey)
+      if (matched) setSelectedScale(matched)
+    }
+
+    const urlModes = params.get('modes')
+    if (urlModes) {
+      const parsed = urlModes.split(',').filter(m => COLOR_CLASSNAMES.includes(m))
+      if (parsed.length > 0) setActiveModes(parsed)
+    }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    params.set('key', selectedScale.replace('♭', 'b'))
+    params.set('modes', activeModes.join(','))
+    history.replaceState(null, '', '?' + params.toString())
+  }, [selectedScale, activeModes])
+
+  useEffect(() => {
     selectedScaleRef.current = selectedScale
     activeModesRef.current = activeModes
   }, [selectedScale, activeModes])
