@@ -44,6 +44,27 @@ const TOUR_STEPS: Step[] = [
   },
 ]
 
+const PIANO_WHITE_KEYS = [
+  { index: 0, label: 'C' },
+  { index: 2, label: 'D' },
+  { index: 4, label: 'E' },
+  { index: 5, label: 'F' },
+  { index: 7, label: 'G' },
+  { index: 9, label: 'A' },
+  { index: 11, label: 'B' },
+]
+
+const PIANO_BLACK_KEYS = [
+  { index: 1, left: '8.5%' },
+  { index: 3, left: '22.8%' },
+  { index: 6, left: '51.3%' },
+  { index: 8, left: '65.6%' },
+  { index: 10, left: '79.8%' },
+]
+
+const CHROMATIC_ROW1 = [0, 2, 4, 5, 7, 9, 11]
+const CHROMATIC_ROW2 = [1, 3, null, 6, 8, 10, null]
+
 function isTextInput(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false
   const tag = target.tagName.toLowerCase()
@@ -236,13 +257,6 @@ export default function Home() {
     }
   }, [])
 
-  const handleSelectChange = (
-    event: React.ChangeEvent<{ value: string }>
-  ): void => {
-    setSelectedScale(event.target.value)
-    ;(document.activeElement as HTMLElement)?.blur()
-  }
-
   const toggleActiveMode = (modeName: string): void => {
     const updatedActiveModes = [...activeModes]
     if (updatedActiveModes.some((activeMode) => activeMode === modeName)) {
@@ -284,26 +298,76 @@ export default function Home() {
       </Head>
       <main>
         <h1 className='title black'>Musical Modes</h1>
-        <div className='mode-select black'>
-          <div className='key-select'>
-            <label htmlFor='modes'>Root Key</label>
-            <select
-              value={selectedScale}
-              name='modes'
-              id='modes'
-              onChange={(event: React.ChangeEvent<{ value: string }>) =>
-                handleSelectChange(event)
-              }
-            >
-              {KEYS.map((pianoKey: string, index: number) => (
-                <option key={index} value={pianoKey}>
-                  {preferSharp ? KEYS_SHARP[index] : pianoKey}
-                </option>
-              ))}
-            </select>
-            <button onClick={() => setPreferSharp(p => !p)}>
-              {preferSharp ? '♯' : '♭'}
-            </button>
+        <div className='key-selector-root'>
+          <div className='key-selector-header'>
+            <label>Root Key</label>
+            <div className='accidental-toggle'>
+              <button
+                className={`acc-btn${!preferSharp ? ' active' : ''}`}
+                onClick={() => setPreferSharp(false)}
+                aria-pressed={!preferSharp}
+              >
+                ♭
+              </button>
+              <button
+                className={`acc-btn${preferSharp ? ' active' : ''}`}
+                onClick={() => setPreferSharp(true)}
+                aria-pressed={preferSharp}
+              >
+                ♯
+              </button>
+            </div>
+          </div>
+          <div className='piano-keyboard' id='modes'>
+            {PIANO_BLACK_KEYS.map(({ index, left }) => (
+              <button
+                key={index}
+                className={`black-key${selectedScale === KEYS[index] ? ' selected' : ''} noselect`}
+                style={{ left }}
+                onClick={() => setSelectedScale(KEYS[index])}
+                aria-pressed={selectedScale === KEYS[index]}
+                aria-label={preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+              >
+                {preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+              </button>
+            ))}
+            {PIANO_WHITE_KEYS.map(({ index, label }) => (
+              <button
+                key={index}
+                className={`white-key${selectedScale === KEYS[index] ? ' selected' : ''} noselect`}
+                onClick={() => setSelectedScale(KEYS[index])}
+                aria-pressed={selectedScale === KEYS[index]}
+                aria-label={label}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className='chromatic-grid'>
+            {CHROMATIC_ROW1.map((keyIndex) => (
+              <button
+                key={`n-${keyIndex}`}
+                className={`chromatic-grid-item natural${selectedScale === KEYS[keyIndex] ? ' selected' : ''} noselect`}
+                onClick={() => setSelectedScale(KEYS[keyIndex])}
+                aria-pressed={selectedScale === KEYS[keyIndex]}
+                aria-label={KEYS[keyIndex]}
+              >
+                {KEYS[keyIndex]}
+              </button>
+            ))}
+            {CHROMATIC_ROW2.map((keyIndex, col) => (
+              <button
+                key={`a-${col}`}
+                className={`chromatic-grid-item accidental${keyIndex !== null && selectedScale === KEYS[keyIndex] ? ' selected' : ''} noselect`}
+                onClick={() => { if (keyIndex !== null) setSelectedScale(KEYS[keyIndex]) }}
+                aria-pressed={keyIndex !== null && selectedScale === KEYS[keyIndex]}
+                aria-label={keyIndex !== null ? (preferSharp ? KEYS_SHARP[keyIndex] : KEYS[keyIndex]) : undefined}
+                disabled={keyIndex === null}
+                style={keyIndex === null ? { visibility: 'hidden' } : undefined}
+              >
+                {keyIndex !== null ? (preferSharp ? KEYS_SHARP[keyIndex] : KEYS[keyIndex]) : ''}
+              </button>
+            ))}
           </div>
         </div>
         <div className='table-container'>

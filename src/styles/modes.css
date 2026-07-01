@@ -218,3 +218,172 @@ td {
   border: 1px solid var(--black);
   border-collapse: collapse;
 }
+
+/* Piano keyboard */
+
+.key-selector-root {
+  margin-bottom: 1em;
+}
+
+.key-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  max-width: 320px;
+  width: calc(100vw - 24px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.key-selector-header label {
+  display: inline;
+}
+
+.accidental-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.acc-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  border: 1.5px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+}
+
+.acc-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.piano-keyboard {
+  position: relative;
+  display: flex;
+  height: 88px;
+  max-width: 320px;
+  width: calc(100vw - 24px);
+  margin: 0 auto;
+}
+
+.white-key {
+  flex: 1;
+  height: 100%;
+  border: 1.5px solid var(--black);
+  border-radius: 0 0 4px 4px;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 5px;
+  font-size: 0.7em;
+  font-weight: 700;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  color: var(--black);
+}
+
+.white-key:hover {
+  background: #e8f0fe;
+}
+
+.white-key.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+.black-key {
+  position: absolute;
+  width: 11.5%;
+  height: 55%;
+  background: var(--black);
+  border-radius: 0 0 3px 3px;
+  z-index: 1;
+  top: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  font-size: 0.55em;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  color: var(--light-gray);
+  border: none;
+}
+
+.black-key:hover {
+  background: #2a2a3e;
+}
+
+.black-key.selected {
+  background: var(--primary);
+}
+
+.chromatic-grid {
+  display: none;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: 48px 48px;
+  width: calc(100vw - 24px);
+  max-width: 320px;
+  margin: 0 auto;
+  gap: 2px;
+}
+
+.chromatic-grid-item {
+  background: #fff;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.75em;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--black);
+}
+
+.chromatic-grid-item.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+.chromatic-grid-item.natural {
+  background: #fff;
+}
+
+.chromatic-grid-item.accidental {
+  background: var(--black);
+  color: var(--light-gray);
+}
+
+.chromatic-grid-item.accidental.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .black-key {
+    width: 14%;
+  }
+}
+
+@media (max-width: 359px) {
+  .piano-keyboard {
+    display: none;
+  }
+  .chromatic-grid {
+    display: grid;
+  }
+}
