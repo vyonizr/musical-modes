@@ -387,3 +387,257 @@ td {
     display: grid;
   }
 }
+
+/* Key Detector */
+
+.key-detector {
+  width: 95%;
+  max-width: 515px;
+  margin-bottom: 1em;
+}
+
+.key-detector-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+}
+
+.key-detector-toggle:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.key-detector-hint {
+  margin: 4px 0 0 4px;
+  font-size: 0.75em;
+  color: var(--disabled);
+}
+
+.key-detector-body {
+  margin-top: 12px;
+}
+
+.key-detector-section {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chord-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background: #fff;
+  color: var(--black);
+  min-height: 44px;
+}
+
+.chord-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.chord-input::placeholder {
+  color: var(--disabled);
+  opacity: 0.7;
+}
+
+.remove-section-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--disabled);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--disabled);
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-section-btn:hover {
+  border-color: var(--ionian);
+  color: var(--ionian);
+}
+
+.add-section-btn,
+.detect-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 700;
+  font-family: inherit;
+  min-height: 44px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.add-section-btn {
+  border: 1.5px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+}
+
+.add-section-btn:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.detect-btn {
+  border: 1.5px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.detect-btn:hover {
+  opacity: 0.9;
+}
+
+.detection-results {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.detection-disclaimer {
+  margin: 0 0 12px 0;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: #856404;
+}
+
+.detection-heading {
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.detection-result-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-family: inherit;
+  min-height: 44px;
+  text-align: left;
+}
+
+.detection-result-btn.primary-result {
+  background: var(--primary);
+  color: #fff;
+}
+
+.detection-result-btn.primary-result:hover {
+  opacity: 0.9;
+}
+
+.detection-result-btn:not(.primary-result):hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.detection-empty {
+  color: var(--disabled);
+  font-size: 0.9em;
+}
+
+.detection-result-group {
+  margin-bottom: 12px;
+}
+
+.detection-result-group:last-child {
+  margin-bottom: 0;
+}
+
+.detection-breakdown {
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.detection-section {
+  margin-bottom: 6px;
+}
+
+.detection-section-label {
+  font-size: 0.75em;
+  font-weight: 700;
+  color: var(--disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.detection-section-label .tag-note {
+  text-transform: none;
+  font-weight: 400;
+  color: var(--primary);
+  opacity: 1;
+}
+
+.detection-chord-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.detection-chord-tag {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.tag-native {
+  background: #d4edda;
+  color: #155724;
+}
+
+.tag-borrowed {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.tag-non-diatonic {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.tag-note {
+  font-weight: 400;
+  font-size: 0.85em;
+  opacity: 0.8;
+  white-space: nowrap;
+}
