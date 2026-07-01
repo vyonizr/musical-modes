@@ -176,6 +176,14 @@ export default function Home() {
         (m) => activeModesRef.current.includes(m.name)
       );
 
+    const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
+      pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+        triggerReleaseChord(chordName, oldFlavour);
+        triggerAttackChord(chordName, nextFlavour);
+        pressedChordsRef.current.set(chordName, nextFlavour);
+      });
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       if (isTextInput(e.target)) return;
@@ -185,11 +193,7 @@ export default function Home() {
       if (flavour) {
         sevenFlavourRef.current = flavour;
         setActiveFlavour(flavour);
-        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-          triggerReleaseChord(chordName, oldFlavour);
-          triggerAttackChord(chordName, flavour);
-          pressedChordsRef.current.set(chordName, flavour);
-        });
+        retriggerHeldChords(flavour);
         return;
       }
 
@@ -218,11 +222,7 @@ export default function Home() {
       if (rawKey in MODIFIER_KEYS) {
         sevenFlavourRef.current = undefined;
         setActiveFlavour(undefined);
-        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-          triggerReleaseChord(chordName, oldFlavour);
-          triggerAttackChord(chordName, undefined);
-          pressedChordsRef.current.set(chordName, undefined);
-        });
+        retriggerHeldChords(undefined);
         return;
       }
 

@@ -1,24 +1,5 @@
 import * as Tone from "tone";
-
-const ROOT_TO_SEMITONE: Record<string, number> = {
-  C: 0,
-  "C♯": 1,
-  "D♭": 1,
-  D: 2,
-  "D♯": 3,
-  "E♭": 3,
-  E: 4,
-  F: 5,
-  "F♯": 6,
-  "G♭": 6,
-  G: 7,
-  "G♯": 8,
-  "A♭": 8,
-  A: 9,
-  "A♯": 10,
-  "B♭": 10,
-  B: 11,
-};
+import { NOTE_TO_SEMITONE } from "./constants";
 
 const SEMITONE_TO_NOTE = [
   "C",
@@ -135,7 +116,7 @@ export function chordToNotes(
   flavour?: ChordFlavor
 ): string[] {
   const { root, quality } = parseChord(chordName);
-  let rootMidi = ROOT_TO_SEMITONE[root] + 36;
+  let rootMidi = NOTE_TO_SEMITONE[root] + 36;
   const compact = rootMidi < 40; // C, C#, D, D# fall below guitar low-E string
   if (compact) rootMidi += 12;
 
