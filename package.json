@@ -26,6 +26,9 @@
     "prettier": "2.8.7",
     "typescript": "^5"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "overrides": {
     "serialize-javascript": ">=7.0.5",
     "postcss": ">=8.5.10"
