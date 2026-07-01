@@ -77,6 +77,11 @@ const TOUR_STEPS: Step[] = [
       </span>
     ),
   },
+  {
+    target: ".key-detector-toggle",
+    content:
+      "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
+  },
 ];
 
 const MODIFIER_KEYS: Record<string, ChordFlavor> = {
@@ -535,7 +540,7 @@ export default function Home() {
               {detectionResults && detectionResults.length > 0 && (
                 <div className="detection-results">
                   <p className="detection-disclaimer">
-                    Best guess based on chord matching, not a definitive
+                    Based on chord matching, not a definitive
                     analysis
                   </p>
                   {(() => {
