@@ -3,7 +3,7 @@ import Head from 'next/head'
 import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 
 import { generateModes } from '../utils'
-import { KEYS, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
+import { KEYS, KEYS_SHARP, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
 import { Mode } from '../utils/types'
 import {
   triggerAttackChord,
@@ -34,6 +34,14 @@ const TOUR_STEPS: Step[] = [
     content:
       'Your keyboard maps to the chords too — Q through U for the top row, A through J for the second, Z through M for the third.',
   },
+  {
+    target: '#modifier-hint',
+    content: (
+      <span>
+        On desktop, hold <code>,</code> or <code>.</code> for 7th chords and <code>k</code> or <code>l</code> for sus chords while pressing a chord key.
+      </span>
+    ),
+  },
 ]
 
 function isTextInput(target: EventTarget | null): boolean {
@@ -47,6 +55,7 @@ function isTextInput(target: EventTarget | null): boolean {
 export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]])
+  const [preferSharp, setPreferSharp] = useState(false)
 
   const [tourRun, setTourRun] = useState(false)
   const [tourStepIndex, setTourStepIndex] = useState(0)
@@ -61,6 +70,7 @@ export default function Home() {
   const pressedChordsRef = useRef(
     new Map<string, ChordFlavor | undefined>()
   )
+  const preferSharpRef = useRef(preferSharp)
 
   useEffect(() => {
     if (!localStorage.getItem('musical-modes-tour-seen')) {
@@ -83,19 +93,25 @@ export default function Home() {
       const parsed = urlModes.split(',').filter(m => COLOR_CLASSNAMES.includes(m))
       if (parsed.length > 0) setActiveModes(parsed)
     }
+
+    if (params.get('acc') === 'sharp') {
+      setPreferSharp(true)
+    }
   }, [])
 
   useEffect(() => {
     const params = new URLSearchParams()
     params.set('key', selectedScale.replace('♭', 'b'))
     params.set('modes', activeModes.join(','))
+    params.set('acc', preferSharp ? 'sharp' : 'flat')
     history.replaceState(null, '', '?' + params.toString())
-  }, [selectedScale, activeModes])
+  }, [selectedScale, activeModes, preferSharp])
 
   useEffect(() => {
     selectedScaleRef.current = selectedScale
     activeModesRef.current = activeModes
-  }, [selectedScale, activeModes])
+    preferSharpRef.current = preferSharp
+  }, [selectedScale, activeModes, preferSharp])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -106,26 +122,46 @@ export default function Home() {
       if (rawKey === ',') {
         sevenFlavourRef.current = 'flat7'
         setActiveFlavour('flat7')
+        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+          triggerReleaseChord(chordName, oldFlavour)
+          triggerAttackChord(chordName, 'flat7')
+          pressedChordsRef.current.set(chordName, 'flat7')
+        })
         return
       }
       if (rawKey === '.') {
         sevenFlavourRef.current = 'maj7'
         setActiveFlavour('maj7')
+        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+          triggerReleaseChord(chordName, oldFlavour)
+          triggerAttackChord(chordName, 'maj7')
+          pressedChordsRef.current.set(chordName, 'maj7')
+        })
         return
       }
       if (rawKey === 'k') {
         sevenFlavourRef.current = 'sus2'
         setActiveFlavour('sus2')
+        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+          triggerReleaseChord(chordName, oldFlavour)
+          triggerAttackChord(chordName, 'sus2')
+          pressedChordsRef.current.set(chordName, 'sus2')
+        })
         return
       }
       if (rawKey === 'l') {
         sevenFlavourRef.current = 'sus4'
         setActiveFlavour('sus4')
+        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+          triggerReleaseChord(chordName, oldFlavour)
+          triggerAttackChord(chordName, 'sus4')
+          pressedChordsRef.current.set(chordName, 'sus4')
+        })
         return
       }
 
       const key = e.key.toUpperCase()
-      const modes = generateModes(selectedScaleRef.current)
+      const modes = generateModes(selectedScaleRef.current, preferSharpRef.current)
       const activeModeNames = activeModesRef.current
       const activeModesData = modes.filter((m) =>
         activeModeNames.includes(m.name)
@@ -153,11 +189,16 @@ export default function Home() {
       if (rawKey === ',' || rawKey === '.' || rawKey === 'k' || rawKey === 'l') {
         sevenFlavourRef.current = undefined
         setActiveFlavour(undefined)
+        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
+          triggerReleaseChord(chordName, oldFlavour)
+          triggerAttackChord(chordName, undefined)
+          pressedChordsRef.current.set(chordName, undefined)
+        })
         return
       }
 
       const key = e.key.toUpperCase()
-      const modes = generateModes(selectedScaleRef.current)
+      const modes = generateModes(selectedScaleRef.current, preferSharpRef.current)
       const activeModeNames = activeModesRef.current
       const activeModesData = modes.filter((m) =>
         activeModeNames.includes(m.name)
@@ -256,10 +297,13 @@ export default function Home() {
             >
               {KEYS.map((pianoKey: string, index: number) => (
                 <option key={index} value={pianoKey}>
-                  {pianoKey}
+                  {preferSharp ? KEYS_SHARP[index] : pianoKey}
                 </option>
               ))}
             </select>
+            <button onClick={() => setPreferSharp(p => !p)}>
+              {preferSharp ? '♯' : '♭'}
+            </button>
           </div>
         </div>
         <div className='table-container'>
@@ -273,7 +317,7 @@ export default function Home() {
               <table>
                 {(() => {
                   let activeRowCount = 0
-                  return generateModes(selectedScale).map(
+                  return generateModes(selectedScale, preferSharp).map(
                     (mode: Mode, index: number) => (
                       <Fragment key={index}>
                         {isModeActive(mode.name) && (
@@ -293,6 +337,9 @@ export default function Home() {
             </Fragment>
           )}
         </div>
+        <p id='modifier-hint' className='black' style={{ marginTop: '0.25rem' }}>
+          Hold <code>,</code> &middot; <code>.</code> &middot; <code>k</code> &middot; <code>l</code> for 7th / sus chords
+        </p>
         <p className='black' style={{ marginTop: '1rem' }}>
           Toggle modes
         </p>

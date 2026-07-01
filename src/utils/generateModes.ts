@@ -2,9 +2,9 @@ import isStringInArray from './isStringInArray'
 import modulo from './modulo'
 import { Mode } from './types'
 
-import { KEYS, MODES_LIST } from './constants'
+import { KEYS, KEYS_SHARP, MODES_LIST, NOTE_TO_SEMITONE } from './constants'
 
-const generateModes = (scale: string = 'C') => {
+const generateModes = (scale: string = 'C', preferSharp = false) => {
   const ionianShifter = (mode = 'ionian'): string[] => {
     const intervals = ['W', 'W', 'H', 'W', 'W', 'W', 'H']
 
@@ -65,23 +65,8 @@ const generateModes = (scale: string = 'C') => {
     let finalKey = currentKey
 
     if (isStringInArray(property, 'sharp')) {
-      let keyIndex = KEYS.findIndex((key) => key === currentKey)
-      let alteredIndex = modulo(keyIndex - 1, KEYS.length)
-
-      if (KEYS[alteredIndex].search('♭') !== -1) {
-        finalKey = KEYS[alteredIndex].replace('♭', '')
-      } else {
-        switch (KEYS[alteredIndex]) {
-          case 'B':
-            finalKey = 'C'
-            break
-          case 'E':
-            finalKey = 'F'
-            break
-          default:
-            finalKey = KEYS[alteredIndex] + '♯'
-        }
-      }
+      const semitone = modulo(NOTE_TO_SEMITONE[currentKey] - 1, 12)
+      finalKey = preferSharp ? KEYS_SHARP[semitone] : KEYS[semitone]
     }
 
     if (isStringInArray(property, 'minor')) {
@@ -101,6 +86,7 @@ const generateModes = (scale: string = 'C') => {
       W: 2,
     }
     const intervals = ionianShifter(mode)
+    const activeKeys = preferSharp ? KEYS_SHARP : KEYS
     const keyIndex = KEYS.findIndex((scale) => scale === usedScale)
     let currentIndex = keyIndex
 
@@ -108,7 +94,7 @@ const generateModes = (scale: string = 'C') => {
 
     for (let i = 0; i < intervals.length; i++) {
       const interval = intervals[i]
-      const currentKey = KEYS[modulo(currentIndex, KEYS.length)]
+      const currentKey = activeKeys[modulo(currentIndex, activeKeys.length)]
       const usedMode = MODES_LIST[mode].chords_quality
       const chord = parserKey(
         usedMode[modulo(i, usedMode.length)].split(' '),

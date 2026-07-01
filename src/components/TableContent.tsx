@@ -45,6 +45,9 @@ const TableContent = ({
             onMouseDown={() => triggerAttackChord(chord, activeFlavour)}
             onMouseUp={() => triggerReleaseChord(chord, activeFlavour)}
             onMouseLeave={() => triggerReleaseChord(chord, activeFlavour)}
+            onTouchStart={(e) => { e.preventDefault(); triggerAttackChord(chord, activeFlavour) }}
+            onTouchEnd={() => triggerReleaseChord(chord, activeFlavour)}
+            onTouchCancel={() => triggerReleaseChord(chord, activeFlavour)}
           >
             <div className='chord-container'>
               <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>

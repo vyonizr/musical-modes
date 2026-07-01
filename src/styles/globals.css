@@ -93,3 +93,12 @@ label {
   justify-content: center;
   align-items: center;
 }
+
+#modifier-hint {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  #modifier-hint {
+    display: block;
+  }
+}
