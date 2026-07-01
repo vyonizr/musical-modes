@@ -467,7 +467,7 @@ export default function Home() {
             {keyDetectorOpen ? "\u25B4" : "\u25BE"}
           </button>
           <p className="key-detector-hint">
-            ⚠️ Experimental &mdash; best-guess detection for major and minor
+            ⚠️ Experimental &mdash; best-guess detection for ionian and aeolian
             keys only
           </p>
           {keyDetectorOpen && (
