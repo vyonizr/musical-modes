@@ -128,3 +128,24 @@ export const KEY_ROWS = [
   ['A', 'S', 'D', 'F', 'G', 'H', 'J'],
   ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
 ]
+
+export const PIANO_WHITE_KEYS = [
+  { index: 0, label: 'C' },
+  { index: 2, label: 'D' },
+  { index: 4, label: 'E' },
+  { index: 5, label: 'F' },
+  { index: 7, label: 'G' },
+  { index: 9, label: 'A' },
+  { index: 11, label: 'B' },
+]
+
+export const PIANO_BLACK_KEYS = [
+  { index: 1, left: '8.5%' },
+  { index: 3, left: '22.8%' },
+  { index: 6, left: '51.3%' },
+  { index: 8, left: '65.6%' },
+  { index: 10, left: '79.8%' },
+]
+
+export const CHROMATIC_ROW1 = [0, 2, 4, 5, 7, 9, 11]
+export const CHROMATIC_ROW2 = [1, 3, null, 6, 8, 10, null]

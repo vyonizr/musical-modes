@@ -1,8 +1,8 @@
-import isStringInArray from './isStringInArray'
-import modulo from './modulo'
 import { Mode } from './types'
 
 import { KEYS, KEYS_SHARP, MODES_LIST, NOTE_TO_SEMITONE } from './constants'
+
+const modulo = (dividend: number, divisor: number) => ((dividend % divisor) + divisor) % divisor
 
 const generateModes = (scale: string = 'C', preferSharp = false) => {
   const ionianShifter = (mode = 'ionian'): string[] => {
@@ -22,9 +22,9 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
 
   const sharpOrFlat = (property: string[] = []): string => {
     let result = ''
-    if (isStringInArray(property, 'flat')) {
+    if (property.includes('flat')) {
       result += '♭'
-    } else if (isStringInArray(property, 'sharp')) {
+    } else if (property.includes('sharp')) {
       result += '♯'
     }
     return result
@@ -36,13 +36,13 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
 
     numeral += sharpOrFlat(property)
 
-    if (isStringInArray(property, 'major')) {
+    if (property.includes('major')) {
       numeral += romanKeys[index].toUpperCase()
     } else {
       numeral += romanKeys[index]
     }
 
-    if (isStringInArray(property, 'diminished')) {
+    if (property.includes('diminished')) {
       numeral += '°'
     }
 
@@ -64,16 +64,16 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
   const parserKey = (property: string[] = [], currentKey = 'C'): string => {
     let finalKey = currentKey
 
-    if (isStringInArray(property, 'sharp')) {
+    if (property.includes('sharp')) {
       const semitone = modulo(NOTE_TO_SEMITONE[currentKey] - 1, 12)
       finalKey = preferSharp ? KEYS_SHARP[semitone] : KEYS[semitone]
     }
 
-    if (isStringInArray(property, 'minor')) {
+    if (property.includes('minor')) {
       finalKey += 'm'
     }
 
-    if (isStringInArray(property, 'diminished')) {
+    if (property.includes('diminished')) {
       finalKey += 'dim'
     }
 

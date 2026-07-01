@@ -1,9 +1,9 @@
-import { Fragment, useState, useEffect, useRef, useCallback } from 'react'
+import { Fragment, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Head from 'next/head'
 import { Joyride, Step, STATUS, EVENTS, EventData } from 'react-joyride'
 
 import { generateModes } from '../utils'
-import { KEYS, KEYS_SHARP, COLOR_CLASSNAMES, KEY_ROWS } from '../utils/constants'
+import { KEYS, KEYS_SHARP, COLOR_CLASSNAMES, KEY_ROWS, PIANO_WHITE_KEYS, PIANO_BLACK_KEYS, CHROMATIC_ROW1, CHROMATIC_ROW2 } from '../utils/constants'
 import { Mode } from '../utils/types'
 import {
   triggerAttackChord,
@@ -16,8 +16,16 @@ import TableContent from '../components/TableContent'
 const TOUR_STEPS: Step[] = [
   {
     target: '#modes',
-    content: 'Pick a root key. All chords on the page will update to match.',
+    content: 'Tap a note on the keyboard to set the root key. Every chord on the page updates to match.',
     skipBeacon: true,
+  },
+  {
+    target: '.accidental-toggle',
+    content: (
+      <span>
+        Switch between flat (<code>♭</code>) and sharp (<code>♯</code>) spelling for accidental notes — same sound, different notation.
+      </span>
+    ),
   },
   {
     target: '.legends-wrapper',
@@ -31,39 +39,23 @@ const TOUR_STEPS: Step[] = [
   },
   {
     target: 'table',
-    content:
-      'Your keyboard maps to the chords too — Q through U for the top row, A through J for the second, Z through M for the third.',
+    content: (
+      <span>
+        Your keyboard maps to the chords too — <code>Q</code> through <code>U</code> for the top row, <code>A</code> through <code>J</code> for the second, <code>Z</code> through <code>M</code> for the third.
+      </span>
+    ),
   },
   {
     target: '#modifier-hint',
     content: (
       <span>
-        On desktop, hold <code>,</code> or <code>.</code> for 7th chords and <code>k</code> or <code>l</code> for sus chords while pressing a chord key.
+        Hold <code>,</code> or <code>.</code> for 7th chords; <code>k</code> or <code>l</code> for sus chords. You can press a modifier before or after a chord key — hold a chord and add the modifier to hear it transform instantly.
       </span>
     ),
   },
 ]
 
-const PIANO_WHITE_KEYS = [
-  { index: 0, label: 'C' },
-  { index: 2, label: 'D' },
-  { index: 4, label: 'E' },
-  { index: 5, label: 'F' },
-  { index: 7, label: 'G' },
-  { index: 9, label: 'A' },
-  { index: 11, label: 'B' },
-]
-
-const PIANO_BLACK_KEYS = [
-  { index: 1, left: '8.5%' },
-  { index: 3, left: '22.8%' },
-  { index: 6, left: '51.3%' },
-  { index: 8, left: '65.6%' },
-  { index: 10, left: '79.8%' },
-]
-
-const CHROMATIC_ROW1 = [0, 2, 4, 5, 7, 9, 11]
-const CHROMATIC_ROW2 = [1, 3, null, 6, 8, 10, null]
+const MODIFIER_KEYS: Record<string, ChordFlavor> = { ',': 'flat7', '.': 'maj7', k: 'sus2', l: 'sus4' }
 
 function isTextInput(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false
@@ -77,6 +69,7 @@ export default function Home() {
   const [selectedScale, setSelectedScale] = useState('C')
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]])
   const [preferSharp, setPreferSharp] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
 
   const [tourRun, setTourRun] = useState(false)
   const [tourStepIndex, setTourStepIndex] = useState(0)
@@ -92,6 +85,10 @@ export default function Home() {
     new Map<string, ChordFlavor | undefined>()
   )
   const preferSharpRef = useRef(preferSharp)
+
+  useEffect(() => {
+    setIsTouchDevice(!window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+  }, [])
 
   useEffect(() => {
     if (!localStorage.getItem('musical-modes-tour-seen')) {
@@ -135,58 +132,29 @@ export default function Home() {
   }, [selectedScale, activeModes, preferSharp])
 
   useEffect(() => {
+    const getActiveModes = () =>
+      generateModes(selectedScaleRef.current, preferSharpRef.current)
+        .filter(m => activeModesRef.current.includes(m.name))
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return
       if (isTextInput(e.target)) return
 
       const rawKey = e.key
-      if (rawKey === ',') {
-        sevenFlavourRef.current = 'flat7'
-        setActiveFlavour('flat7')
+      const flavour = MODIFIER_KEYS[rawKey]
+      if (flavour) {
+        sevenFlavourRef.current = flavour
+        setActiveFlavour(flavour)
         pressedChordsRef.current.forEach((oldFlavour, chordName) => {
           triggerReleaseChord(chordName, oldFlavour)
-          triggerAttackChord(chordName, 'flat7')
-          pressedChordsRef.current.set(chordName, 'flat7')
-        })
-        return
-      }
-      if (rawKey === '.') {
-        sevenFlavourRef.current = 'maj7'
-        setActiveFlavour('maj7')
-        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-          triggerReleaseChord(chordName, oldFlavour)
-          triggerAttackChord(chordName, 'maj7')
-          pressedChordsRef.current.set(chordName, 'maj7')
-        })
-        return
-      }
-      if (rawKey === 'k') {
-        sevenFlavourRef.current = 'sus2'
-        setActiveFlavour('sus2')
-        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-          triggerReleaseChord(chordName, oldFlavour)
-          triggerAttackChord(chordName, 'sus2')
-          pressedChordsRef.current.set(chordName, 'sus2')
-        })
-        return
-      }
-      if (rawKey === 'l') {
-        sevenFlavourRef.current = 'sus4'
-        setActiveFlavour('sus4')
-        pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-          triggerReleaseChord(chordName, oldFlavour)
-          triggerAttackChord(chordName, 'sus4')
-          pressedChordsRef.current.set(chordName, 'sus4')
+          triggerAttackChord(chordName, flavour)
+          pressedChordsRef.current.set(chordName, flavour)
         })
         return
       }
 
       const key = e.key.toUpperCase()
-      const modes = generateModes(selectedScaleRef.current, preferSharpRef.current)
-      const activeModeNames = activeModesRef.current
-      const activeModesData = modes.filter((m) =>
-        activeModeNames.includes(m.name)
-      )
+      const activeModesData = getActiveModes()
 
       for (let row = 0; row < KEY_ROWS.length; row++) {
         const col = KEY_ROWS[row].indexOf(key)
@@ -207,7 +175,7 @@ export default function Home() {
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const rawKey = e.key
-      if (rawKey === ',' || rawKey === '.' || rawKey === 'k' || rawKey === 'l') {
+      if (rawKey in MODIFIER_KEYS) {
         sevenFlavourRef.current = undefined
         setActiveFlavour(undefined)
         pressedChordsRef.current.forEach((oldFlavour, chordName) => {
@@ -219,11 +187,7 @@ export default function Home() {
       }
 
       const key = e.key.toUpperCase()
-      const modes = generateModes(selectedScaleRef.current, preferSharpRef.current)
-      const activeModeNames = activeModesRef.current
-      const activeModesData = modes.filter((m) =>
-        activeModeNames.includes(m.name)
-      )
+      const activeModesData = getActiveModes()
 
       for (let row = 0; row < KEY_ROWS.length; row++) {
         const col = KEY_ROWS[row].indexOf(key)
@@ -257,22 +221,10 @@ export default function Home() {
     }
   }, [])
 
-  const toggleActiveMode = (modeName: string): void => {
-    const updatedActiveModes = [...activeModes]
-    if (updatedActiveModes.some((activeMode) => activeMode === modeName)) {
-      const filtered = updatedActiveModes.filter(
-        (activeMode) => activeMode !== modeName
-      )
-      setActiveModes(filtered)
-    } else {
-      updatedActiveModes.push(modeName)
-      setActiveModes(updatedActiveModes)
-    }
-  }
-
-  const isModeActive = (modeName: string): boolean => {
-    return activeModes.some((activeMode) => activeMode === modeName)
-  }
+  const toggleActiveMode = (modeName: string) =>
+    setActiveModes(prev =>
+      prev.includes(modeName) ? prev.filter(m => m !== modeName) : [...prev, modeName]
+    )
 
   const handleJoyrideEvent = useCallback((data: EventData) => {
     const { action, index, status, type } = data
@@ -289,6 +241,13 @@ export default function Home() {
     setTourRun(true)
     setTourStepIndex(0)
   }
+
+  const visibleSteps = useMemo(() => {
+    if (isTouchDevice) {
+      return TOUR_STEPS.filter(s => s.target !== '#modifier-hint')
+    }
+    return TOUR_STEPS
+  }, [isTouchDevice])
 
   return (
     <div>
@@ -384,7 +343,7 @@ export default function Home() {
                   return generateModes(selectedScale, preferSharp).map(
                     (mode: Mode, index: number) => (
                       <Fragment key={index}>
-                        {isModeActive(mode.name) && (
+                        {activeModes.includes(mode.name) && (
                           <TableContent
                             mode={mode}
                             index={index}
@@ -412,7 +371,7 @@ export default function Home() {
             <div
               key={index}
               className={`bg-${
-                isModeActive(modeName) ? `${modeName} white` : 'disabled'
+                activeModes.includes(modeName) ? `${modeName} white` : 'disabled'
               } legends-items max-content pointer noselect`}
               onClick={() => toggleActiveMode(modeName)}
             >
@@ -448,7 +407,7 @@ export default function Home() {
         </footer>
       </main>
       <Joyride
-        steps={TOUR_STEPS}
+        steps={visibleSteps}
         run={tourRun}
         stepIndex={tourStepIndex}
         continuous
