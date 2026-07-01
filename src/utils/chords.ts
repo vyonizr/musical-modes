@@ -177,13 +177,15 @@ export function displaySusChordName(chordName: string, sus: "sus4" | "sus2"): st
 
 let synth: Tone.PolySynth | null = null;
 let reverb: Tone.Reverb | null = null;
+let limiter: Tone.Limiter | null = null;
 
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
-    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).toDestination();
+    limiter = new Tone.Limiter(-2).toDestination();
+    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(limiter);
     synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: "triangle" },
-      envelope: { attack: 0.002, decay: 0.8, sustain: 0.4, release: 1.2 },
+      envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: 1.2 },
     });
     // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
     synth.maxPolyphony = 64;
