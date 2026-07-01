@@ -9,7 +9,7 @@ import {
 import Head from "next/head";
 import { Joyride, Step, STATUS, EVENTS, EventData } from "react-joyride";
 
-import { generateModes, detectKey } from "../utils";
+import { generateModes, detectKey, isValidChordToken, parseSection } from "../utils";
 import { DetectionResult } from "../utils/detectKey";
 import {
   KEYS,
@@ -467,39 +467,52 @@ export default function Home() {
           </p>
           {keyDetectorOpen && (
             <div className="key-detector-body">
-              {detectorSections.map((section, si) => (
-                <div key={si} className="key-detector-section">
-                  <input
-                    type="text"
-                    className="chord-input"
-                    placeholder={`Section ${si + 1} chords (e.g. C G Am F)`}
-                    value={section}
-                    onChange={(e) => {
-                      const next = [...detectorSections];
-                      next[si] = e.target.value;
-                      setDetectorSections(next);
-                      setDetectionResults(null);
-                    }}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                  />
-                  {detectorSections.length > 1 && (
-                    <button
-                      className="remove-section-btn"
-                      onClick={() => {
-                        setDetectorSections((prev) =>
-                          prev.filter((_, i) => i !== si)
-                        );
-                        setDetectionResults(null);
-                      }}
-                      aria-label={`Remove section ${si + 1}`}
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
-              ))}
+              {detectorSections.map((section, si) => {
+                const tokens = parseSection(section)
+                const invalidTokens = tokens.filter(
+                  (t) => !isValidChordToken(t)
+                )
+                return (
+                  <div key={si}>
+                    <div className="key-detector-section">
+                      <input
+                        type="text"
+                        className={`chord-input${invalidTokens.length > 0 ? ' chord-input-invalid' : ''}`}
+                        placeholder={`Section ${si + 1} chords (e.g. C G Am F)`}
+                        value={section}
+                        onChange={(e) => {
+                          const next = [...detectorSections];
+                          next[si] = e.target.value;
+                          setDetectorSections(next);
+                          setDetectionResults(null);
+                        }}
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                      {detectorSections.length > 1 && (
+                        <button
+                          className="remove-section-btn"
+                          onClick={() => {
+                            setDetectorSections((prev) =>
+                              prev.filter((_, i) => i !== si)
+                            );
+                            setDetectionResults(null);
+                          }}
+                          aria-label={`Remove section ${si + 1}`}
+                        >
+                          &times;
+                        </button>
+                      )}
+                    </div>
+                    {invalidTokens.length > 0 && (
+                      <p className="chord-input-error">
+                        Not a chord: {invalidTokens.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
               <button
                 className="add-section-btn"
                 onClick={() => setDetectorSections((prev) => [...prev, ""])}
@@ -508,6 +521,10 @@ export default function Home() {
               </button>
               <button
                 className="detect-btn"
+                disabled={detectorSections.some((s) => {
+                  const tokens = parseSection(s)
+                  return tokens.some((t) => !isValidChordToken(t))
+                })}
                 onClick={() => {
                   const results = detectKey(detectorSections, preferSharp);
                   setDetectionResults(results);

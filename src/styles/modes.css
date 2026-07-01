@@ -453,6 +453,16 @@ td {
   opacity: 0.7;
 }
 
+.chord-input.chord-input-invalid {
+  border-color: var(--ionian);
+}
+
+.chord-input-error {
+  margin: 0 0 8px 4px;
+  font-size: 0.75em;
+  color: var(--ionian);
+}
+
 .remove-section-btn {
   width: 44px;
   height: 44px;
@@ -507,6 +517,11 @@ td {
 
 .detect-btn:hover {
   opacity: 0.9;
+}
+
+.detect-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .detection-results {

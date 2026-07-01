@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "concurrently -p none \"serwist build serwist.config.mjs --watch\" \"next dev\"",
     "build": "next build && serwist build serwist.config.mjs",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@serwist/next": "^9.5.11",
@@ -24,7 +26,8 @@
     "concurrently": "^10.0.3",
     "esbuild": "^0.28.1",
     "prettier": "2.8.7",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": "24.x"

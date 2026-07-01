@@ -13,6 +13,7 @@ export interface SectionAnalysis {
   sectionIndex: number
   chords: string[]
   distinctChords: string[]
+  invalidChords: string[]
   matches: ChordMatch[]
   score: number
   cadentialMatch: boolean
@@ -65,7 +66,11 @@ function chordInSet(chord: string, set: string[]): boolean {
   return set.some((c) => chordsEquivalent(c, chord))
 }
 
-function parseSection(raw: string): string[] {
+export function isValidChordToken(token: string): boolean {
+  return chordSemitoneQuality(token) !== null
+}
+
+export function parseSection(raw: string): string[] {
   return raw
     .split(/[\s,]+/)
     .map((s) => s.trim())
@@ -136,7 +141,18 @@ export function detectKey(
 
       for (let si = 0; si < parsedSections.length; si++) {
         const chords = parsedSections[si]
-        const distinctChords = getDistinct(chords)
+        const validChords: string[] = []
+        const invalidChords: string[] = []
+
+        for (const chord of chords) {
+          if (isValidChordToken(chord)) {
+            validChords.push(chord)
+          } else {
+            invalidChords.push(chord)
+          }
+        }
+
+        const distinctChords = getDistinct(validChords)
         const matches: ChordMatch[] = []
         let sectionScore = 0
 
@@ -173,6 +189,7 @@ export function detectKey(
           sectionIndex: si,
           chords,
           distinctChords,
+          invalidChords,
           matches,
           score: sectionScore,
           cadentialMatch,
