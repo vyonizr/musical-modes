@@ -9,7 +9,12 @@ import {
 import Head from "next/head";
 import { Joyride, Step, STATUS, EVENTS, EventData } from "react-joyride";
 
-import { generateModes, detectKey, isValidChordToken, parseSection } from "../utils";
+import {
+  generateModes,
+  detectKey,
+  isValidChordToken,
+  parseSection,
+} from "../utils";
 import { DetectionResult } from "../utils/detectKey";
 import {
   KEYS,
@@ -473,16 +478,18 @@ export default function Home() {
           {keyDetectorOpen && (
             <div className="key-detector-body">
               {detectorSections.map((section, si) => {
-                const tokens = parseSection(section)
+                const tokens = parseSection(section);
                 const invalidTokens = tokens.filter(
                   (t) => !isValidChordToken(t)
-                )
+                );
                 return (
                   <div key={si}>
                     <div className="key-detector-section">
                       <input
                         type="text"
-                        className={`chord-input${invalidTokens.length > 0 ? ' chord-input-invalid' : ''}`}
+                        className={`chord-input${
+                          invalidTokens.length > 0 ? " chord-input-invalid" : ""
+                        }`}
                         placeholder={`Section ${si + 1} chords (e.g. C G Am F)`}
                         value={section}
                         onChange={(e) => {
@@ -512,11 +519,11 @@ export default function Home() {
                     </div>
                     {invalidTokens.length > 0 && (
                       <p className="chord-input-error">
-                        Not a chord: {invalidTokens.join(', ')}
+                        Not a chord: {invalidTokens.join(", ")}
                       </p>
                     )}
                   </div>
-                )
+                );
               })}
               <button
                 className="add-section-btn"
@@ -527,8 +534,8 @@ export default function Home() {
               <button
                 className="detect-btn"
                 disabled={detectorSections.some((s) => {
-                  const tokens = parseSection(s)
-                  return tokens.some((t) => !isValidChordToken(t))
+                  const tokens = parseSection(s);
+                  return tokens.some((t) => !isValidChordToken(t));
                 })}
                 onClick={() => {
                   const results = detectKey(detectorSections, preferSharp);
@@ -540,8 +547,7 @@ export default function Home() {
               {detectionResults && detectionResults.length > 0 && (
                 <div className="detection-results">
                   <p className="detection-disclaimer">
-                    Based on chord matching, not a definitive
-                    analysis
+                    Based on chord matching, not a definitive analysis
                   </p>
                   {(() => {
                     const topScore = detectionResults[0].totalScore;
@@ -636,7 +642,7 @@ export default function Home() {
           )}
         </div>
         <footer>
-          © {new Date().getFullYear()}{" "}
+          © 2020-{new Date().getFullYear()}{" "}
           <a
             href="https://vyonizr.com/"
             target="_blank"
