@@ -468,7 +468,7 @@ export default function Home() {
           </button>
           <p className="key-detector-hint">
             ⚠️ Experimental &mdash; best-guess detection for ionian and aeolian
-            keys only
+            modes only
           </p>
           {keyDetectorOpen && (
             <div className="key-detector-body">
