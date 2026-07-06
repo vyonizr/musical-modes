@@ -171,3 +171,23 @@ describe('detectKey first-chord and resolution bonuses', () => {
     )
   })
 })
+
+describe('detectKey dorian and mixolydian candidates', () => {
+  it('includes dorian and mixolydian among the candidate modes', () => {
+    const results = detectKey(['G'])
+    const modesPresent = new Set(results.map((r) => r.mode))
+
+    expect(modesPresent.has('dorian')).toBe(true)
+    expect(modesPresent.has('mixolydian')).toBe(true)
+  })
+
+  it('scores a bVII-IV-I mixolydian vamp higher for the mixolydian tonic than the ionian reading of the same root', () => {
+    const results = detectKey(['G F C G'])
+    const gMixolydian = results.find(
+      (r) => r.root === 'G' && r.mode === 'mixolydian'
+    )!
+    const gIonian = results.find((r) => r.root === 'G' && r.mode === 'ionian')!
+
+    expect(gMixolydian.totalScore).toBeGreaterThan(gIonian.totalScore)
+  })
+})

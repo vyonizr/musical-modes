@@ -32,20 +32,28 @@ export interface DetectionResult {
 const WEIGHTS = [3, 1, 1, 2.5, 2, 1.5, 0.5]
 const BORROWED_WEIGHT = 0.5
 
-const MODE_CANDIDATES = ['ionian', 'aeolian'] as const
+const MODE_CANDIDATES = ['ionian', 'aeolian', 'dorian', 'mixolydian'] as const
 type ModeCandidate = (typeof MODE_CANDIDATES)[number]
 
 const PARALLEL_MODE: Record<ModeCandidate, ModeCandidate> = {
   ionian: 'aeolian',
   aeolian: 'ionian',
+  dorian: 'aeolian',
+  mixolydian: 'ionian',
 }
 
 const MODE_LABELS: Record<ModeCandidate, string> = {
   ionian: 'major',
   aeolian: 'minor',
+  dorian: 'dorian',
+  mixolydian: 'mixolydian',
 }
 
-const MINOR_QUALITY_MODES = new Set<ModeCandidate>(['aeolian'])
+const MODE_WEIGHT_OVERRIDES: Partial<Record<ModeCandidate, Record<number, number>>> = {
+  mixolydian: { 6: 1.5 },
+}
+
+const MINOR_QUALITY_MODES = new Set<ModeCandidate>(['aeolian', 'dorian'])
 
 interface ChordWeight {
   weight: number
@@ -120,11 +128,14 @@ function buildWeightMap(
   allModesFlat: Mode[]
 ): Map<string, ChordWeight> {
   const weightMap = new Map<string, ChordWeight>()
+  const overrides = MODE_WEIGHT_OVERRIDES[mode]
 
   const candidate = allModesFlat.find((m) => m.name === mode)!
   for (let i = 0; i < candidate.chords.length; i++) {
     const key = canonicalKey(candidate.chords[i])
-    if (key) weightMap.set(key, { weight: WEIGHTS[i], borrowed: false })
+    if (key) {
+      weightMap.set(key, { weight: overrides?.[i] ?? WEIGHTS[i], borrowed: false })
+    }
   }
 
   const parallelMode = PARALLEL_MODE[mode]
