@@ -169,8 +169,16 @@ function scoreSection(
   }
 
   const distinctChords = getDistinct(validChords)
+
+  const counts = new Map<string, number>()
+  for (const chord of validChords) {
+    const key = canonicalKey(chord)
+    if (key) counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
   const matches: ChordMatch[] = []
   let weightedSum = 0
+  let prominenceSum = 0
 
   for (const chord of distinctChords) {
     const key = canonicalKey(chord)!
@@ -187,10 +195,12 @@ function scoreSection(
       nonDiatonic: !entry,
     })
 
-    weightedSum += weight
+    const prominence = Math.sqrt(counts.get(key) ?? 1)
+    weightedSum += weight * prominence
+    prominenceSum += prominence
   }
 
-  let score = distinctChords.length > 0 ? weightedSum / distinctChords.length : 0
+  let score = prominenceSum > 0 ? weightedSum / prominenceSum : 0
 
   const lastChord = validChords[validChords.length - 1]
   const cadentialMatch =

@@ -119,3 +119,21 @@ describe('detectKey harmonic-minor cadence chords', () => {
     expect(eMatch.borrowed).toBe(false)
   })
 })
+
+describe('detectKey chord-occurrence weighting', () => {
+  it('weights a repeated tonic more than a single occurrence', () => {
+    const repeated = detectKey(['C C C C G'])
+    const single = detectKey(['C G'])
+
+    const repeatedCandidate = repeated.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const singleCandidate = single.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(repeatedCandidate.sections[0].score).toBeGreaterThan(
+      singleCandidate.sections[0].score
+    )
+  })
+})
