@@ -45,6 +45,8 @@ const MODE_LABELS: Record<ModeCandidate, string> = {
   aeolian: 'minor',
 }
 
+const MINOR_QUALITY_MODES = new Set<ModeCandidate>(['aeolian'])
+
 interface ChordWeight {
   weight: number
   borrowed: boolean
@@ -131,6 +133,14 @@ function buildWeightMap(
     const key = canonicalKey(parallel.chords[i])
     if (key && !weightMap.has(key)) {
       weightMap.set(key, { weight: BORROWED_WEIGHT, borrowed: true })
+    }
+  }
+
+  if (MINOR_QUALITY_MODES.has(mode)) {
+    const ionian = allModesFlat.find((m) => m.name === 'ionian')!
+    for (const i of [4, 6]) {
+      const key = canonicalKey(ionian.chords[i])
+      if (key) weightMap.set(key, { weight: WEIGHTS[i], borrowed: false })
     }
   }
 

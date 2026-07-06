@@ -108,3 +108,14 @@ describe('detectKey scale-degree weighting', () => {
     expect(strongCandidate.totalScore).toBeGreaterThan(weakCandidate.totalScore)
   })
 })
+
+describe('detectKey harmonic-minor cadence chords', () => {
+  it('treats the harmonic-minor V (raised leading tone) as native, not borrowed', () => {
+    const results = detectKey(['Am F E Am'])
+    const aMinor = results.find((r) => r.root === 'A' && r.mode === 'aeolian')!
+    const eMatch = aMinor.sections[0].matches.find((m) => m.chord === 'E')!
+
+    expect(eMatch.native).toBe(true)
+    expect(eMatch.borrowed).toBe(false)
+  })
+})
