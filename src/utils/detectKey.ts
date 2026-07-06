@@ -159,7 +159,9 @@ function scoreSection(
   chords: string[],
   weightMap: Map<string, ChordWeight>,
   parallelModeName: string,
-  tonicChord: string
+  tonicChord: string,
+  dominantChord: string,
+  ivChord: string
 ): ScoredSection {
   const validChords: string[] = []
   const invalidChords: string[] = []
@@ -202,10 +204,21 @@ function scoreSection(
 
   let score = prominenceSum > 0 ? weightedSum / prominenceSum : 0
 
-  const lastChord = validChords[validChords.length - 1]
+  if (validChords.length > 0) {
+    if (chordsEquivalent(validChords[0], tonicChord)) score += 0.5
+    if (chordsEquivalent(validChords[validChords.length - 1], tonicChord)) score += 1
+  }
+
+  for (let j = 0; j < validChords.length - 1; j++) {
+    const resolvesToTonic = chordsEquivalent(validChords[j + 1], tonicChord)
+    const fromDominant = chordsEquivalent(validChords[j], dominantChord)
+    const fromIv = chordsEquivalent(validChords[j], ivChord)
+    if (resolvesToTonic && (fromDominant || fromIv)) score += 1
+  }
+
   const cadentialMatch =
-    validChords.length > 0 && chordsEquivalent(lastChord, tonicChord)
-  if (cadentialMatch) score += 1
+    validChords.length > 0 &&
+    chordsEquivalent(validChords[validChords.length - 1], tonicChord)
 
   return { score, matches, distinctChords, invalidChords, cadentialMatch }
 }
@@ -229,6 +242,10 @@ export function detectKey(
       const weightMap = buildWeightMap(mode, allModesFlat)
       const candidate = allModesFlat.find((m) => m.name === mode)!
       const tonicChord = candidate.chords[0]
+      const ivChord = candidate.chords[3]
+      const dominantChord = MINOR_QUALITY_MODES.has(mode)
+        ? allModesFlat.find((m) => m.name === 'ionian')!.chords[4]
+        : candidate.chords[4]
       const parallelMode = PARALLEL_MODE[mode]
 
       const sectionAnalyses: SectionAnalysis[] = []
@@ -236,7 +253,14 @@ export function detectKey(
 
       for (let si = 0; si < parsedSections.length; si++) {
         const { score, matches, distinctChords, invalidChords, cadentialMatch } =
-          scoreSection(parsedSections[si], weightMap, parallelMode, tonicChord)
+          scoreSection(
+            parsedSections[si],
+            weightMap,
+            parallelMode,
+            tonicChord,
+            dominantChord,
+            ivChord
+          )
 
         totalScore += score
         sectionAnalyses.push({

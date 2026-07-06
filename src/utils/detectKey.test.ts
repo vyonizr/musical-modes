@@ -137,3 +137,37 @@ describe('detectKey chord-occurrence weighting', () => {
     )
   })
 })
+
+describe('detectKey first-chord and resolution bonuses', () => {
+  it('rewards a section that opens on the tonic', () => {
+    const opensOnTonic = detectKey(['C G Dm'])
+    const doesNotOpen = detectKey(['Dm C G'])
+
+    const opensCandidate = opensOnTonic.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const doesNotCandidate = doesNotOpen.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(opensCandidate.sections[0].score).toBeGreaterThan(
+      doesNotCandidate.sections[0].score
+    )
+  })
+
+  it('rewards a IV→I or V→I resolution occurring anywhere in a section, not only at the end', () => {
+    const withResolution = detectKey(['Dm F C Dm'])
+    const withoutResolution = detectKey(['Dm C F Dm'])
+
+    const withCandidate = withResolution.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const withoutCandidate = withoutResolution.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(withCandidate.sections[0].score).toBeGreaterThan(
+      withoutCandidate.sections[0].score
+    )
+  })
+})
