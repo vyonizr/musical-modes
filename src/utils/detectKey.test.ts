@@ -92,3 +92,19 @@ describe('detectKey with invalid tokens', () => {
     expect(section.distinctChords).toHaveLength(0)
   })
 })
+
+describe('detectKey scale-degree weighting', () => {
+  it('weights tonic/IV higher than ii/vii° even though both are fully diatonic', () => {
+    const strongTier = detectKey(['C F'])
+    const weakTier = detectKey(['Dm Bdim'])
+
+    const strongCandidate = strongTier.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const weakCandidate = weakTier.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(strongCandidate.totalScore).toBeGreaterThan(weakCandidate.totalScore)
+  })
+})

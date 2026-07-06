@@ -1,5 +1,6 @@
 import generateModes from './generateModes'
 import { KEYS, NOTE_TO_SEMITONE } from './constants'
+import { Mode } from './types'
 
 export interface ChordMatch {
   chord: string
@@ -26,6 +27,27 @@ export interface DetectionResult {
   totalScore: number
   hasBorrowed: boolean
   sections: SectionAnalysis[]
+}
+
+const WEIGHTS = [3, 1, 1, 2.5, 2, 1.5, 0.5]
+const BORROWED_WEIGHT = 0.5
+
+const MODE_CANDIDATES = ['ionian', 'aeolian'] as const
+type ModeCandidate = (typeof MODE_CANDIDATES)[number]
+
+const PARALLEL_MODE: Record<ModeCandidate, ModeCandidate> = {
+  ionian: 'aeolian',
+  aeolian: 'ionian',
+}
+
+const MODE_LABELS: Record<ModeCandidate, string> = {
+  ionian: 'major',
+  aeolian: 'minor',
+}
+
+interface ChordWeight {
+  weight: number
+  borrowed: boolean
 }
 
 function normalizeAccidental(s: string): string {
@@ -55,15 +77,16 @@ function chordSemitoneQuality(
   return { semitone, quality }
 }
 
+function canonicalKey(chord: string): string | null {
+  const parsed = chordSemitoneQuality(chord)
+  return parsed ? `${parsed.semitone}:${parsed.quality}` : null
+}
+
 function chordsEquivalent(a: string, b: string): boolean {
   const ca = chordSemitoneQuality(a)
   const cb = chordSemitoneQuality(b)
   if (!ca || !cb) return false
   return ca.semitone === cb.semitone && ca.quality === cb.quality
-}
-
-function chordInSet(chord: string, set: string[]): boolean {
-  return set.some((c) => chordsEquivalent(c, chord))
 }
 
 export function isValidChordToken(token: string): boolean {
@@ -81,8 +104,7 @@ function getDistinct(chords: string[]): string[] {
   const seen = new Set<string>()
   const result: string[] = []
   for (const c of chords) {
-    const canon = chordSemitoneQuality(c)
-    const key = canon ? `${canon.semitone}:${canon.quality}` : c
+    const key = canonicalKey(c) ?? c
     if (!seen.has(key)) {
       seen.add(key)
       result.push(c)
@@ -91,31 +113,81 @@ function getDistinct(chords: string[]): string[] {
   return result
 }
 
-function generateAllChordSets(root: string, mode: string): { native: string[]; parallel: string[] } {
-  const modesFlat = generateModes(root, false)
-  const modesSharp = generateModes(root, true)
+function buildWeightMap(
+  mode: ModeCandidate,
+  allModesFlat: Mode[]
+): Map<string, ChordWeight> {
+  const weightMap = new Map<string, ChordWeight>()
 
-  const candidateFlat = modesFlat.find((m) => m.name === mode)!
-  const candidateSharp = modesSharp.find((m) => m.name === mode)!
+  const candidate = allModesFlat.find((m) => m.name === mode)!
+  for (let i = 0; i < candidate.chords.length; i++) {
+    const key = canonicalKey(candidate.chords[i])
+    if (key) weightMap.set(key, { weight: WEIGHTS[i], borrowed: false })
+  }
 
-  const parallelMode = mode === 'ionian' ? 'aeolian' : 'ionian'
-  const paraFlat = modesFlat.find((m) => m.name === parallelMode)!
-  const paraSharp = modesSharp.find((m) => m.name === parallelMode)!
-
-  function unionSets(a: string[], b: string[]): string[] {
-    const result = [...a]
-    for (const chord of b) {
-      if (!result.some((c) => chordsEquivalent(c, chord))) {
-        result.push(chord)
-      }
+  const parallelMode = PARALLEL_MODE[mode]
+  const parallel = allModesFlat.find((m) => m.name === parallelMode)!
+  for (let i = 0; i < parallel.chords.length; i++) {
+    const key = canonicalKey(parallel.chords[i])
+    if (key && !weightMap.has(key)) {
+      weightMap.set(key, { weight: BORROWED_WEIGHT, borrowed: true })
     }
-    return result
   }
 
-  return {
-    native: unionSets(candidateFlat.chords, candidateSharp.chords),
-    parallel: unionSets(paraFlat.chords, paraSharp.chords),
+  return weightMap
+}
+
+interface ScoredSection {
+  score: number
+  matches: ChordMatch[]
+  distinctChords: string[]
+  invalidChords: string[]
+  cadentialMatch: boolean
+}
+
+function scoreSection(
+  chords: string[],
+  weightMap: Map<string, ChordWeight>,
+  parallelModeName: string,
+  tonicChord: string
+): ScoredSection {
+  const validChords: string[] = []
+  const invalidChords: string[] = []
+  for (const chord of chords) {
+    if (isValidChordToken(chord)) validChords.push(chord)
+    else invalidChords.push(chord)
   }
+
+  const distinctChords = getDistinct(validChords)
+  const matches: ChordMatch[] = []
+  let weightedSum = 0
+
+  for (const chord of distinctChords) {
+    const key = canonicalKey(chord)!
+    const entry = weightMap.get(key)
+    const weight = entry?.weight ?? 0
+    const isBorrowed = entry?.borrowed ?? false
+    const isNative = weight > 0 && !isBorrowed
+
+    matches.push({
+      chord,
+      native: isNative,
+      borrowed: isBorrowed,
+      borrowedFrom: isBorrowed ? parallelModeName : undefined,
+      nonDiatonic: !entry,
+    })
+
+    weightedSum += weight
+  }
+
+  let score = distinctChords.length > 0 ? weightedSum / distinctChords.length : 0
+
+  const lastChord = validChords[validChords.length - 1]
+  const cadentialMatch =
+    validChords.length > 0 && chordsEquivalent(lastChord, tonicChord)
+  if (cadentialMatch) score += 1
+
+  return { score, matches, distinctChords, invalidChords, cadentialMatch }
 }
 
 export function detectKey(
@@ -131,67 +203,29 @@ export function detectKey(
   const results: DetectionResult[] = []
 
   for (const root of KEYS) {
-    for (const mode of ['ionian', 'aeolian'] as const) {
-      const { native: nativeChords, parallel: parallelChords } = generateAllChordSets(root, mode)
+    const allModesFlat = generateModes(root, false)
 
-      const tonicChord = generateModes(root, false).find((m) => m.name === mode)!.chords[0]
+    for (const mode of MODE_CANDIDATES) {
+      const weightMap = buildWeightMap(mode, allModesFlat)
+      const candidate = allModesFlat.find((m) => m.name === mode)!
+      const tonicChord = candidate.chords[0]
+      const parallelMode = PARALLEL_MODE[mode]
 
       const sectionAnalyses: SectionAnalysis[] = []
       let totalScore = 0
 
       for (let si = 0; si < parsedSections.length; si++) {
-        const chords = parsedSections[si]
-        const validChords: string[] = []
-        const invalidChords: string[] = []
+        const { score, matches, distinctChords, invalidChords, cadentialMatch } =
+          scoreSection(parsedSections[si], weightMap, parallelMode, tonicChord)
 
-        for (const chord of chords) {
-          if (isValidChordToken(chord)) {
-            validChords.push(chord)
-          } else {
-            invalidChords.push(chord)
-          }
-        }
-
-        const distinctChords = getDistinct(validChords)
-        const matches: ChordMatch[] = []
-        let sectionScore = 0
-
-        for (const chord of distinctChords) {
-          const isNative = chordInSet(chord, nativeChords)
-          const isBorrowed = !isNative && chordInSet(chord, parallelChords)
-          const isNonDiatonic = !isNative && !isBorrowed
-
-          matches.push({
-            chord,
-            native: isNative,
-            borrowed: isBorrowed,
-            borrowedFrom: isBorrowed ? (mode === 'ionian' ? 'aeolian' : 'ionian') : undefined,
-            nonDiatonic: isNonDiatonic,
-          })
-
-          if (isNative) sectionScore += 1
-          else if (isBorrowed) sectionScore += 0.5
-        }
-
-        if (distinctChords.length > 0) {
-          sectionScore /= distinctChords.length
-        }
-
-        const lastChord = chords[chords.length - 1]
-        const cadentialMatch = chordsEquivalent(lastChord, tonicChord)
-        if (cadentialMatch) {
-          sectionScore += 1
-        }
-
-        totalScore += sectionScore
-
+        totalScore += score
         sectionAnalyses.push({
           sectionIndex: si,
-          chords,
+          chords: parsedSections[si],
           distinctChords,
           invalidChords,
           matches,
-          score: sectionScore,
+          score,
           cadentialMatch,
         })
       }
@@ -199,12 +233,11 @@ export function detectKey(
       const hasBorrowed = sectionAnalyses.some((s) =>
         s.matches.some((m) => m.borrowed)
       )
-      const parallelMode = mode === 'ionian' ? 'minor' : 'major'
+      const modeLabel = MODE_LABELS[mode]
+      const borrowedLabel = MODE_LABELS[parallelMode]
       const displayName =
-        root +
-        ' ' +
-        (mode === 'ionian' ? 'major' : 'minor') +
-        (hasBorrowed ? ` (borrows from ${root} ${parallelMode})` : '')
+        `${root} ${modeLabel}` +
+        (hasBorrowed ? ` (borrows from ${root} ${borrowedLabel})` : '')
 
       results.push({
         root,
