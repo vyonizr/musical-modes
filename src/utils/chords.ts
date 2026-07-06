@@ -20,34 +20,13 @@ export type ChordFlavor = "flat7" | "maj7" | "sus4" | "sus2";
 
 type QualityVoicing = Record<"maj" | "min" | "dim", number[]>;
 
-// Roots E2–B2 (MIDI 40–47): open-position span, 2 octaves
 const GUITAR_VOICING: QualityVoicing = {
-  maj: [0, 7, 12, 16, 19, 24], // R 5 R 3 5 R
-  min: [0, 7, 12, 15, 19, 24], // R 5 R m3 5 R
-  dim: [0, 3, 6, 12, 15, 18], // R m3 b5 R m3 b5
+  maj: [0, 4, 7, 12, 16, 19],
+  min: [0, 3, 7, 12, 15, 19],
+  dim: [0, 3, 6, 12, 15, 18],
 };
 
 const GUITAR_VOICING_7TH: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityVoicing> = {
-  flat7: {
-    maj: [0, 7, 10, 16, 19, 24],
-    min: [0, 7, 10, 15, 19, 24],
-    dim: [0, 6, 10, 15, 18, 24],
-  },
-  maj7: {
-    maj: [0, 7, 11, 16, 19, 24],
-    min: [0, 7, 11, 15, 19, 24],
-    dim: [0, 6, 11, 15, 18, 24],
-  },
-};
-
-// Roots C3–D#3 (MIDI 48–51): below guitar low-E in octave 2, so bumped up; narrower span to stay balanced
-const GUITAR_VOICING_COMPACT: QualityVoicing = {
-  maj: [0, 4, 7, 12, 16, 19], // R 3 5 R 3 5
-  min: [0, 3, 7, 12, 15, 19], // R m3 5 R m3 5
-  dim: [0, 3, 6, 12, 15, 18], // same as standard dim
-};
-
-const GUITAR_VOICING_7TH_COMPACT: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityVoicing> = {
   flat7: {
     maj: [0, 4, 7, 10, 16, 19],
     min: [0, 3, 7, 10, 15, 19],
@@ -61,19 +40,6 @@ const GUITAR_VOICING_7TH_COMPACT: Record<Exclude<ChordFlavor, "sus4" | "sus2">, 
 };
 
 const GUITAR_VOICING_SUS: Record<"sus4" | "sus2", QualityVoicing> = {
-  sus4: {
-    maj: [0, 7, 12, 17, 19, 24],
-    min: [0, 7, 12, 17, 19, 24],
-    dim: [0, 5, 6, 12, 17, 18],
-  },
-  sus2: {
-    maj: [0, 7, 12, 14, 19, 24],
-    min: [0, 7, 12, 14, 19, 24],
-    dim: [0, 2, 6, 12, 14, 18],
-  },
-};
-
-const GUITAR_VOICING_SUS_COMPACT: Record<"sus4" | "sus2", QualityVoicing> = {
   sus4: {
     maj: [0, 5, 7, 12, 17, 19],
     min: [0, 5, 7, 12, 17, 19],
@@ -111,33 +77,29 @@ function midiToNote(midi: number): string {
   return SEMITONE_TO_NOTE[noteIndex] + octave;
 }
 
+const ANCHOR_MIDI = 43;
+
 export function chordToNotes(
   chordName: string,
   flavour?: ChordFlavor
 ): string[] {
   const { root, quality } = parseChord(chordName);
   let rootMidi = NOTE_TO_SEMITONE[root] + 36;
-  const compact = rootMidi < 40; // C, C#, D, D# fall below guitar low-E string
-  if (compact) rootMidi += 12;
+  while (rootMidi < ANCHOR_MIDI - 6) rootMidi += 12;
+  while (rootMidi >= ANCHOR_MIDI + 6) rootMidi -= 12;
 
   if (flavour === "sus4" || flavour === "sus2") {
-    const table = compact ? GUITAR_VOICING_SUS_COMPACT : GUITAR_VOICING_SUS;
-    return table[flavour][quality].map((offset) =>
+    return GUITAR_VOICING_SUS[flavour][quality].map((offset) =>
       midiToNote(rootMidi + offset)
     );
   }
   if (flavour) {
-    const table = compact
-      ? GUITAR_VOICING_7TH_COMPACT
-      : GUITAR_VOICING_7TH;
-    return table[flavour][quality].map((offset) =>
+    return GUITAR_VOICING_7TH[flavour][quality].map((offset) =>
       midiToNote(rootMidi + offset)
     );
   }
 
-  return (compact ? GUITAR_VOICING_COMPACT : GUITAR_VOICING)[quality].map(
-    (offset) => midiToNote(rootMidi + offset)
-  );
+  return GUITAR_VOICING[quality].map((offset) => midiToNote(rootMidi + offset));
 }
 
 export function display7thChordName(chordName: string, seventh: Exclude<ChordFlavor, "sus4" | "sus2">): string {
