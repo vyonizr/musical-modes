@@ -10,7 +10,7 @@ npm run build    # Next.js production build + serwist SW build
 npm start        # serve production build
 ```
 
-No test runner, no linter. Do not add either without an explicit request.
+Tests: `npm test` (vitest). No linter — do not add one without an explicit request.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/inde
 
 **Keyboard mapping:** `KEY_ROWS` in `src/utils/constants.ts` maps keyboard rows (Q–U / A–J / Z–M) to chord columns for the first three active mode rows. Modifier keys change chord flavour: `,` = flat-7, `.` = maj7, `k` = sus2, `l` = sus4. Modifiers can be pressed before or after a chord key — held chords transform live. Keyboard handlers in `index.tsx` use refs alongside state to avoid stale closures — follow the same pattern if extending.
 
-**Chord flavours:** `ChordFlavor` (`"flat7" | "maj7" | "sus4" | "sus2"`) in `src/utils/chords.ts` threads from keyboard state in `index.tsx` → `TableContent` as `activeFlavour` prop → `display7thChordName()` / `displaySusChordName()` changes the displayed label; `triggerAttackChord(chord, flavour)` changes the notes played. Guitar voicing tables for each flavour/quality/root-range combination are in `chords.ts`.
+**Chord flavours:** `ChordFlavor` (`"flat7" | "maj7" | "sus4" | "sus2"`) in `src/utils/chords.ts` threads from keyboard state in `index.tsx` → `TableContent` as `activeFlavour` prop → `display7thChordName()` / `displaySusChordName()` changes the displayed label; `triggerAttackChord(chord, flavour)` changes the notes played. Guitar voicing tables for each flavour/quality combination are in `chords.ts`. Every chord root is folded into the same fixed register (`ANCHOR_MIDI ± 6` semitones) before offsets are applied, so switching roots never causes an octave jump — see `docs/sdd/specs/2026-07-07-chord-voicing-register-balance.md`.
 
 **Onboarding tour:** `react-joyride` runs once on first visit; `localStorage('musical-modes-tour-seen')` gates it. Restartable via the `?` link in the footer.
 
