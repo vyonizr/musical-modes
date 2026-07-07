@@ -54,6 +54,8 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 > PWA / service worker only activates in production builds (`npm run build && npm start`).
+>
+> Run the test suite with `npm test` (vitest).
 
 ---
 

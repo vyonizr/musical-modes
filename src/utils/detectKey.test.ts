@@ -92,3 +92,152 @@ describe('detectKey with invalid tokens', () => {
     expect(section.distinctChords).toHaveLength(0)
   })
 })
+
+describe('detectKey scale-degree weighting', () => {
+  it('weights tonic/IV higher than ii/vii° even though both are fully diatonic', () => {
+    const strongTier = detectKey(['C F'])
+    const weakTier = detectKey(['Dm Bdim'])
+
+    const strongCandidate = strongTier.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const weakCandidate = weakTier.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(strongCandidate.totalScore).toBeGreaterThan(weakCandidate.totalScore)
+  })
+})
+
+describe('detectKey harmonic-minor cadence chords', () => {
+  it('treats the harmonic-minor V (raised leading tone) as native, not borrowed', () => {
+    const results = detectKey(['Am F E Am'])
+    const aMinor = results.find((r) => r.root === 'A' && r.mode === 'aeolian')!
+    const eMatch = aMinor.sections[0].matches.find((m) => m.chord === 'E')!
+
+    expect(eMatch.native).toBe(true)
+    expect(eMatch.borrowed).toBe(false)
+  })
+})
+
+describe('detectKey chord-occurrence weighting', () => {
+  it('weights a repeated tonic more than a single occurrence', () => {
+    const repeated = detectKey(['C C C C G'])
+    const single = detectKey(['C G'])
+
+    const repeatedCandidate = repeated.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const singleCandidate = single.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(repeatedCandidate.sections[0].score).toBeGreaterThan(
+      singleCandidate.sections[0].score
+    )
+  })
+})
+
+describe('detectKey first-chord and resolution bonuses', () => {
+  it('rewards a section that opens on the tonic', () => {
+    const opensOnTonic = detectKey(['C G Dm'])
+    const doesNotOpen = detectKey(['Dm C G'])
+
+    const opensCandidate = opensOnTonic.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const doesNotCandidate = doesNotOpen.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(opensCandidate.sections[0].score).toBeGreaterThan(
+      doesNotCandidate.sections[0].score
+    )
+  })
+
+  it('rewards a IV→I or V→I resolution occurring anywhere in a section, not only at the end', () => {
+    const withResolution = detectKey(['Dm F C Dm'])
+    const withoutResolution = detectKey(['Dm C F Dm'])
+
+    const withCandidate = withResolution.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const withoutCandidate = withoutResolution.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(withCandidate.sections[0].score).toBeGreaterThan(
+      withoutCandidate.sections[0].score
+    )
+  })
+})
+
+describe('detectKey final-chord bonus', () => {
+  it('rewards the tonic landing as the very last chord of the whole progression', () => {
+    const endsOnTonic = detectKey(['Am Dm', 'A Dm A Dm A'])
+    const endsElsewhere = detectKey(['Am Dm', 'A Dm A Dm Dm'])
+
+    const aMajorEnds = endsOnTonic.find(
+      (r) => r.root === 'A' && r.mode === 'ionian'
+    )!
+    const aMajorElsewhere = endsElsewhere.find(
+      (r) => r.root === 'A' && r.mode === 'ionian'
+    )!
+
+    expect(aMajorEnds.totalScore).toBeGreaterThan(aMajorElsewhere.totalScore)
+  })
+})
+
+describe('detectKey repeated-resolution cap', () => {
+  it('caps the IV-I resolution bonus at one hit per section regardless of repetition', () => {
+    // Same multiset of chords (Dm:2, F:2, C:2), same first/last chord, so the
+    // weighted-average and cadence bonuses are identical between the two —
+    // the only difference is that the first ordering contains the F->C
+    // (IV->I) resolution twice, the second only once.
+    const twoOccurrences = detectKey(['Dm F C Dm F C'])
+    const oneOccurrence = detectKey(['Dm Dm F F C C'])
+
+    const twoCandidate = twoOccurrences.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const oneCandidate = oneOccurrence.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(twoCandidate.sections[0].score).toBe(oneCandidate.sections[0].score)
+  })
+})
+
+describe('detectKey non-diatonic penalty', () => {
+  it('prefers a candidate that explains every chord (even weakly, as borrows) over one that leaves a chord unexplained', () => {
+    const results = detectKey(['G A B'])
+    const bMajor = results.find((r) => r.root === 'B' && r.mode === 'ionian')!
+    const bMixolydian = results.find(
+      (r) => r.root === 'B' && r.mode === 'mixolydian'
+    )!
+
+    // B major explains G and A as borrows from B aeolian (both diatonic to
+    // B natural minor); B mixolydian can't account for G at all.
+    expect(bMajor.totalScore).toBeGreaterThan(bMixolydian.totalScore)
+  })
+})
+
+describe('detectKey dorian and mixolydian candidates', () => {
+  it('includes dorian and mixolydian among the candidate modes', () => {
+    const results = detectKey(['G'])
+    const modesPresent = new Set(results.map((r) => r.mode))
+
+    expect(modesPresent.has('dorian')).toBe(true)
+    expect(modesPresent.has('mixolydian')).toBe(true)
+  })
+
+  it('scores a bVII-IV-I mixolydian vamp higher for the mixolydian tonic than the ionian reading of the same root', () => {
+    const results = detectKey(['G F C G'])
+    const gMixolydian = results.find(
+      (r) => r.root === 'G' && r.mode === 'mixolydian'
+    )!
+    const gIonian = results.find((r) => r.root === 'G' && r.mode === 'ionian')!
+
+    expect(gMixolydian.totalScore).toBeGreaterThan(gIonian.totalScore)
+  })
+})
