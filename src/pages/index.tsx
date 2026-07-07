@@ -198,6 +198,20 @@ export default function Home() {
         (m) => activeModesRef.current.includes(m.name)
       );
 
+    const findChordForKey = (key: string, activeModesData: Mode[]) => {
+      for (let row = 0; row < KEY_ROWS.length; row++) {
+        const col = KEY_ROWS[row].indexOf(key);
+        if (
+          col !== -1 &&
+          row < activeModesData.length &&
+          col < activeModesData[row].chords.length
+        ) {
+          return activeModesData[row].chords[col];
+        }
+      }
+      return null;
+    };
+
     const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
       pressedChordsRef.current.forEach((oldFlavour, chordName) => {
         triggerReleaseChord(chordName, oldFlavour);
@@ -219,24 +233,13 @@ export default function Home() {
         return;
       }
 
-      const key = e.key.toUpperCase();
-      const activeModesData = getActiveModes();
+      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
+      if (!chordName) return;
 
-      for (let row = 0; row < KEY_ROWS.length; row++) {
-        const col = KEY_ROWS[row].indexOf(key);
-        if (
-          col !== -1 &&
-          row < activeModesData.length &&
-          col < activeModesData[row].chords.length
-        ) {
-          const chordName = activeModesData[row].chords[col];
-          const flavour = sevenFlavourRef.current;
-          pressedChordsRef.current.set(chordName, flavour);
-          setKeyboardPressedChords((prev) => [...prev, chordName]);
-          triggerAttackChord(chordName, flavour);
-          return;
-        }
-      }
+      const activeFlavour = sevenFlavourRef.current;
+      pressedChordsRef.current.set(chordName, activeFlavour);
+      setKeyboardPressedChords((prev) => [...prev, chordName]);
+      triggerAttackChord(chordName, activeFlavour);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -248,26 +251,13 @@ export default function Home() {
         return;
       }
 
-      const key = e.key.toUpperCase();
-      const activeModesData = getActiveModes();
+      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
+      if (!chordName) return;
 
-      for (let row = 0; row < KEY_ROWS.length; row++) {
-        const col = KEY_ROWS[row].indexOf(key);
-        if (
-          col !== -1 &&
-          row < activeModesData.length &&
-          col < activeModesData[row].chords.length
-        ) {
-          const chordName = activeModesData[row].chords[col];
-          const flavour = pressedChordsRef.current.get(chordName);
-          pressedChordsRef.current.delete(chordName);
-          setKeyboardPressedChords((prev) =>
-            prev.filter((c) => c !== chordName)
-          );
-          triggerReleaseChord(chordName, flavour);
-          return;
-        }
-      }
+      const flavour = pressedChordsRef.current.get(chordName);
+      pressedChordsRef.current.delete(chordName);
+      setKeyboardPressedChords((prev) => prev.filter((c) => c !== chordName));
+      triggerReleaseChord(chordName, flavour);
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -282,6 +272,10 @@ export default function Home() {
       pressedChordsRef.current.clear();
     };
   }, []);
+
+  const keyLabel = (index: number) =>
+    preferSharp ? KEYS_SHARP[index] : KEYS[index];
+  const isSelectedKey = (index: number) => selectedScale === KEYS[index];
 
   const toggleActiveMode = (modeName: string) =>
     setActiveModes((prev) =>
@@ -346,24 +340,24 @@ export default function Home() {
               <button
                 key={index}
                 className={`black-key${
-                  selectedScale === KEYS[index] ? " selected" : ""
+                  isSelectedKey(index) ? " selected" : ""
                 } noselect`}
                 style={{ left }}
                 onClick={() => setSelectedScale(KEYS[index])}
-                aria-pressed={selectedScale === KEYS[index]}
-                aria-label={preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+                aria-pressed={isSelectedKey(index)}
+                aria-label={keyLabel(index)}
               >
-                {preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+                {keyLabel(index)}
               </button>
             ))}
             {PIANO_WHITE_KEYS.map(({ index, label }) => (
               <button
                 key={index}
                 className={`white-key${
-                  selectedScale === KEYS[index] ? " selected" : ""
+                  isSelectedKey(index) ? " selected" : ""
                 } noselect`}
                 onClick={() => setSelectedScale(KEYS[index])}
-                aria-pressed={selectedScale === KEYS[index]}
+                aria-pressed={isSelectedKey(index)}
                 aria-label={label}
               >
                 {label}
@@ -375,10 +369,10 @@ export default function Home() {
               <button
                 key={`n-${keyIndex}`}
                 className={`chromatic-grid-item natural${
-                  selectedScale === KEYS[keyIndex] ? " selected" : ""
+                  isSelectedKey(keyIndex) ? " selected" : ""
                 } noselect`}
                 onClick={() => setSelectedScale(KEYS[keyIndex])}
-                aria-pressed={selectedScale === KEYS[keyIndex]}
+                aria-pressed={isSelectedKey(keyIndex)}
                 aria-label={KEYS[keyIndex]}
               >
                 {KEYS[keyIndex]}
@@ -388,31 +382,19 @@ export default function Home() {
               <button
                 key={`a-${col}`}
                 className={`chromatic-grid-item accidental${
-                  keyIndex !== null && selectedScale === KEYS[keyIndex]
+                  keyIndex !== null && isSelectedKey(keyIndex)
                     ? " selected"
                     : ""
                 } noselect`}
                 onClick={() => {
                   if (keyIndex !== null) setSelectedScale(KEYS[keyIndex]);
                 }}
-                aria-pressed={
-                  keyIndex !== null && selectedScale === KEYS[keyIndex]
-                }
-                aria-label={
-                  keyIndex !== null
-                    ? preferSharp
-                      ? KEYS_SHARP[keyIndex]
-                      : KEYS[keyIndex]
-                    : undefined
-                }
+                aria-pressed={keyIndex !== null && isSelectedKey(keyIndex)}
+                aria-label={keyIndex !== null ? keyLabel(keyIndex) : undefined}
                 disabled={keyIndex === null}
                 style={keyIndex === null ? { visibility: "hidden" } : undefined}
               >
-                {keyIndex !== null
-                  ? preferSharp
-                    ? KEYS_SHARP[keyIndex]
-                    : KEYS[keyIndex]
-                  : ""}
+                {keyIndex !== null ? keyLabel(keyIndex) : ""}
               </button>
             ))}
           </div>
