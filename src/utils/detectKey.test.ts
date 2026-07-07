@@ -172,6 +172,42 @@ describe('detectKey first-chord and resolution bonuses', () => {
   })
 })
 
+describe('detectKey final-chord bonus', () => {
+  it('rewards the tonic landing as the very last chord of the whole progression', () => {
+    const endsOnTonic = detectKey(['Am Dm', 'A Dm A Dm A'])
+    const endsElsewhere = detectKey(['Am Dm', 'A Dm A Dm Dm'])
+
+    const aMajorEnds = endsOnTonic.find(
+      (r) => r.root === 'A' && r.mode === 'ionian'
+    )!
+    const aMajorElsewhere = endsElsewhere.find(
+      (r) => r.root === 'A' && r.mode === 'ionian'
+    )!
+
+    expect(aMajorEnds.totalScore).toBeGreaterThan(aMajorElsewhere.totalScore)
+  })
+})
+
+describe('detectKey repeated-resolution cap', () => {
+  it('caps the IV-I resolution bonus at one hit per section regardless of repetition', () => {
+    // Same multiset of chords (Dm:2, F:2, C:2), same first/last chord, so the
+    // weighted-average and cadence bonuses are identical between the two —
+    // the only difference is that the first ordering contains the F->C
+    // (IV->I) resolution twice, the second only once.
+    const twoOccurrences = detectKey(['Dm F C Dm F C'])
+    const oneOccurrence = detectKey(['Dm Dm F F C C'])
+
+    const twoCandidate = twoOccurrences.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+    const oneCandidate = oneOccurrence.find(
+      (r) => r.root === 'C' && r.mode === 'ionian'
+    )!
+
+    expect(twoCandidate.sections[0].score).toBe(oneCandidate.sections[0].score)
+  })
+})
+
 describe('detectKey dorian and mixolydian candidates', () => {
   it('includes dorian and mixolydian among the candidate modes', () => {
     const results = detectKey(['G'])

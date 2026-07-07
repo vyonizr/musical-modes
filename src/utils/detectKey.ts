@@ -220,12 +220,14 @@ function scoreSection(
     if (chordsEquivalent(validChords[validChords.length - 1], tonicChord)) score += 1
   }
 
+  let hasResolution = false
   for (let j = 0; j < validChords.length - 1; j++) {
     const resolvesToTonic = chordsEquivalent(validChords[j + 1], tonicChord)
     const fromDominant = chordsEquivalent(validChords[j], dominantChord)
     const fromIv = chordsEquivalent(validChords[j], ivChord)
-    if (resolvesToTonic && (fromDominant || fromIv)) score += 1
+    if (resolvesToTonic && (fromDominant || fromIv)) hasResolution = true
   }
+  if (hasResolution) score += 1
 
   const cadentialMatch =
     validChords.length > 0 &&
@@ -243,6 +245,9 @@ export function detectKey(
     .filter((arr) => arr.length > 0)
 
   if (parsedSections.length === 0) return []
+
+  const lastSection = parsedSections[parsedSections.length - 1]
+  const finalChord = lastSection[lastSection.length - 1]
 
   const results: DetectionResult[] = []
 
@@ -274,6 +279,9 @@ export function detectKey(
           )
 
         totalScore += score
+        if (si === parsedSections.length - 1 && isValidChordToken(finalChord)) {
+          if (chordsEquivalent(finalChord, tonicChord)) totalScore += 2.5
+        }
         sectionAnalyses.push({
           sectionIndex: si,
           chords: parsedSections[si],
