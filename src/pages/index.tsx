@@ -30,6 +30,8 @@ import { Mode } from "../utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
+  setVolume,
+  getStoredVolume,
   ChordFlavor,
 } from "../utils/chords";
 
@@ -109,6 +111,7 @@ export default function Home() {
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]]);
   const [preferSharp, setPreferSharp] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [volume, setVolumeState] = useState(0.8);
 
   const [keyDetectorOpen, setKeyDetectorOpen] = useState(false);
   const [detectorSections, setDetectorSections] = useState<string[]>([""]);
@@ -142,6 +145,15 @@ export default function Home() {
       setTourRun(true);
       setTourStepIndex(0);
     }
+  }, []);
+
+  useEffect(() => {
+    setVolumeState(getStoredVolume());
+  }, []);
+
+  const handleVolumeChange = useCallback((next: number) => {
+    setVolumeState(next);
+    setVolume(next);
   }, []);
 
   useEffect(() => {
@@ -403,6 +415,20 @@ export default function Home() {
                   : ""}
               </button>
             ))}
+          </div>
+          <div className="volume-control">
+            <label htmlFor="volume-slider">Volume</label>
+            <input
+              id="volume-slider"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              onMouseUp={(e) => e.currentTarget.blur()}
+              onTouchEnd={(e) => e.currentTarget.blur()}
+            />
           </div>
         </div>
         <div className="table-container">

@@ -264,6 +264,24 @@ td {
   color: #fff;
 }
 
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  width: calc(100vw - 24px);
+  margin: 6px auto 0;
+}
+
+.volume-control label {
+  white-space: nowrap;
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
 .piano-keyboard {
   position: relative;
   display: flex;
