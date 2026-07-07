@@ -208,6 +208,20 @@ describe('detectKey repeated-resolution cap', () => {
   })
 })
 
+describe('detectKey non-diatonic penalty', () => {
+  it('prefers a candidate that explains every chord (even weakly, as borrows) over one that leaves a chord unexplained', () => {
+    const results = detectKey(['G A B'])
+    const bMajor = results.find((r) => r.root === 'B' && r.mode === 'ionian')!
+    const bMixolydian = results.find(
+      (r) => r.root === 'B' && r.mode === 'mixolydian'
+    )!
+
+    // B major explains G and A as borrows from B aeolian (both diatonic to
+    // B natural minor); B mixolydian can't account for G at all.
+    expect(bMajor.totalScore).toBeGreaterThan(bMixolydian.totalScore)
+  })
+})
+
 describe('detectKey dorian and mixolydian candidates', () => {
   it('includes dorian and mixolydian among the candidate modes', () => {
     const results = detectKey(['G'])

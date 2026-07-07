@@ -32,6 +32,7 @@ export interface DetectionResult {
 
 const WEIGHTS = [3, 1, 1, 2.5, 2, 1.5, 0.5]
 const BORROWED_WEIGHT = 0.5
+const NON_DIATONIC_WEIGHT = -1
 
 const MODE_CANDIDATES = ['ionian', 'aeolian', 'dorian', 'mixolydian'] as const
 type ModeCandidate = (typeof MODE_CANDIDATES)[number]
@@ -199,7 +200,7 @@ function scoreSection(
   for (const chord of distinctChords) {
     const key = canonicalKey(chord)!
     const entry = weightMap.get(key)
-    const weight = entry?.weight ?? 0
+    const weight = entry?.weight ?? NON_DIATONIC_WEIGHT
     const isBorrowed = entry?.borrowed ?? false
     const isNative = weight > 0 && !isBorrowed
 
