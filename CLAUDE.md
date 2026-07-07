@@ -14,7 +14,7 @@ Tests: `npm test` (vitest). No linter — do not add one without an explicit req
 
 ## Architecture
 
-Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/index.tsx`. `TableContent.tsx` is purely presentational. (`Slider.tsx` exists but is currently unused.)
+Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/index.tsx`. `TableContent.tsx` is purely presentational.
 
 **Core data flow:**
 1. User picks a root key → `generateModes(scale, preferSharp)` in `src/utils/generateModes.ts` computes all 7 diatonic modes by rotating the Ionian interval pattern (`W W H W W W H`)
@@ -43,4 +43,4 @@ Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/inde
 - **`tsconfig.json` has `strict: false`.** Do not tighten without being asked.
 - **`package.json` overrides** (`serialize-javascript`, `postcss`) are security pins. Preserve them.
 - **Prettier config** (`prettierrc.json`) is empty — uses defaults only.
-- **Package manager**: README says Yarn but only `package-lock.json` exists. Use `npm`.
+- **Package manager**: use `npm` (`package-lock.json` is the only lockfile present).
