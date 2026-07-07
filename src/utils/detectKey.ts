@@ -26,6 +26,7 @@ export interface DetectionResult {
   displayName: string
   totalScore: number
   hasBorrowed: boolean
+  borrowedModes: string[]
   sections: SectionAnalysis[]
 }
 
@@ -35,18 +36,19 @@ const BORROWED_WEIGHT = 0.5
 const MODE_CANDIDATES = ['ionian', 'aeolian', 'dorian', 'mixolydian'] as const
 type ModeCandidate = (typeof MODE_CANDIDATES)[number]
 
-const PARALLEL_MODE: Record<ModeCandidate, ModeCandidate> = {
-  ionian: 'aeolian',
-  aeolian: 'ionian',
-  dorian: 'aeolian',
-  mixolydian: 'ionian',
+const BORROW_SOURCES: Record<ModeCandidate, string[]> = {
+  ionian: ['aeolian', 'lydian'],
+  aeolian: ['ionian'],
+  dorian: ['aeolian'],
+  mixolydian: ['ionian'],
 }
 
-const MODE_LABELS: Record<ModeCandidate, string> = {
+const MODE_LABELS: Record<string, string> = {
   ionian: 'major',
   aeolian: 'minor',
   dorian: 'dorian',
   mixolydian: 'mixolydian',
+  lydian: 'lydian',
 }
 
 const MODE_WEIGHT_OVERRIDES: Partial<Record<ModeCandidate, Record<number, number>>> = {
@@ -58,6 +60,7 @@ const MINOR_QUALITY_MODES = new Set<ModeCandidate>(['aeolian', 'dorian'])
 interface ChordWeight {
   weight: number
   borrowed: boolean
+  borrowedFrom?: string
 }
 
 function normalizeAccidental(s: string): string {
@@ -138,12 +141,13 @@ function buildWeightMap(
     }
   }
 
-  const parallelMode = PARALLEL_MODE[mode]
-  const parallel = allModesFlat.find((m) => m.name === parallelMode)!
-  for (let i = 0; i < parallel.chords.length; i++) {
-    const key = canonicalKey(parallel.chords[i])
-    if (key && !weightMap.has(key)) {
-      weightMap.set(key, { weight: BORROWED_WEIGHT, borrowed: true })
+  for (const borrowSource of BORROW_SOURCES[mode]) {
+    const parallel = allModesFlat.find((m) => m.name === borrowSource)!
+    for (let i = 0; i < parallel.chords.length; i++) {
+      const key = canonicalKey(parallel.chords[i])
+      if (key && !weightMap.has(key)) {
+        weightMap.set(key, { weight: BORROWED_WEIGHT, borrowed: true, borrowedFrom: borrowSource })
+      }
     }
   }
 
@@ -169,7 +173,6 @@ interface ScoredSection {
 function scoreSection(
   chords: string[],
   weightMap: Map<string, ChordWeight>,
-  parallelModeName: string,
   tonicChord: string,
   dominantChord: string,
   ivChord: string
@@ -204,7 +207,7 @@ function scoreSection(
       chord,
       native: isNative,
       borrowed: isBorrowed,
-      borrowedFrom: isBorrowed ? parallelModeName : undefined,
+      borrowedFrom: isBorrowed ? entry?.borrowedFrom : undefined,
       nonDiatonic: !entry,
     })
 
@@ -262,7 +265,6 @@ export function detectKey(
       const dominantChord = MINOR_QUALITY_MODES.has(mode)
         ? allModesFlat.find((m) => m.name === 'ionian')!.chords[4]
         : candidate.chords[4]
-      const parallelMode = PARALLEL_MODE[mode]
 
       const sectionAnalyses: SectionAnalysis[] = []
       let totalScore = 0
@@ -272,7 +274,6 @@ export function detectKey(
           scoreSection(
             parsedSections[si],
             weightMap,
-            parallelMode,
             tonicChord,
             dominantChord,
             ivChord
@@ -296,11 +297,20 @@ export function detectKey(
       const hasBorrowed = sectionAnalyses.some((s) =>
         s.matches.some((m) => m.borrowed)
       )
+      const borrowedFromModes = new Set<string>()
+      for (const s of sectionAnalyses) {
+        for (const m of s.matches) {
+          if (m.borrowed && m.borrowedFrom) borrowedFromModes.add(m.borrowedFrom)
+        }
+      }
+      const borrowedModes = BORROW_SOURCES[mode].filter((source) =>
+        borrowedFromModes.has(source)
+      )
       const modeLabel = MODE_LABELS[mode]
-      const borrowedLabel = MODE_LABELS[parallelMode]
+      const borrowedLabels = borrowedModes.map((source) => `${root} ${MODE_LABELS[source]}`)
       const displayName =
         `${root} ${modeLabel}` +
-        (hasBorrowed ? ` (borrows from ${root} ${borrowedLabel})` : '')
+        (borrowedLabels.length > 0 ? ` (borrows from ${borrowedLabels.join(', ')})` : '')
 
       results.push({
         root,
@@ -308,6 +318,7 @@ export function detectKey(
         displayName,
         totalScore,
         hasBorrowed,
+        borrowedModes,
         sections: sectionAnalyses,
       })
     }

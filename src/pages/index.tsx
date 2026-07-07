@@ -570,7 +570,7 @@ export default function Home() {
                                 setSelectedScale(result.root);
                                 setActiveModes(
                                   result.hasBorrowed
-                                    ? ["ionian", "aeolian"]
+                                    ? [result.mode, ...result.borrowedModes]
                                     : [result.mode]
                                 );
                                 setKeyDetectorOpen(false);
