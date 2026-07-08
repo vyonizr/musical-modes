@@ -9,6 +9,7 @@ interface IProps {
   activeRowIndex: number
   keyboardPressedChords: string[]
   activeFlavour?: ChordFlavor
+  activeProgressionStep?: { mode: string; degreeIndex: number; flavour?: ChordFlavor } | null
 }
 
 const TableContent = ({
@@ -17,6 +18,7 @@ const TableContent = ({
   activeRowIndex,
   keyboardPressedChords,
   activeFlavour,
+  activeProgressionStep,
 }: IProps) => {
   const capitalizedName = mode.name.charAt(0).toUpperCase() + mode.name.slice(1)
 
@@ -27,12 +29,18 @@ const TableContent = ({
       </tr>
       <tr className={`mode-row ${COLOR_CLASSNAMES[index]} bold`}>
         {mode.chords.map((chord: string, chordIndex: number) => {
-          const displayName =
+          let displayName =
             activeFlavour === "sus4" || activeFlavour === "sus2"
               ? displaySusChordName(chord, activeFlavour)
               : activeFlavour
               ? display7thChordName(chord, activeFlavour)
               : chord
+          if (activeProgressionStep && activeProgressionStep.mode === mode.name && activeProgressionStep.degreeIndex === chordIndex && activeProgressionStep.flavour) {
+            const pf = activeProgressionStep.flavour
+            displayName = pf === "sus4" || pf === "sus2"
+              ? displaySusChordName(chord, pf)
+              : display7thChordName(chord, pf)
+          }
           const fontSize =
             displayName.length > 7 ? '0.65em' :
             displayName.length > 5 ? '0.8em' : undefined
@@ -41,6 +49,8 @@ const TableContent = ({
             key={chordIndex}
             className={`pointer noselect playable-chord${
               keyboardPressedChords.includes(chord) ? ' keyboard-active' : ''
+            }${
+              activeProgressionStep && activeProgressionStep.mode === mode.name && activeProgressionStep.degreeIndex === chordIndex ? ' progression-active' : ''
             }`}
             onMouseDown={() => triggerAttackChord(chord, activeFlavour)}
             onMouseUp={() => triggerReleaseChord(chord, activeFlavour)}
