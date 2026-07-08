@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Progression } from 'src/utils/progressions'
 import { Mode } from 'src/utils/types'
 import { ChordFlavor } from 'src/utils/chords'
+import { analyzeLoop } from 'src/utils/loop'
 
 interface IProps {
   progressions: Progression[]
@@ -44,11 +45,16 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
             const pattern = romanNumerals.map((roman, i) =>
               romanWithFlavour(roman, p.steps[i].flavour)
             ).join(' \u2013 ')
+            const loop = analyzeLoop(romanNumerals)
+            const label = loop.isLoop ? loop.character : null
             return (
               <div key={p.id} className="progression-row">
                 <div className="progression-info">
                   <span className="progression-name">{p.name}</span>
-                  <span className="progression-pattern">{pattern}</span>
+                  <span className="progression-pattern">
+                    {pattern}
+                    {label && <span className="progression-cadence"> &mdash; {label}</span>}
+                  </span>
                   <span className="progression-songs">{p.songs.join(', ')}</span>
                 </div>
                 <button

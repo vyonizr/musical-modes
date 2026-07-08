@@ -15,7 +15,7 @@ const ROMAN_TO_DEGREE: Record<string, number> = {
 
 const QUALITY_SUFFIXES = ['°', 'maj7', 'sus4', 'sus2', '7', 'dim', 'm']
 
-interface ParsedNumeral {
+export interface ParsedNumeral {
   degree: number
   accidental: '♭' | '♯' | null
 }
@@ -70,7 +70,7 @@ const CADENCE_PATTERNS: CadencePattern[] = [
   },
 ]
 
-function parseRomanNumeral(s: string): ParsedNumeral | null {
+export function parseRomanNumeral(s: string): ParsedNumeral | null {
   let clean = s.trim()
   if (clean.length === 0) return null
 
@@ -99,14 +99,14 @@ function parseRomanNumeral(s: string): ParsedNumeral | null {
   return { degree, accidental }
 }
 
-function degreeToSemitone(d: number, accidental: '♭' | '♯' | null): number {
+export function degreeToSemitone(d: number, accidental: '♭' | '♯' | null): number {
   let semitone = MAJOR_SCALE_SEMITONES[d]
   if (accidental === '♭') semitone -= 1
   else if (accidental === '♯') semitone += 1
   return ((semitone % 12) + 12) % 12
 }
 
-function classifyMotion(diff: number): RootMotion {
+export function classifyMotion(diff: number): RootMotion {
   const d = ((diff % 12) + 12) % 12
   switch (d) {
     case 5: return 'authentic'
