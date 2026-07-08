@@ -63,31 +63,31 @@ export const PROGRESSIONS: Progression[] = [
     name: "Double Plagal",
     bpm: 120,
     steps: [
-      { mode: "mixolydian", degreeIndex: 6 },
-      { mode: "mixolydian", degreeIndex: 3 },
-      { mode: "mixolydian", degreeIndex: 0 },
-      { mode: "mixolydian", degreeIndex: 0 },
+      { mode: "aeolian", degreeIndex: 6 },
+      { mode: "ionian", degreeIndex: 3 },
+      { mode: "ionian", degreeIndex: 0 },
+      { mode: "ionian", degreeIndex: 0 },
     ],
     songs: [
       "The Killers - Some Kind of Love",
     ],
   },
   {
-    id: "mixolydian-vamp",
-    name: "Mixolydian Vamp",
+    id: "backdoor-vamp",
+    name: "Backdoor Vamp",
     bpm: 90,
     steps: [
-      { mode: "mixolydian", degreeIndex: 0 },
-      { mode: "mixolydian", degreeIndex: 6 },
-      { mode: "mixolydian", degreeIndex: 3 },
-      { mode: "mixolydian", degreeIndex: 0 },
+      { mode: "ionian", degreeIndex: 0 },
+      { mode: "aeolian", degreeIndex: 6 },
+      { mode: "ionian", degreeIndex: 3 },
+      { mode: "ionian", degreeIndex: 0 },
     ],
     songs: [
       "Christoffer Franzen - Walk",
     ],
   },
   {
-    id: "bad-omens",
+    id: "haunting-progression",
     name: "Haunting Progression",
     bpm: 120,
     steps: [

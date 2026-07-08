@@ -12,63 +12,45 @@ function resolveProgression(progression: Progression, key: string, preferSharp: 
 }
 
 describe('progression chord resolution', () => {
-  it('resolves 50s progression in C', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === '50s')!
+  it('resolves melancholic-uplift progression in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'melancholic-uplift')!
     const chords = resolveProgression(prog, 'C', false)
-    expect(chords).toEqual(['C', 'Am', 'F', 'G'])
+    expect(chords).toEqual(['E♭', 'F', 'C', 'C'])
   })
 
-  it('resolves 50s progression in G', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === '50s')!
+  it('resolves melancholic-uplift progression in G', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'melancholic-uplift')!
     const chords = resolveProgression(prog, 'G', false)
-    expect(chords).toEqual(['G', 'Em', 'C', 'D'])
+    expect(chords).toEqual(['B♭', 'C', 'G', 'G'])
   })
 
-  it('resolves pop-punk progression in C', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'pop-punk')!
+  it('resolves melancholic-return progression (dorian) in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'melancholic-return')!
     const chords = resolveProgression(prog, 'C', false)
-    expect(chords).toEqual(['C', 'G', 'Am', 'F'])
+    expect(chords).toEqual(['E♭', 'F', 'Cm', 'Cm'])
   })
 
-  it('resolves Andalusian cadence in C (aeolian = A minor)', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'andalusian')!
-    const chords = resolveProgression(prog, 'A', false)
-    expect(chords).toEqual(['Am', 'G', 'F', 'Em'])
-  })
-
-  it('resolves 12-bar blues chords in C', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === '12-bar-blues')!
+  it('resolves mario-cadence progression (aeolian cadence) in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'mario-cadence')!
     const chords = resolveProgression(prog, 'C', false)
-    expect(chords).toEqual(['C', 'F', 'C', 'G', 'F', 'C'])
+    expect(chords).toEqual(['A♭', 'B♭', 'C', 'C'])
   })
 
-  it('resolves minor descent in A aeolian', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'minor-descent')!
-    const chords = resolveProgression(prog, 'A', false)
-    expect(chords).toEqual(['Am', 'F', 'C', 'G'])
-  })
-
-  it('resolves modal-mixture progression (Ionian with Mixolydian bVII) in C', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'modal-mixture')!
+  it('resolves double-plagal progression in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'double-plagal')!
     const chords = resolveProgression(prog, 'C', false)
-    expect(chords).toEqual(['C', 'G', 'B♭', 'F'])
+    expect(chords).toEqual(['B♭', 'F', 'C', 'C'])
   })
 
-  it('resolves doo-wop progression in C', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'doo-wop')!
+  it('resolves backdoor-vamp progression in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'backdoor-vamp')!
     const chords = resolveProgression(prog, 'C', false)
-    expect(chords).toEqual(['C', 'Am', 'Dm', 'G'])
+    expect(chords).toEqual(['C', 'B♭', 'F', 'C'])
   })
 
-  it('resolves dorian vamp in D', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'dorian-vamp')!
-    const chords = resolveProgression(prog, 'D', false)
-    expect(chords).toEqual(['Dm', 'G'])
-  })
-
-  it('resolves phrygian borrow progression in Am', () => {
-    const prog = PROGRESSIONS.find((p) => p.id === 'phrygian-borrow')!
-    const chords = resolveProgression(prog, 'A', false)
-    expect(chords).toEqual(['Am', 'B♭', 'G', 'Am'])
+  it('resolves haunting-progression in C', () => {
+    const prog = PROGRESSIONS.find((p) => p.id === 'haunting-progression')!
+    const chords = resolveProgression(prog, 'C', false)
+    expect(chords).toEqual(['A♭', 'Fm', 'C', 'C'])
   })
 })
