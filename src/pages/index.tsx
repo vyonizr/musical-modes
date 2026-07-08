@@ -144,6 +144,10 @@ export default function Home() {
     string | null
   >(null);
   const playbackGenRef = useRef(0);
+  const activeProgressionChordRef = useRef<{
+    chord: Mode["chords"][number];
+    flavour?: ChordFlavor;
+  } | null>(null);
 
   useEffect(() => {
     setIsTouchDevice(
@@ -172,8 +176,16 @@ export default function Home() {
 
   const handlePlayProgression = useCallback(
     async (progression: Progression) => {
+      // Rapid re-triggering (clicking another example, or the same one, before
+      // playback finishes) must cut off whatever's currently sounding right away
+      // instead of waiting for the stale loop's own delayed release.
+      if (activeProgressionChordRef.current) {
+        const { chord, flavour } = activeProgressionChordRef.current;
+        triggerReleaseChord(chord, flavour);
+        activeProgressionChordRef.current = null;
+      }
       const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
-      setActiveModes((prev) => Array.from(new Set([...prev, ...modeNames])));
+      setActiveModes(modeNames);
       const gen = ++playbackGenRef.current;
       setActiveProgressionId(progression.id);
       const modes = generateModes(selectedScale, preferSharp);
@@ -189,17 +201,18 @@ export default function Home() {
           flavour: step.flavour,
         });
         triggerAttackChord(chord, step.flavour);
+        activeProgressionChordRef.current = { chord, flavour: step.flavour };
         const durationMs =
           (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 100));
         await delay(durationMs - 80);
-        if (playbackGenRef.current !== gen) {
-          triggerReleaseChord(chord, step.flavour);
-          break;
-        }
+        if (playbackGenRef.current !== gen) break;
         triggerReleaseChord(chord, step.flavour);
+        activeProgressionChordRef.current = null;
       }
-      setActiveProgressionStep(null);
-      setActiveProgressionId(null);
+      if (playbackGenRef.current === gen) {
+        setActiveProgressionStep(null);
+        setActiveProgressionId(null);
+      }
     },
     [selectedScale, preferSharp]
   );
