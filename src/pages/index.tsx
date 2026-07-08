@@ -36,6 +36,8 @@ import {
 } from "../utils/chords";
 
 import TableContent from "../components/TableContent";
+import { PROGRESSIONS, Progression } from "../utils/progressions";
+import ProgressionsPanel from "../components/ProgressionsPanel";
 
 const TOUR_STEPS: Step[] = [
   {
@@ -133,6 +135,15 @@ export default function Home() {
   );
   const pressedChordsRef = useRef(new Map<string, ChordFlavor | undefined>());
   const preferSharpRef = useRef(preferSharp);
+  const [activeProgressionStep, setActiveProgressionStep] = useState<{
+    mode: string;
+    degreeIndex: number;
+    flavour?: ChordFlavor;
+  } | null>(null);
+  const [activeProgressionId, setActiveProgressionId] = useState<
+    string | null
+  >(null);
+  const playbackGenRef = useRef(0);
 
   useEffect(() => {
     setIsTouchDevice(
@@ -155,6 +166,43 @@ export default function Home() {
     setVolumeState(next);
     setVolume(next);
   }, []);
+
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const handlePlayProgression = useCallback(
+    async (progression: Progression) => {
+      const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
+      setActiveModes((prev) => Array.from(new Set([...prev, ...modeNames])));
+      const gen = ++playbackGenRef.current;
+      setActiveProgressionId(progression.id);
+      const modes = generateModes(selectedScale, preferSharp);
+      for (let i = 0; i < progression.steps.length; i++) {
+        if (playbackGenRef.current !== gen) break;
+        const step = progression.steps[i];
+        const mode = modes.find((m) => m.name === step.mode);
+        if (!mode) continue;
+        const chord = mode.chords[step.degreeIndex];
+        setActiveProgressionStep({
+          mode: step.mode,
+          degreeIndex: step.degreeIndex,
+          flavour: step.flavour,
+        });
+        triggerAttackChord(chord, step.flavour);
+        const durationMs =
+          (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 100));
+        await delay(durationMs - 80);
+        if (playbackGenRef.current !== gen) {
+          triggerReleaseChord(chord, step.flavour);
+          break;
+        }
+        triggerReleaseChord(chord, step.flavour);
+      }
+      setActiveProgressionStep(null);
+      setActiveProgressionId(null);
+    },
+    [selectedScale, preferSharp]
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -413,6 +461,12 @@ export default function Home() {
             />
           </div>
         </div>
+        <ProgressionsPanel
+          progressions={PROGRESSIONS}
+          modes={generateModes(selectedScale, preferSharp)}
+          onPlay={handlePlayProgression}
+          activeProgressionId={activeProgressionId}
+        />
         <div className="table-container">
           {activeModes.length === 0 ? (
             <h3>Nothing to play 😕</h3>
@@ -434,6 +488,7 @@ export default function Home() {
                             activeRowIndex={activeRowCount++}
                             keyboardPressedChords={keyboardPressedChords}
                             activeFlavour={activeFlavour}
+                            activeProgressionStep={activeProgressionStep}
                           />
                         )}
                       </Fragment>
