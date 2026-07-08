@@ -37,11 +37,13 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
             Not official music theory terms. Names are just what I like to call them / how the progression feels.
           </p>
           {progressions.map(p => {
-            const pattern = p.steps.map(step => {
+            const romanNumerals = p.steps.map(step => {
               const mode = modes.find(m => m.name === step.mode)
-              const roman = mode ? mode.romanNumerals[step.degreeIndex] : '?'
-              return romanWithFlavour(roman, step.flavour)
-            }).join(' \u2013 ')
+              return mode ? mode.romanNumerals[step.degreeIndex] : '?'
+            })
+            const pattern = romanNumerals.map((roman, i) =>
+              romanWithFlavour(roman, p.steps[i].flavour)
+            ).join(' \u2013 ')
             return (
               <div key={p.id} className="progression-row">
                 <div className="progression-info">
