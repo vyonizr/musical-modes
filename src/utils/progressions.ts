@@ -17,9 +17,9 @@ export interface Progression {
 
 export const PROGRESSIONS: Progression[] = [
   {
-    id: "olson",
-    name: "Olson Progression",
-    bpm: 80,
+    id: "melancholic-uplift",
+    name: "Melancholic Uplift",
+    bpm: 100,
     steps: [
       { mode: "aeolian", degreeIndex:2 },
       { mode: "ionian", degreeIndex: 3 },
@@ -31,9 +31,9 @@ export const PROGRESSIONS: Progression[] = [
     ],
   },
   {
-    id: "dorian",
-    name: "Dorian Progression",
-    bpm: 120,
+    id: "melancholic-return",
+    name: "Melancholic Return",
+    bpm: 100,
     steps: [
       { mode: "dorian", degreeIndex:2 },
       { mode: "dorian", degreeIndex: 3 },
@@ -59,8 +59,8 @@ export const PROGRESSIONS: Progression[] = [
     ],
   },
   {
-    id: "mixolydian",
-    name: "Mixolydian Progression",
+    id: "double-plagal",
+    name: "Double Plagal",
     bpm: 120,
     steps: [
       { mode: "mixolydian", degreeIndex: 6 },
@@ -75,7 +75,7 @@ export const PROGRESSIONS: Progression[] = [
   {
     id: "mixolydian-vamp",
     name: "Mixolydian Vamp",
-    bpm: 80,
+    bpm: 90,
     steps: [
       { mode: "mixolydian", degreeIndex: 0 },
       { mode: "mixolydian", degreeIndex: 6 },

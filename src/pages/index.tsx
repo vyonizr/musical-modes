@@ -143,6 +143,7 @@ export default function Home() {
   const [activeProgressionId, setActiveProgressionId] = useState<
     string | null
   >(null);
+  const activeProgressionIdRef = useRef<string | null>(null);
   const playbackGenRef = useRef(0);
   const activeProgressionChordRef = useRef<{
     chord: Mode["chords"][number];
@@ -184,9 +185,20 @@ export default function Home() {
         triggerReleaseChord(chord, flavour);
         activeProgressionChordRef.current = null;
       }
+      // Clicking the currently-playing progression's button again stops it
+      // instead of restarting it from the top.
+      const wasPlayingThis = activeProgressionIdRef.current === progression.id;
+      if (wasPlayingThis) {
+        playbackGenRef.current++;
+        activeProgressionIdRef.current = null;
+        setActiveProgressionStep(null);
+        setActiveProgressionId(null);
+        return;
+      }
       const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
       setActiveModes(modeNames);
       const gen = ++playbackGenRef.current;
+      activeProgressionIdRef.current = progression.id;
       setActiveProgressionId(progression.id);
       const modes = generateModes(selectedScale, preferSharp);
       for (let i = 0; i < progression.steps.length; i++) {
@@ -210,6 +222,7 @@ export default function Home() {
         activeProgressionChordRef.current = null;
       }
       if (playbackGenRef.current === gen) {
+        activeProgressionIdRef.current = null;
         setActiveProgressionStep(null);
         setActiveProgressionId(null);
       }
