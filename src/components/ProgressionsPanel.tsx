@@ -33,6 +33,9 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
       </button>
       {open && (
         <div className="progressions-list">
+          <p className="progressions-disclaimer">
+            Not official music theory terms. Names are just what I like to call them / how the progression feels.
+          </p>
           {progressions.map(p => {
             const pattern = p.steps.map(step => {
               const mode = modes.find(m => m.name === step.mode)
