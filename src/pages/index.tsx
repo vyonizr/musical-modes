@@ -38,6 +38,7 @@ import {
 import TableContent from "../components/TableContent";
 import { PROGRESSIONS, Progression } from "../utils/progressions";
 import ProgressionsPanel from "../components/ProgressionsPanel";
+import packageJson from "../../package.json";
 
 const TOUR_STEPS: Step[] = [
   {
@@ -730,7 +731,7 @@ export default function Home() {
             </div>
           )}
         </div>
-        <footer>
+        <footer style={{ textAlign: "center" }}>
           © 2020-{new Date().getFullYear()}{" "}
           <a
             href="https://vyonizr.com/"
@@ -755,6 +756,7 @@ export default function Home() {
           >
             ?
           </span>
+          <br />v{packageJson.version}
         </footer>
       </main>
       <Joyride
