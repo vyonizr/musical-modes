@@ -231,13 +231,15 @@ describe('detectKey dorian and mixolydian candidates', () => {
     expect(modesPresent.has('mixolydian')).toBe(true)
   })
 
-  it('scores a bVII-IV-I mixolydian vamp higher for the mixolydian tonic than the ionian reading of the same root', () => {
+  it('scores a bVII-IV-I vamp as G ionian borrowing bVII from aeolian, over the mixolydian tonic reading', () => {
     const results = detectKey(['G F C G'])
     const gMixolydian = results.find(
       (r) => r.root === 'G' && r.mode === 'mixolydian'
     )!
     const gIonian = results.find((r) => r.root === 'G' && r.mode === 'ionian')!
 
-    expect(gMixolydian.totalScore).toBeGreaterThan(gIonian.totalScore)
+    expect(gIonian.totalScore).toBeGreaterThan(gMixolydian.totalScore)
+    expect(gIonian.hasBorrowed).toBe(true)
+    expect(gIonian.borrowedModes).toContain('aeolian')
   })
 })

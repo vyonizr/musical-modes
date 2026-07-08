@@ -30,10 +30,15 @@ import { Mode } from "../utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
+  setVolume,
+  getStoredVolume,
   ChordFlavor,
 } from "../utils/chords";
 
 import TableContent from "../components/TableContent";
+import { PROGRESSIONS, Progression } from "../utils/progressions";
+import ProgressionsPanel from "../components/ProgressionsPanel";
+import packageJson from "../../package.json";
 
 const TOUR_STEPS: Step[] = [
   {
@@ -109,6 +114,7 @@ export default function Home() {
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]]);
   const [preferSharp, setPreferSharp] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [volume, setVolumeState] = useState(0.8);
 
   const [keyDetectorOpen, setKeyDetectorOpen] = useState(false);
   const [detectorSections, setDetectorSections] = useState<string[]>([""]);
@@ -130,6 +136,20 @@ export default function Home() {
   );
   const pressedChordsRef = useRef(new Map<string, ChordFlavor | undefined>());
   const preferSharpRef = useRef(preferSharp);
+  const [activeProgressionStep, setActiveProgressionStep] = useState<{
+    mode: string;
+    degreeIndex: number;
+    flavour?: ChordFlavor;
+  } | null>(null);
+  const [activeProgressionId, setActiveProgressionId] = useState<
+    string | null
+  >(null);
+  const activeProgressionIdRef = useRef<string | null>(null);
+  const playbackGenRef = useRef(0);
+  const activeProgressionChordRef = useRef<{
+    chord: Mode["chords"][number];
+    flavour?: ChordFlavor;
+  } | null>(null);
 
   useEffect(() => {
     setIsTouchDevice(
@@ -143,6 +163,73 @@ export default function Home() {
       setTourStepIndex(0);
     }
   }, []);
+
+  useEffect(() => {
+    setVolumeState(getStoredVolume());
+  }, []);
+
+  const handleVolumeChange = useCallback((next: number) => {
+    setVolumeState(next);
+    setVolume(next);
+  }, []);
+
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const handlePlayProgression = useCallback(
+    async (progression: Progression) => {
+      // Rapid re-triggering (clicking another example, or the same one, before
+      // playback finishes) must cut off whatever's currently sounding right away
+      // instead of waiting for the stale loop's own delayed release.
+      if (activeProgressionChordRef.current) {
+        const { chord, flavour } = activeProgressionChordRef.current;
+        triggerReleaseChord(chord, flavour);
+        activeProgressionChordRef.current = null;
+      }
+      // Clicking the currently-playing progression's button again stops it
+      // instead of restarting it from the top.
+      const wasPlayingThis = activeProgressionIdRef.current === progression.id;
+      if (wasPlayingThis) {
+        playbackGenRef.current++;
+        activeProgressionIdRef.current = null;
+        setActiveProgressionStep(null);
+        setActiveProgressionId(null);
+        return;
+      }
+      const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
+      setActiveModes(modeNames);
+      const gen = ++playbackGenRef.current;
+      activeProgressionIdRef.current = progression.id;
+      setActiveProgressionId(progression.id);
+      const modes = generateModes(selectedScale, preferSharp);
+      for (let i = 0; i < progression.steps.length; i++) {
+        if (playbackGenRef.current !== gen) break;
+        const step = progression.steps[i];
+        const mode = modes.find((m) => m.name === step.mode);
+        if (!mode) continue;
+        const chord = mode.chords[step.degreeIndex];
+        setActiveProgressionStep({
+          mode: step.mode,
+          degreeIndex: step.degreeIndex,
+          flavour: step.flavour,
+        });
+        triggerAttackChord(chord, step.flavour);
+        activeProgressionChordRef.current = { chord, flavour: step.flavour };
+        const durationMs =
+          (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 100));
+        await delay(durationMs - 80);
+        if (playbackGenRef.current !== gen) break;
+        triggerReleaseChord(chord, step.flavour);
+        activeProgressionChordRef.current = null;
+      }
+      if (playbackGenRef.current === gen) {
+        activeProgressionIdRef.current = null;
+        setActiveProgressionStep(null);
+        setActiveProgressionId(null);
+      }
+    },
+    [selectedScale, preferSharp]
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -186,6 +273,20 @@ export default function Home() {
         (m) => activeModesRef.current.includes(m.name)
       );
 
+    const findChordForKey = (key: string, activeModesData: Mode[]) => {
+      for (let row = 0; row < KEY_ROWS.length; row++) {
+        const col = KEY_ROWS[row].indexOf(key);
+        if (
+          col !== -1 &&
+          row < activeModesData.length &&
+          col < activeModesData[row].chords.length
+        ) {
+          return activeModesData[row].chords[col];
+        }
+      }
+      return null;
+    };
+
     const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
       pressedChordsRef.current.forEach((oldFlavour, chordName) => {
         triggerReleaseChord(chordName, oldFlavour);
@@ -207,24 +308,13 @@ export default function Home() {
         return;
       }
 
-      const key = e.key.toUpperCase();
-      const activeModesData = getActiveModes();
+      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
+      if (!chordName) return;
 
-      for (let row = 0; row < KEY_ROWS.length; row++) {
-        const col = KEY_ROWS[row].indexOf(key);
-        if (
-          col !== -1 &&
-          row < activeModesData.length &&
-          col < activeModesData[row].chords.length
-        ) {
-          const chordName = activeModesData[row].chords[col];
-          const flavour = sevenFlavourRef.current;
-          pressedChordsRef.current.set(chordName, flavour);
-          setKeyboardPressedChords((prev) => [...prev, chordName]);
-          triggerAttackChord(chordName, flavour);
-          return;
-        }
-      }
+      const activeFlavour = sevenFlavourRef.current;
+      pressedChordsRef.current.set(chordName, activeFlavour);
+      setKeyboardPressedChords((prev) => [...prev, chordName]);
+      triggerAttackChord(chordName, activeFlavour);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -236,26 +326,13 @@ export default function Home() {
         return;
       }
 
-      const key = e.key.toUpperCase();
-      const activeModesData = getActiveModes();
+      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
+      if (!chordName) return;
 
-      for (let row = 0; row < KEY_ROWS.length; row++) {
-        const col = KEY_ROWS[row].indexOf(key);
-        if (
-          col !== -1 &&
-          row < activeModesData.length &&
-          col < activeModesData[row].chords.length
-        ) {
-          const chordName = activeModesData[row].chords[col];
-          const flavour = pressedChordsRef.current.get(chordName);
-          pressedChordsRef.current.delete(chordName);
-          setKeyboardPressedChords((prev) =>
-            prev.filter((c) => c !== chordName)
-          );
-          triggerReleaseChord(chordName, flavour);
-          return;
-        }
-      }
+      const flavour = pressedChordsRef.current.get(chordName);
+      pressedChordsRef.current.delete(chordName);
+      setKeyboardPressedChords((prev) => prev.filter((c) => c !== chordName));
+      triggerReleaseChord(chordName, flavour);
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -270,6 +347,10 @@ export default function Home() {
       pressedChordsRef.current.clear();
     };
   }, []);
+
+  const keyLabel = (index: number) =>
+    preferSharp ? KEYS_SHARP[index] : KEYS[index];
+  const isSelectedKey = (index: number) => selectedScale === KEYS[index];
 
   const toggleActiveMode = (modeName: string) =>
     setActiveModes((prev) =>
@@ -334,24 +415,24 @@ export default function Home() {
               <button
                 key={index}
                 className={`black-key${
-                  selectedScale === KEYS[index] ? " selected" : ""
+                  isSelectedKey(index) ? " selected" : ""
                 } noselect`}
                 style={{ left }}
                 onClick={() => setSelectedScale(KEYS[index])}
-                aria-pressed={selectedScale === KEYS[index]}
-                aria-label={preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+                aria-pressed={isSelectedKey(index)}
+                aria-label={keyLabel(index)}
               >
-                {preferSharp ? KEYS_SHARP[index] : KEYS[index]}
+                {keyLabel(index)}
               </button>
             ))}
             {PIANO_WHITE_KEYS.map(({ index, label }) => (
               <button
                 key={index}
                 className={`white-key${
-                  selectedScale === KEYS[index] ? " selected" : ""
+                  isSelectedKey(index) ? " selected" : ""
                 } noselect`}
                 onClick={() => setSelectedScale(KEYS[index])}
-                aria-pressed={selectedScale === KEYS[index]}
+                aria-pressed={isSelectedKey(index)}
                 aria-label={label}
               >
                 {label}
@@ -363,10 +444,10 @@ export default function Home() {
               <button
                 key={`n-${keyIndex}`}
                 className={`chromatic-grid-item natural${
-                  selectedScale === KEYS[keyIndex] ? " selected" : ""
+                  isSelectedKey(keyIndex) ? " selected" : ""
                 } noselect`}
                 onClick={() => setSelectedScale(KEYS[keyIndex])}
-                aria-pressed={selectedScale === KEYS[keyIndex]}
+                aria-pressed={isSelectedKey(keyIndex)}
                 aria-label={KEYS[keyIndex]}
               >
                 {KEYS[keyIndex]}
@@ -376,35 +457,43 @@ export default function Home() {
               <button
                 key={`a-${col}`}
                 className={`chromatic-grid-item accidental${
-                  keyIndex !== null && selectedScale === KEYS[keyIndex]
+                  keyIndex !== null && isSelectedKey(keyIndex)
                     ? " selected"
                     : ""
                 } noselect`}
                 onClick={() => {
                   if (keyIndex !== null) setSelectedScale(KEYS[keyIndex]);
                 }}
-                aria-pressed={
-                  keyIndex !== null && selectedScale === KEYS[keyIndex]
-                }
-                aria-label={
-                  keyIndex !== null
-                    ? preferSharp
-                      ? KEYS_SHARP[keyIndex]
-                      : KEYS[keyIndex]
-                    : undefined
-                }
+                aria-pressed={keyIndex !== null && isSelectedKey(keyIndex)}
+                aria-label={keyIndex !== null ? keyLabel(keyIndex) : undefined}
                 disabled={keyIndex === null}
                 style={keyIndex === null ? { visibility: "hidden" } : undefined}
               >
-                {keyIndex !== null
-                  ? preferSharp
-                    ? KEYS_SHARP[keyIndex]
-                    : KEYS[keyIndex]
-                  : ""}
+                {keyIndex !== null ? keyLabel(keyIndex) : ""}
               </button>
             ))}
           </div>
+          <div className="volume-control">
+            <label htmlFor="volume-slider">Volume</label>
+            <input
+              id="volume-slider"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              onMouseUp={(e) => e.currentTarget.blur()}
+              onTouchEnd={(e) => e.currentTarget.blur()}
+            />
+          </div>
         </div>
+        <ProgressionsPanel
+          progressions={PROGRESSIONS}
+          modes={generateModes(selectedScale, preferSharp)}
+          onPlay={handlePlayProgression}
+          activeProgressionId={activeProgressionId}
+        />
         <div className="table-container">
           {activeModes.length === 0 ? (
             <h3>Nothing to play 😕</h3>
@@ -426,6 +515,7 @@ export default function Home() {
                             activeRowIndex={activeRowCount++}
                             keyboardPressedChords={keyboardPressedChords}
                             activeFlavour={activeFlavour}
+                            activeProgressionStep={activeProgressionStep}
                           />
                         )}
                       </Fragment>
@@ -641,7 +731,7 @@ export default function Home() {
             </div>
           )}
         </div>
-        <footer>
+        <footer style={{ textAlign: "center" }}>
           © 2020-{new Date().getFullYear()}{" "}
           <a
             href="https://vyonizr.com/"
@@ -666,6 +756,7 @@ export default function Home() {
           >
             ?
           </span>
+          <br />v{packageJson.version}
         </footer>
       </main>
       <Joyride

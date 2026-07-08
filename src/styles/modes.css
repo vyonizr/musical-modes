@@ -187,6 +187,16 @@ td {
   transition: 0.1s ease;
 }
 
+.playable-chord.progression-active {
+  box-shadow: inset 0 0 0 3px var(--primary);
+  background-color: rgba(66, 133, 244, 0.1);
+}
+
+.playable-chord.progression-active.keyboard-active {
+  background-color: var(--primary);
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
 .mode-name-header {
   height: 24px;
   font-size: 0.8em;
@@ -260,6 +270,123 @@ td {
 }
 
 .acc-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  width: calc(100vw - 24px);
+  margin: 6px auto 0;
+}
+
+.volume-control label {
+  white-space: nowrap;
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+/* Progressions Panel */
+
+.progressions-panel {
+  width: 95%;
+  max-width: 515px;
+  margin: 0 auto 1em;
+}
+
+.progressions-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+}
+
+.progressions-toggle:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.progressions-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progression-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  background: #fff;
+  gap: 8px;
+}
+
+.progression-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.progression-name {
+  font-weight: 700;
+  font-size: 0.9em;
+  color: var(--black);
+}
+
+.progression-pattern {
+  font-size: 0.8em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.progression-songs {
+  font-size: 0.75em;
+  color: var(--disabled);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.play-progression-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--primary);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.play-progression-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.play-progression-btn.playing {
   background: var(--primary);
   color: #fff;
 }
@@ -655,4 +782,111 @@ td {
   font-size: 0.85em;
   opacity: 0.8;
   white-space: nowrap;
+}
+
+/* Progressions Panel */
+
+.progressions-panel {
+  width: 95%;
+  max-width: 515px;
+  margin-bottom: 1em;
+}
+
+.progressions-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+}
+
+.progressions-toggle:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.progressions-list {
+  margin-top: 8px;
+}
+
+.progression-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  background: #fff;
+  gap: 8px;
+}
+
+.progression-row:last-child {
+  margin-bottom: 0;
+}
+
+.progression-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.progression-name {
+  font-weight: 700;
+  font-size: 0.85em;
+  color: var(--black);
+}
+
+.progression-pattern {
+  font-size: 0.8em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.progression-songs {
+  font-size: 0.7em;
+  color: var(--disabled);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.play-progression-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.play-progression-btn:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.play-progression-btn.playing {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Progression highlight on grid cells */
+
+td.progression-active {
+  box-shadow: inset 0 0 0 3px var(--primary);
+  background-color: rgba(66, 133, 244, 0.08);
 }

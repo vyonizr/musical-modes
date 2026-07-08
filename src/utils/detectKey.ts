@@ -31,7 +31,7 @@ export interface DetectionResult {
 }
 
 const WEIGHTS = [3, 1, 1, 2.5, 2, 1.5, 0.5]
-const BORROWED_WEIGHT = 0.5
+const BORROWED_WEIGHT = 0.75
 const NON_DIATONIC_WEIGHT = -1
 
 const MODE_CANDIDATES = ['ionian', 'aeolian', 'dorian', 'mixolydian'] as const
@@ -50,10 +50,6 @@ const MODE_LABELS: Record<string, string> = {
   dorian: 'dorian',
   mixolydian: 'mixolydian',
   lydian: 'lydian',
-}
-
-const MODE_WEIGHT_OVERRIDES: Partial<Record<ModeCandidate, Record<number, number>>> = {
-  mixolydian: { 6: 1.5 },
 }
 
 const MINOR_QUALITY_MODES = new Set<ModeCandidate>(['aeolian', 'dorian'])
@@ -132,13 +128,12 @@ function buildWeightMap(
   allModesFlat: Mode[]
 ): Map<string, ChordWeight> {
   const weightMap = new Map<string, ChordWeight>()
-  const overrides = MODE_WEIGHT_OVERRIDES[mode]
 
   const candidate = allModesFlat.find((m) => m.name === mode)!
   for (let i = 0; i < candidate.chords.length; i++) {
     const key = canonicalKey(candidate.chords[i])
     if (key) {
-      weightMap.set(key, { weight: overrides?.[i] ?? WEIGHTS[i], borrowed: false })
+      weightMap.set(key, { weight: WEIGHTS[i], borrowed: false })
     }
   }
 

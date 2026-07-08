@@ -121,11 +121,35 @@ export function displaySusChordName(chordName: string, sus: "sus4" | "sus2"): st
 let synth: Tone.PolySynth | null = null;
 let reverb: Tone.Reverb | null = null;
 let limiter: Tone.Limiter | null = null;
+let volumeNode: Tone.Volume | null = null;
+
+const VOLUME_STORAGE_KEY = "musical-modes-volume";
+
+// 0 (silent) - 1 (full) mapped to -40dB..0dB, matching how humans perceive loudness
+export function volumeToDb(volume: number): number {
+  if (volume <= 0) return -Infinity;
+  return -40 + volume * 40;
+}
+
+export function setVolume(volume: number): void {
+  if (volumeNode) volumeNode.volume.value = volumeToDb(volume);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(VOLUME_STORAGE_KEY, String(volume));
+  }
+}
+
+export function getStoredVolume(): number {
+  if (typeof window === "undefined") return 0.8;
+  const stored = localStorage.getItem(VOLUME_STORAGE_KEY);
+  const parsed = stored ? parseFloat(stored) : NaN;
+  return Number.isFinite(parsed) ? parsed : 0.8;
+}
 
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
     limiter = new Tone.Limiter(-2).toDestination();
-    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(limiter);
+    volumeNode = new Tone.Volume(volumeToDb(getStoredVolume())).connect(limiter);
+    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
     synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: "triangle" },
       envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: 1.2 },
