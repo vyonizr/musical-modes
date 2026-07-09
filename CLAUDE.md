@@ -5,16 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # starts serwist in watch mode + Next.js dev server (via concurrently)
-npm run build    # Next.js production build + serwist SW build
-npm start        # serve production build
+npm run dev      # starts Vite dev server
+npm run build    # production build (Vite + PWA service worker)
+npm start        # serve production build via Vite preview
 ```
 
 Tests: `npm test` (vitest). No linter — do not add one without an explicit request.
 
 ## Architecture
 
-Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/index.tsx`. `TableContent.tsx` is purely presentational.
+Single-page React app built with Vite. All UI state lives in `src/App.tsx`. `TableContent.tsx` is purely presentational.
 
 **Core data flow:**
 1. User picks a root key → `generateModes(scale, preferSharp)` in `src/utils/generateModes.ts` computes all 7 diatonic modes by rotating the Ionian interval pattern (`W W H W W W H`)
@@ -43,7 +43,7 @@ Single-page Next.js 16 app (Pages Router). All UI state lives in `src/pages/inde
 
 ## Key Gotchas
 
-- **PWA / service worker only activates in production.** `serwist.config.mjs` configures the SW; `next.config.mjs` has no PWA config. The dev script runs serwist in `--watch` mode but the SW is not registered by the browser in dev.
+- **PWA / service worker only activates in production.** `vite-plugin-pwa` builds the SW via `injectManifest` strategy during `vite build`; `vite.config.ts` configures it. The SW is not registered by the browser in dev.
 - **Chord cells use `onMouseDown`/`onMouseUp`/`onMouseLeave`**, not `onClick` — `onMouseDown` is intentional for mobile autoplay policy; `onMouseUp`/`onMouseLeave` trigger release. Do not change.
 - **iOS audio is blocked by design.** WebAudio requires a user gesture; the app does not work around this. Known limitation, not a bug.
 - **`tsconfig.json` has `strict: false`.** Do not tighten without being asked.

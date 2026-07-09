@@ -6,7 +6,6 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import Head from "next/head";
 import { Joyride, Step, STATUS, EVENTS, EventData } from "react-joyride";
 
 import {
@@ -14,8 +13,8 @@ import {
   detectKey,
   isValidChordToken,
   parseSection,
-} from "../utils";
-import { DetectionResult } from "../utils/detectKey";
+} from "./utils";
+import { DetectionResult } from "./utils/detectKey";
 import {
   KEYS,
   KEYS_SHARP,
@@ -25,20 +24,20 @@ import {
   PIANO_BLACK_KEYS,
   CHROMATIC_ROW1,
   CHROMATIC_ROW2,
-} from "../utils/constants";
-import { Mode } from "../utils/types";
+} from "./utils/constants";
+import { Mode } from "./utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
   setVolume,
   getStoredVolume,
   ChordFlavor,
-} from "../utils/chords";
+} from "./utils/chords";
 
-import TableContent from "../components/TableContent";
-import { PROGRESSIONS, Progression } from "../utils/progressions";
-import ProgressionsPanel from "../components/ProgressionsPanel";
-import packageJson from "../../package.json";
+import TableContent from "./components/TableContent";
+import { PROGRESSIONS, Progression } from "./utils/progressions";
+import ProgressionsPanel from "./components/ProgressionsPanel";
+import packageJson from "../package.json";
 
 const TOUR_STEPS: Step[] = [
   {
@@ -52,7 +51,7 @@ const TOUR_STEPS: Step[] = [
     content: (
       <span>
         Switch between flat (<code>♭</code>) and sharp (<code>♯</code>) spelling
-        for accidental notes — same sound, different notation.
+        for accidental notes. Same sound, different notation.
       </span>
     ),
   },
@@ -70,7 +69,7 @@ const TOUR_STEPS: Step[] = [
     target: "table",
     content: (
       <span>
-        Your keyboard maps to the chords too — <code>Q</code> through{" "}
+        Your keyboard maps to the chords too. <code>Q</code> through{" "}
         <code>U</code> for the top row, <code>A</code> through <code>J</code>{" "}
         for the second, <code>Z</code> through <code>M</code> for the third.
       </span>
@@ -82,7 +81,7 @@ const TOUR_STEPS: Step[] = [
       <span>
         Hold <code>,</code> or <code>.</code> for 7th chords; <code>k</code> or{" "}
         <code>l</code> for sus chords. You can press a modifier before or after
-        a chord key — hold a chord and add the modifier to hear it transform
+        a chord key. Hold a chord and add the modifier to hear it transform
         instantly.
       </span>
     ),
@@ -91,6 +90,11 @@ const TOUR_STEPS: Step[] = [
     target: ".key-detector-toggle",
     content:
       "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
+  },
+  {
+    target: ".progressions-toggle",
+    content:
+      "Browse chord progressions from real songs, resolved to your current key. Tap one to hear it played back.",
   },
 ];
 
@@ -109,7 +113,7 @@ function isTextInput(target: EventTarget | null): boolean {
   return false;
 }
 
-export default function Home() {
+export default function App() {
   const [selectedScale, setSelectedScale] = useState("C");
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]]);
   const [preferSharp, setPreferSharp] = useState(false);
@@ -384,10 +388,6 @@ export default function Home() {
 
   return (
     <div>
-      <Head>
-        <title>Musical Modes</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <main>
         <h1 className="title black">Musical Modes</h1>
         <div className="key-selector-root">
