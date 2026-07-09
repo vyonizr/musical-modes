@@ -31,6 +31,8 @@ Single-page React app built with Vite. All UI state lives in `src/App.tsx`. `Tab
 
 **Onboarding tour:** `react-joyride` runs once on first visit; `localStorage('musical-modes-tour-seen')` gates it. Restartable via the `?` link in the footer.
 
+**Copy / i18n:** all UI copy lives in `src/locales/en.json`, accessed via `react-i18next`'s `useTranslation()` / `t()` — `src/i18n.ts` initialises `i18next` with `en` as the only, fixed language (no switcher, no detector) and is imported once for its side effect from `main.tsx`. Parameterized copy uses i18next interpolation (`"Section {{n}} chords"` + `t('keyDetector.sectionPlaceholder', { n })`), not template literals. Two spots are deliberately *not* run through `t()`: the accidental-toggle and keyboard-mapping steps in `TOUR_STEPS`, and the `#modifier-hint` paragraph in `App.tsx` — all three interleave translated text with inline `<code>` markup, which `t()` can't express; `<Trans>` is the intended upgrade path if that's ever needed. To find copy that's no longer referenced (generic unused-export tools like `knip`/`ts-prune` can't see into `en.json`), run `npm run i18n:unused` (wraps the `i18n-unused` package) — it's a manual/local check, not wired into CI. See `docs/sdd/specs/2026-07-10-extract-ui-strings.md` and `docs/sdd/specs/2026-07-10-i18next-migration.md` for the rationale.
+
 **Import paths** use `baseUrl: "."` (tsconfig), so imports look like `src/utils/types` not `../../utils/types`. Follow existing pattern.
 
 **Design docs** live in `docs/sdd/specs/` as dated markdown files (e.g. `2026-07-01-feature-name.md`). Check there before implementing a feature — specs often contain rationale, voicing tables, and out-of-scope decisions that aren't obvious from the code.

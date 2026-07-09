@@ -49,6 +49,7 @@ Working backwards from chords to key stops being guesswork too. Type what you've
 | Audio | Tone.js (PolySynth, guitar voicings) |
 | PWA | vite-plugin-pwa |
 | Styling | Plain CSS |
+| i18n | react-i18next (English only, structured for future locales) |
 
 ## Getting Started
 
