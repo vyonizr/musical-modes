@@ -34,6 +34,7 @@ import {
   ChordFlavor,
 } from "./utils/chords";
 
+import { STRINGS } from "./utils/strings";
 import TableContent from "./components/TableContent";
 import { PROGRESSIONS, Progression } from "./utils/progressions";
 import ProgressionsPanel from "./components/ProgressionsPanel";
@@ -42,10 +43,10 @@ import packageJson from "../package.json";
 const TOUR_STEPS: Step[] = [
   {
     target: "#modes",
-    content:
-      "Tap a note on the keyboard to set the root key. Every chord on the page updates to match.",
+    content: STRINGS.tour.rootKeyStep,
     skipBeacon: true,
   },
+  // ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md
   {
     target: ".accidental-toggle",
     content: (
@@ -57,14 +58,13 @@ const TOUR_STEPS: Step[] = [
   },
   {
     target: ".legends-wrapper",
-    content:
-      "Toggle which modes are shown. Each coloured button is a different musical mode.",
+    content: STRINGS.tour.toggleModesStep,
   },
   {
     target: "table",
-    content:
-      "Tap any chord to play it. On desktop, you can hold it down to sustain.",
+    content: STRINGS.tour.playChordStep,
   },
+  // ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md
   {
     target: "table",
     content: (
@@ -75,6 +75,7 @@ const TOUR_STEPS: Step[] = [
       </span>
     ),
   },
+  // ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md
   {
     target: "#modifier-hint",
     content: (
@@ -88,13 +89,11 @@ const TOUR_STEPS: Step[] = [
   },
   {
     target: ".key-detector-toggle",
-    content:
-      "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
+    content: STRINGS.tour.keyDetectorStep,
   },
   {
     target: ".progressions-toggle",
-    content:
-      "Browse chord progressions from real songs, resolved to your current key. Tap one to hear it played back.",
+    content: STRINGS.tour.progressionsStep,
   },
 ];
 
@@ -389,10 +388,10 @@ export default function App() {
   return (
     <div>
       <main>
-        <h1 className="title black">Musical Modes</h1>
+        <h1 className="title black">{STRINGS.header.title}</h1>
         <div className="key-selector-root">
           <div className="key-selector-header">
-            <label>Root Key</label>
+            <label>{STRINGS.header.rootKeyLabel}</label>
             <div className="accidental-toggle">
               <button
                 className={`acc-btn${!preferSharp ? " active" : ""}`}
@@ -474,7 +473,7 @@ export default function App() {
             ))}
           </div>
           <div className="volume-control">
-            <label htmlFor="volume-slider">Volume</label>
+            <label htmlFor="volume-slider">{STRINGS.header.volumeLabel}</label>
             <input
               id="volume-slider"
               type="range"
@@ -496,11 +495,11 @@ export default function App() {
         />
         <div className="table-container">
           {activeModes.length === 0 ? (
-            <h3>Nothing to play 😕</h3>
+            <h3>{STRINGS.table.nothingToPlay}</h3>
           ) : (
             <Fragment>
               <p className="black" style={{ marginTop: "0.5rem" }}>
-                Tap or use keyboard to play the chords
+                {STRINGS.table.playHint}
               </p>
               <table>
                 {(() => {
@@ -526,6 +525,7 @@ export default function App() {
             </Fragment>
           )}
         </div>
+        {/* ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md */}
         <p
           id="modifier-hint"
           className="black"
@@ -535,7 +535,7 @@ export default function App() {
           &middot; <code>l</code> for 7th / sus chords
         </p>
         <p className="black" style={{ marginTop: "1rem" }}>
-          Toggle modes
+          {STRINGS.table.toggleModesHint}
         </p>
         <div className="legends-wrapper">
           {COLOR_CLASSNAMES.map((modeName: string, index: number) => (
@@ -558,12 +558,11 @@ export default function App() {
             onClick={() => setKeyDetectorOpen((prev) => !prev)}
             aria-expanded={keyDetectorOpen}
           >
-            Don&apos;t know the key? Detect it from chords{" "}
+            {STRINGS.keyDetector.toggleLabel}{" "}
             {keyDetectorOpen ? "\u25B4" : "\u25BE"}
           </button>
           <p className="key-detector-hint">
-            ⚠️ Experimental &mdash; best-guess detection for ionian and aeolian
-            modes only
+            {STRINGS.keyDetector.experimentalHint}
           </p>
           {keyDetectorOpen && (
             <div className="key-detector-body">
@@ -580,7 +579,7 @@ export default function App() {
                         className={`chord-input${
                           invalidTokens.length > 0 ? " chord-input-invalid" : ""
                         }`}
-                        placeholder={`Section ${si + 1} chords (e.g. C G Am F)`}
+                        placeholder={STRINGS.keyDetector.sectionPlaceholder(si + 1)}
                         value={section}
                         onChange={(e) => {
                           const next = [...detectorSections];
@@ -601,7 +600,7 @@ export default function App() {
                             );
                             setDetectionResults(null);
                           }}
-                          aria-label={`Remove section ${si + 1}`}
+                          aria-label={STRINGS.keyDetector.removeSectionLabel(si + 1)}
                         >
                           &times;
                         </button>
@@ -609,7 +608,7 @@ export default function App() {
                     </div>
                     {invalidTokens.length > 0 && (
                       <p className="chord-input-error">
-                        Not a chord: {invalidTokens.join(", ")}
+                        {STRINGS.keyDetector.notAChord(invalidTokens.join(", "))}
                       </p>
                     )}
                   </div>
@@ -619,7 +618,7 @@ export default function App() {
                 className="add-section-btn"
                 onClick={() => setDetectorSections((prev) => [...prev, ""])}
               >
-                + Add section
+                {STRINGS.keyDetector.addSection}
               </button>
               <button
                 className="detect-btn"
@@ -632,12 +631,12 @@ export default function App() {
                   setDetectionResults(results);
                 }}
               >
-                Detect Key
+                {STRINGS.keyDetector.detect}
               </button>
               {detectionResults && detectionResults.length > 0 && (
                 <div className="detection-results">
                   <p className="detection-disclaimer">
-                    Based on chord matching, not a definitive analysis
+                    {STRINGS.keyDetector.resultsDisclaimer}
                   </p>
                   {(() => {
                     const topScore = detectionResults[0].totalScore;
@@ -648,7 +647,7 @@ export default function App() {
                     return (
                       <>
                         <p className="detection-heading">
-                          {isTie ? "Top results (tied):" : "Best guess:"}
+                          {isTie ? STRINGS.keyDetector.tiedResultsHeading : STRINGS.keyDetector.bestGuessHeading}
                         </p>
                         {tied.map((result, i) => (
                           <div key={i} className="detection-result-group">
@@ -676,11 +675,11 @@ export default function App() {
                                   className="detection-section"
                                 >
                                   <span className="detection-section-label">
-                                    Section {section.sectionIndex + 1}
+                                    {STRINGS.keyDetector.sectionLabel(section.sectionIndex + 1)}
                                     {section.cadentialMatch && (
                                       <span className="tag-note">
                                         {" "}
-                                        &mdash; resolves to tonic
+                                        &mdash; {STRINGS.keyDetector.resolvesToTonic}
                                       </span>
                                     )}
                                     :
@@ -701,13 +700,13 @@ export default function App() {
                                         {m.borrowed && m.borrowedFrom && (
                                           <span className="tag-note">
                                             {" "}
-                                            (borrowed from {m.borrowedFrom})
+                                            {STRINGS.keyDetector.borrowedFrom(m.borrowedFrom)}
                                           </span>
                                         )}
                                         {m.nonDiatonic && (
                                           <span className="tag-note">
                                             {" "}
-                                            (non-diatonic)
+                                            {STRINGS.keyDetector.nonDiatonic}
                                           </span>
                                         )}
                                       </span>
@@ -725,7 +724,7 @@ export default function App() {
               )}
               {detectionResults && detectionResults.length === 0 && (
                 <p className="detection-empty">
-                  Enter at least one chord to detect a key.
+                  {STRINGS.keyDetector.emptyState}
                 </p>
               )}
             </div>
@@ -738,7 +737,7 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            vyonizr
+            {STRINGS.footer.authorLabel}
           </a>{" "}
           |{" "}
           <a
@@ -746,7 +745,7 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Github
+            {STRINGS.footer.githubLabel}
           </a>{" "}
           |{" "}
           <span
@@ -773,9 +772,9 @@ export default function App() {
           zIndex: 10000,
         }}
         locale={{
-          next: "Next",
-          skip: "Skip",
-          last: "Done",
+          next: STRINGS.tour.joyrideNext,
+          skip: STRINGS.tour.joyrideSkip,
+          last: STRINGS.tour.joyrideLast,
         }}
       />
     </div>

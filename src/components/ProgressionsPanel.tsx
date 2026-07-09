@@ -4,6 +4,7 @@ import { Progression } from 'src/utils/progressions'
 import { Mode } from 'src/utils/types'
 import { ChordFlavor } from 'src/utils/chords'
 import { analyzeLoop } from 'src/utils/loop'
+import { STRINGS } from 'src/utils/strings'
 
 interface IProps {
   progressions: Progression[]
@@ -31,12 +32,12 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
       >
-        Chord Progressions {open ? '\u25B4' : '\u25BE'}
+        {STRINGS.progressions.toggleLabel} {open ? '\u25B4' : '\u25BE'}
       </button>
       {open && (
         <div className="progressions-list">
           <p className="progressions-disclaimer">
-            Not official music theory terms. Names are just what I like to call them / how the progression feels.
+            {STRINGS.progressions.disclaimer}
           </p>
           {progressions.map(p => {
             const romanNumerals = p.steps.map(step => {
@@ -57,7 +58,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
                       href={p.spotifyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Open playlist on Spotify"
+                      title={STRINGS.progressions.spotifyLinkTitle}
                     >
                       {p.name}
                       <svg
