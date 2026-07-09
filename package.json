@@ -7,23 +7,26 @@
     "build": "vite build",
     "start": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "i18n:unused": "i18n-unused display-unused"
   },
   "dependencies": {
+    "i18next": "^26.3.6",
     "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-i18next": "^17.0.9",
     "react-joyride": "^3.1.0",
     "serwist": "^9.5.11",
     "tone": "^15.1.22"
   },
   "devDependencies": {
-
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.4.2",
     "esbuild": "^0.28.1",
+    "i18n-unused": "^0.19.0",
     "prettier": "2.8.7",
     "typescript": "^5",
     "vite": "^6.3.5",

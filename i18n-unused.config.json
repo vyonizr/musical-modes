@@ -1,0 +1,5 @@
+{
+  "srcPath": "src",
+  "localesPath": "src/locales",
+  "translationKeyMatcher": "/\\bt\\(\"[a-zA-Z0-9_.]+/gi"
+}

@@ -4,7 +4,7 @@ import { Progression } from 'src/utils/progressions'
 import { Mode } from 'src/utils/types'
 import { ChordFlavor } from 'src/utils/chords'
 import { analyzeLoop } from 'src/utils/loop'
-import { STRINGS } from 'src/utils/strings'
+import { useTranslation } from 'react-i18next'
 
 interface IProps {
   progressions: Progression[]
@@ -23,6 +23,7 @@ function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
 }
 
 const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }: IProps) => {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -32,12 +33,12 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
       >
-        {STRINGS.progressions.toggleLabel} {open ? '\u25B4' : '\u25BE'}
+        {t("progressions.toggleLabel")} {open ? '\u25B4' : '\u25BE'}
       </button>
       {open && (
         <div className="progressions-list">
           <p className="progressions-disclaimer">
-            {STRINGS.progressions.disclaimer}
+            {t("progressions.disclaimer")}
           </p>
           {progressions.map(p => {
             const romanNumerals = p.steps.map(step => {
@@ -58,7 +59,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
                       href={p.spotifyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title={STRINGS.progressions.spotifyLinkTitle}
+                      title={t("progressions.spotifyLinkTitle")}
                     >
                       {p.name}
                       <svg
