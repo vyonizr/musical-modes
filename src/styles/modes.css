@@ -350,6 +350,23 @@ td {
   color: var(--black);
 }
 
+.progression-spotify-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.progression-spotify-link:hover {
+  text-decoration: underline;
+}
+
+.spotify-icon {
+  color: #1db954;
+  flex-shrink: 0;
+}
+
 .progression-pattern {
   font-size: 0.8em;
   color: var(--primary);
