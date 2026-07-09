@@ -51,7 +51,7 @@ const TOUR_STEPS: Step[] = [
     content: (
       <span>
         Switch between flat (<code>♭</code>) and sharp (<code>♯</code>) spelling
-        for accidental notes — same sound, different notation.
+        for accidental notes. Same sound, different notation.
       </span>
     ),
   },
@@ -69,7 +69,7 @@ const TOUR_STEPS: Step[] = [
     target: "table",
     content: (
       <span>
-        Your keyboard maps to the chords too — <code>Q</code> through{" "}
+        Your keyboard maps to the chords too. <code>Q</code> through{" "}
         <code>U</code> for the top row, <code>A</code> through <code>J</code>{" "}
         for the second, <code>Z</code> through <code>M</code> for the third.
       </span>
@@ -81,7 +81,7 @@ const TOUR_STEPS: Step[] = [
       <span>
         Hold <code>,</code> or <code>.</code> for 7th chords; <code>k</code> or{" "}
         <code>l</code> for sus chords. You can press a modifier before or after
-        a chord key — hold a chord and add the modifier to hear it transform
+        a chord key. Hold a chord and add the modifier to hear it transform
         instantly.
       </span>
     ),
@@ -90,6 +90,11 @@ const TOUR_STEPS: Step[] = [
     target: ".key-detector-toggle",
     content:
       "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
+  },
+  {
+    target: ".progressions-toggle",
+    content:
+      "Browse chord progressions from real songs, resolved to your current key. Tap one to hear it played back.",
   },
 ];
 
