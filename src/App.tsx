@@ -6,7 +6,6 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import Head from "next/head";
 import { Joyride, Step, STATUS, EVENTS, EventData } from "react-joyride";
 
 import {
@@ -14,8 +13,8 @@ import {
   detectKey,
   isValidChordToken,
   parseSection,
-} from "../utils";
-import { DetectionResult } from "../utils/detectKey";
+} from "./utils";
+import { DetectionResult } from "./utils/detectKey";
 import {
   KEYS,
   KEYS_SHARP,
@@ -25,20 +24,20 @@ import {
   PIANO_BLACK_KEYS,
   CHROMATIC_ROW1,
   CHROMATIC_ROW2,
-} from "../utils/constants";
-import { Mode } from "../utils/types";
+} from "./utils/constants";
+import { Mode } from "./utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
   setVolume,
   getStoredVolume,
   ChordFlavor,
-} from "../utils/chords";
+} from "./utils/chords";
 
-import TableContent from "../components/TableContent";
-import { PROGRESSIONS, Progression } from "../utils/progressions";
-import ProgressionsPanel from "../components/ProgressionsPanel";
-import packageJson from "../../package.json";
+import TableContent from "./components/TableContent";
+import { PROGRESSIONS, Progression } from "./utils/progressions";
+import ProgressionsPanel from "./components/ProgressionsPanel";
+import packageJson from "../package.json";
 
 const TOUR_STEPS: Step[] = [
   {
@@ -109,7 +108,7 @@ function isTextInput(target: EventTarget | null): boolean {
   return false;
 }
 
-export default function Home() {
+export default function App() {
   const [selectedScale, setSelectedScale] = useState("C");
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]]);
   const [preferSharp, setPreferSharp] = useState(false);
@@ -384,10 +383,6 @@ export default function Home() {
 
   return (
     <div>
-      <Head>
-        <title>Musical Modes</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <main>
         <h1 className="title black">Musical Modes</h1>
         <div className="key-selector-root">
