@@ -29,7 +29,14 @@
   "progressions": {
     "toggleLabel": "Chord Progressions",
     "disclaimer": "Not official music theory terms. Names are just what I like to call them / how the progression feels.",
-    "spotifyLinkTitle": "Open playlist on Spotify"
+    "spotifyLinkTitle": "Open playlist on Spotify",
+    "copyEmbedLabel": "Copy embed code",
+    "embedCopied": "Embed code copied!",
+    "playLabel": "Play",
+    "stopLabel": "Stop"
+  },
+  "embed": {
+    "backlink": "Musical Modes"
   },
   "tour": {
     "rootKeyStep": "Tap a note on the keyboard to set the root key. Every chord on the page updates to match.",
