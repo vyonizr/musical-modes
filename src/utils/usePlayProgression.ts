@@ -55,7 +55,7 @@ export function usePlayProgression() {
         triggerAttackChord(chord, step.flavour);
         activeProgressionChordRef.current = { chord, flavour: step.flavour };
         const durationMs =
-          (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 100));
+          (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 120));
         await delay(durationMs - 80);
         if (playbackGenRef.current !== gen) break;
         triggerReleaseChord(chord, step.flavour);

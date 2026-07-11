@@ -1,11 +1,21 @@
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useCallback } from "react";
 import { Play, Square } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { generateModes } from "src/utils";
 import { KEYS } from "src/utils/constants";
 import { usePlayProgression } from "src/utils/usePlayProgression";
-import { PROGRESSIONS } from "src/utils/progressions";
+import { PROGRESSIONS, Progression } from "src/utils/progressions";
+import { ChordFlavor } from "src/utils/chords";
 import TableContent from "src/components/TableContent";
+
+function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
+  if (!flavour) return roman;
+  if (flavour === "flat7") return roman + "7";
+  if (flavour === "maj7") return roman + "maj7";
+  if (flavour === "sus4") return roman + "sus4";
+  if (flavour === "sus2") return roman + "sus2";
+  return roman;
+}
 
 export default function EmbedWidget() {
   const { t } = useTranslation();
@@ -21,6 +31,9 @@ export default function EmbedWidget() {
 
   const progression = PROGRESSIONS.find((p) => p.id === progressionId) || PROGRESSIONS[0];
   const effectiveBpm = bpmOverride || progression.bpm;
+  const effectiveProgression: Progression = bpmOverride
+    ? { ...progression, bpm: bpmOverride }
+    : progression;
 
   const modes = useMemo(() => generateModes(selectedScale, preferSharp), [selectedScale, preferSharp]);
 
@@ -29,11 +42,21 @@ export default function EmbedWidget() {
     [progression]
   );
 
+  const pattern = useMemo(() => {
+    return progression.steps
+      .map((step) => {
+        const mode = modes.find((m) => m.name === step.mode);
+        const roman = mode ? mode.romanNumerals[step.degreeIndex] : "?";
+        return romanWithFlavour(roman, step.flavour);
+      })
+      .join(" \u2013 ");
+  }, [progression, modes]);
+
   const { activeProgressionStep, activeProgressionId, handlePlayProgression } = usePlayProgression();
 
-  const handlePlay = () => {
-    handlePlayProgression(progression, modes);
-  };
+  const handlePlay = useCallback(() => {
+    handlePlayProgression(effectiveProgression, modes);
+  }, [effectiveProgression, modes, handlePlayProgression]);
 
   const backlinkParams = new URLSearchParams();
   backlinkParams.set("key", selectedScale.replace("♭", "b"));
@@ -45,6 +68,7 @@ export default function EmbedWidget() {
       <div className="embed-header">
         <div className="embed-header-info">
           <span className="embed-progression-name">{progression.name}</span>
+          <span className="embed-progression-pattern">{pattern}</span>
           <span className="embed-progression-bpm">{effectiveBpm} BPM</span>
         </div>
         <button

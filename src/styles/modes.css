@@ -977,6 +977,12 @@ td.progression-active {
   color: var(--black);
 }
 
+.embed-progression-pattern {
+  font-size: 0.8em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .embed-progression-bpm {
   font-size: 0.75em;
   color: var(--disabled);
