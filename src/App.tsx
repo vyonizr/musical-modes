@@ -38,6 +38,7 @@ import { useTranslation } from "react-i18next";
 import TableContent from "./components/TableContent";
 import { PROGRESSIONS, Progression } from "./utils/progressions";
 import ProgressionsPanel from "./components/ProgressionsPanel";
+import ProgressionBuilder from "./components/ProgressionBuilder";
 import { usePlayProgression } from "./utils/usePlayProgression";
 import { computeEmbedHeight } from "./utils/embed";
 import packageJson from "../package.json";
@@ -179,7 +180,7 @@ export default function App() {
       const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
       const height = computeEmbedHeight(modeNames.length);
       const src = `${window.location.origin}/?embed=1&progression=${progression.id}&key=${selectedScale.replace("♭", "b")}&acc=${preferSharp ? "sharp" : "flat"}&bpm=${progression.bpm ?? 120}`;
-      const iframe = `<iframe src="${src}" width="480" height="${height}" frameborder="0" loading="lazy" title="${progression.name} — Musical Modes"></iframe>`;
+      const iframe = `<iframe src="${src}" width="375" height="${height}" frameborder="0" loading="lazy" title="${progression.name} — Musical Modes"></iframe>`;
       navigator.clipboard.writeText(iframe);
     },
     [selectedScale, preferSharp]
@@ -444,6 +445,13 @@ export default function App() {
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
           onCopyEmbed={handleCopyEmbed}
+        />
+        <ProgressionBuilder
+          modes={generateModes(selectedScale, preferSharp)}
+          selectedScale={selectedScale}
+          preferSharp={preferSharp}
+          onPlay={handlePlayProgression}
+          activeProgressionId={activeProgressionId}
         />
         <div className="table-container">
           {activeModes.length === 0 ? (

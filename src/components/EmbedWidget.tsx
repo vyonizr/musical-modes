@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { generateModes } from "src/utils";
 import { KEYS } from "src/utils/constants";
 import { usePlayProgression } from "src/utils/usePlayProgression";
-import { PROGRESSIONS, Progression } from "src/utils/progressions";
+import { PROGRESSIONS, Progression, ProgressionStep } from "src/utils/progressions";
 import { ChordFlavor } from "src/utils/chords";
+import { decodeSteps } from "src/utils/steps";
 import TableContent from "src/components/TableContent";
 
 function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
@@ -17,11 +18,40 @@ function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
   return roman;
 }
 
+function isValidSteps(steps: ProgressionStep[]): boolean {
+  return steps.every(
+    (s) =>
+      typeof s.mode === "string" &&
+      s.mode.length > 0 &&
+      typeof s.degreeIndex === "number" &&
+      Number.isFinite(s.degreeIndex)
+  );
+}
+
+function buildProgression(params: URLSearchParams): Progression {
+  const stepsParam = params.get("steps");
+  if (stepsParam) {
+    const steps = decodeSteps(stepsParam);
+    if (steps.length > 0 && isValidSteps(steps)) {
+      const bpm = params.get("bpm") ? parseInt(params.get("bpm")!, 10) : undefined;
+      return {
+        id: "custom",
+        name: "Custom progression",
+        bpm,
+        steps,
+        songs: [],
+      };
+    }
+  }
+
+  const progressionId = params.get("progression") || PROGRESSIONS[0].id;
+  return PROGRESSIONS.find((p) => p.id === progressionId) || PROGRESSIONS[0];
+}
+
 export default function EmbedWidget() {
   const { t } = useTranslation();
   const params = new URLSearchParams(location.search);
 
-  const progressionId = params.get("progression") || PROGRESSIONS[0].id;
   const keyParam = params.get("key") || "C";
   const accParam = params.get("acc") || "flat";
   const bpmOverride = params.get("bpm") ? parseInt(params.get("bpm")!, 10) : undefined;
@@ -29,7 +59,7 @@ export default function EmbedWidget() {
   const selectedScale = KEYS.find((k) => k.replace("♭", "b") === keyParam) || "C";
   const preferSharp = accParam === "sharp";
 
-  const progression = PROGRESSIONS.find((p) => p.id === progressionId) || PROGRESSIONS[0];
+  const progression = buildProgression(params);
   const effectiveBpm = bpmOverride || progression.bpm;
   const effectiveProgression: Progression = bpmOverride
     ? { ...progression, bpm: bpmOverride }
@@ -94,6 +124,7 @@ export default function EmbedWidget() {
                     keyboardPressedChords={[]}
                     activeFlavour={undefined}
                     activeProgressionStep={activeProgressionStep}
+                    showKeyHint={false}
                   />
                 </Fragment>
               ));

@@ -10,6 +10,7 @@ interface IProps {
   keyboardPressedChords: string[]
   activeFlavour?: ChordFlavor
   activeProgressionStep?: { mode: string; degreeIndex: number; flavour?: ChordFlavor } | null
+  showKeyHint?: boolean
 }
 
 const TableContent = ({
@@ -19,6 +20,7 @@ const TableContent = ({
   keyboardPressedChords,
   activeFlavour,
   activeProgressionStep,
+  showKeyHint = true,
 }: IProps) => {
   const capitalizedName = mode.name.charAt(0).toUpperCase() + mode.name.slice(1)
 
@@ -63,7 +65,7 @@ const TableContent = ({
               <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>
               <span className='roman-label'>{mode.romanNumerals[chordIndex]}</span>
             </div>
-            {activeRowIndex < KEY_ROWS.length && (
+            {showKeyHint && activeRowIndex < KEY_ROWS.length && (
               <span className='key-hint'>{KEY_ROWS[activeRowIndex][chordIndex]}</span>
             )}
           </td>

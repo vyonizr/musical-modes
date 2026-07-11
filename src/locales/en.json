@@ -35,6 +35,14 @@
     "playLabel": "Play",
     "stopLabel": "Stop"
   },
+  "progressionBuilder": {
+    "toggleLabel": "Build Your Own Progression",
+    "bpmLabel": "BPM:",
+    "barsLabel": "bars",
+    "addStep": "Add step",
+    "removeStepLabel": "Remove step",
+    "copyEmbed": "Copy embed code"
+  },
   "embed": {
     "backlink": "Musical Modes"
   },
