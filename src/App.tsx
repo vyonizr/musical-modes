@@ -1,116 +1,33 @@
-import {
-  Fragment,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
-import { Joyride, Step, STATUS, EVENTS, EventData } from "react-joyride";
+import { Fragment, useState, useEffect, useCallback } from "react";
+import { Joyride } from "react-joyride";
 
-import {
-  generateModes,
-  detectKey,
-  isValidChordToken,
-  parseSection,
-} from "./utils";
-import { DetectionResult } from "./utils/detectKey";
+import { generateModes } from "./utils";
+import { Mode } from "./utils/types";
 import {
   KEYS,
   KEYS_SHARP,
   COLOR_CLASSNAMES,
-  KEY_ROWS,
   PIANO_WHITE_KEYS,
   PIANO_BLACK_KEYS,
   CHROMATIC_ROW1,
   CHROMATIC_ROW2,
 } from "./utils/constants";
-import { Mode } from "./utils/types";
-import {
-  triggerAttackChord,
-  triggerReleaseChord,
-  setVolume,
-  getStoredVolume,
-  ChordFlavor,
-} from "./utils/chords";
+import { setVolume, getStoredVolume } from "./utils/chords";
 
 import { useTranslation } from "react-i18next";
 import TableContent from "./components/TableContent";
 import { PROGRESSIONS, Progression } from "./utils/progressions";
 import ProgressionsPanel from "./components/ProgressionsPanel";
+import ProgressionBuilder from "./components/ProgressionBuilder";
+import KeyDetectorPanel from "./components/KeyDetectorPanel";
+import { usePlayProgression } from "./utils/usePlayProgression";
+import { useOnboardingTour } from "./utils/useOnboardingTour";
+import { useChordKeyboardInput } from "./utils/useChordKeyboardInput";
+import { buildEmbedSnippet } from "./utils/embed";
 import packageJson from "../package.json";
-
-const MODIFIER_KEYS: Record<string, ChordFlavor> = {
-  ",": "flat7",
-  ".": "maj7",
-  k: "sus2",
-  l: "sus4",
-};
-
-function isTextInput(target: EventTarget | null): boolean {
-  if (!target || !(target instanceof HTMLElement)) return false;
-  const tag = target.tagName.toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if (target.isContentEditable) return true;
-  return false;
-}
 
 export default function App() {
   const { t } = useTranslation();
-
-  const TOUR_STEPS: Step[] = [
-    {
-      target: "#modes",
-      content: t("tour.rootKeyStep"),
-      skipBeacon: true,
-    },
-    {
-      target: ".accidental-toggle",
-      content: (
-        <span>
-          Switch between flat (<code>♭</code>) and sharp (<code>♯</code>) spelling
-          for accidental notes. Same sound, different notation.
-        </span>
-      ),
-    },
-    {
-      target: ".legends-wrapper",
-      content: t("tour.toggleModesStep"),
-    },
-    {
-      target: "table",
-      content: t("tour.playChordStep"),
-    },
-    {
-      target: "table",
-      content: (
-        <span>
-          Your keyboard maps to the chords too. <code>Q</code> through{" "}
-          <code>U</code> for the top row, <code>A</code> through <code>J</code>{" "}
-          for the second, <code>Z</code> through <code>M</code> for the third.
-        </span>
-      ),
-    },
-    {
-      target: "#modifier-hint",
-      content: (
-        <span>
-          Hold <code>,</code> or <code>.</code> for 7th chords; <code>k</code> or{" "}
-          <code>l</code> for sus chords. You can press a modifier before or after
-          a chord key. Hold a chord and add the modifier to hear it transform
-          instantly.
-        </span>
-      ),
-    },
-    {
-      target: ".key-detector-toggle",
-      content: t("tour.keyDetectorStep"),
-    },
-    {
-      target: ".progressions-toggle",
-      content: t("tour.progressionsStep"),
-    },
-  ];
 
   const [selectedScale, setSelectedScale] = useState("C");
   const [activeModes, setActiveModes] = useState([COLOR_CLASSNAMES[0]]);
@@ -118,52 +35,17 @@ export default function App() {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
 
-  const [keyDetectorOpen, setKeyDetectorOpen] = useState(false);
-  const [detectorSections, setDetectorSections] = useState<string[]>([""]);
-  const [detectionResults, setDetectionResults] = useState<
-    DetectionResult[] | null
-  >(null);
-
-  const [tourRun, setTourRun] = useState(false);
-  const [tourStepIndex, setTourStepIndex] = useState(0);
-
-  const selectedScaleRef = useRef(selectedScale);
-  const activeModesRef = useRef(activeModes);
-  const sevenFlavourRef = useRef<ChordFlavor | undefined>(undefined);
-  const [activeFlavour, setActiveFlavour] = useState<ChordFlavor | undefined>(
-    undefined
+  const { activeFlavour, keyboardPressedChords } = useChordKeyboardInput(
+    selectedScale,
+    activeModes,
+    preferSharp
   );
-  const [keyboardPressedChords, setKeyboardPressedChords] = useState<string[]>(
-    []
-  );
-  const pressedChordsRef = useRef(new Map<string, ChordFlavor | undefined>());
-  const preferSharpRef = useRef(preferSharp);
-  const [activeProgressionStep, setActiveProgressionStep] = useState<{
-    mode: string;
-    degreeIndex: number;
-    flavour?: ChordFlavor;
-  } | null>(null);
-  const [activeProgressionId, setActiveProgressionId] = useState<
-    string | null
-  >(null);
-  const activeProgressionIdRef = useRef<string | null>(null);
-  const playbackGenRef = useRef(0);
-  const activeProgressionChordRef = useRef<{
-    chord: Mode["chords"][number];
-    flavour?: ChordFlavor;
-  } | null>(null);
+  const { activeProgressionStep, activeProgressionId, handlePlayProgression: hookPlayProgression } = usePlayProgression();
 
   useEffect(() => {
     setIsTouchDevice(
       !window.matchMedia("(hover: hover) and (pointer: fine)").matches
     );
-  }, []);
-
-  useEffect(() => {
-    if (!localStorage.getItem("musical-modes-tour-seen")) {
-      setTourRun(true);
-      setTourStepIndex(0);
-    }
   }, []);
 
   useEffect(() => {
@@ -175,60 +57,25 @@ export default function App() {
     setVolume(next);
   }, []);
 
-  const delay = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-
   const handlePlayProgression = useCallback(
     async (progression: Progression) => {
-      // Rapid re-triggering (clicking another example, or the same one, before
-      // playback finishes) must cut off whatever's currently sounding right away
-      // instead of waiting for the stale loop's own delayed release.
-      if (activeProgressionChordRef.current) {
-        const { chord, flavour } = activeProgressionChordRef.current;
-        triggerReleaseChord(chord, flavour);
-        activeProgressionChordRef.current = null;
-      }
-      // Clicking the currently-playing progression's button again stops it
-      // instead of restarting it from the top.
-      const wasPlayingThis = activeProgressionIdRef.current === progression.id;
-      if (wasPlayingThis) {
-        playbackGenRef.current++;
-        activeProgressionIdRef.current = null;
-        setActiveProgressionStep(null);
-        setActiveProgressionId(null);
-        return;
-      }
+      const modes = generateModes(selectedScale, preferSharp);
       const modeNames = Array.from(new Set(progression.steps.map((s) => s.mode)));
       setActiveModes(modeNames);
-      const gen = ++playbackGenRef.current;
-      activeProgressionIdRef.current = progression.id;
-      setActiveProgressionId(progression.id);
-      const modes = generateModes(selectedScale, preferSharp);
-      for (let i = 0; i < progression.steps.length; i++) {
-        if (playbackGenRef.current !== gen) break;
-        const step = progression.steps[i];
-        const mode = modes.find((m) => m.name === step.mode);
-        if (!mode) continue;
-        const chord = mode.chords[step.degreeIndex];
-        setActiveProgressionStep({
-          mode: step.mode,
-          degreeIndex: step.degreeIndex,
-          flavour: step.flavour,
-        });
-        triggerAttackChord(chord, step.flavour);
-        activeProgressionChordRef.current = { chord, flavour: step.flavour };
-        const durationMs =
-          (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 100));
-        await delay(durationMs - 80);
-        if (playbackGenRef.current !== gen) break;
-        triggerReleaseChord(chord, step.flavour);
-        activeProgressionChordRef.current = null;
-      }
-      if (playbackGenRef.current === gen) {
-        activeProgressionIdRef.current = null;
-        setActiveProgressionStep(null);
-        setActiveProgressionId(null);
-      }
+      await hookPlayProgression(progression, modes);
+    },
+    [selectedScale, preferSharp, hookPlayProgression]
+  );
+
+  const handleCopyEmbed = useCallback(
+    (progression: Progression) => {
+      const iframe = buildEmbedSnippet(
+        progression,
+        selectedScale,
+        preferSharp,
+        window.location.origin
+      );
+      navigator.clipboard.writeText(iframe);
     },
     [selectedScale, preferSharp]
   );
@@ -263,93 +110,6 @@ export default function App() {
     history.replaceState(null, "", "?" + params.toString());
   }, [selectedScale, activeModes, preferSharp]);
 
-  useEffect(() => {
-    selectedScaleRef.current = selectedScale;
-    activeModesRef.current = activeModes;
-    preferSharpRef.current = preferSharp;
-  }, [selectedScale, activeModes, preferSharp]);
-
-  useEffect(() => {
-    const getActiveModes = () =>
-      generateModes(selectedScaleRef.current, preferSharpRef.current).filter(
-        (m) => activeModesRef.current.includes(m.name)
-      );
-
-    const findChordForKey = (key: string, activeModesData: Mode[]) => {
-      for (let row = 0; row < KEY_ROWS.length; row++) {
-        const col = KEY_ROWS[row].indexOf(key);
-        if (
-          col !== -1 &&
-          row < activeModesData.length &&
-          col < activeModesData[row].chords.length
-        ) {
-          return activeModesData[row].chords[col];
-        }
-      }
-      return null;
-    };
-
-    const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
-      pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-        triggerReleaseChord(chordName, oldFlavour);
-        triggerAttackChord(chordName, nextFlavour);
-        pressedChordsRef.current.set(chordName, nextFlavour);
-      });
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat) return;
-      if (isTextInput(e.target)) return;
-
-      const rawKey = e.key;
-      const flavour = MODIFIER_KEYS[rawKey];
-      if (flavour) {
-        sevenFlavourRef.current = flavour;
-        setActiveFlavour(flavour);
-        retriggerHeldChords(flavour);
-        return;
-      }
-
-      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
-      if (!chordName) return;
-
-      const activeFlavour = sevenFlavourRef.current;
-      pressedChordsRef.current.set(chordName, activeFlavour);
-      setKeyboardPressedChords((prev) => [...prev, chordName]);
-      triggerAttackChord(chordName, activeFlavour);
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const rawKey = e.key;
-      if (rawKey in MODIFIER_KEYS) {
-        sevenFlavourRef.current = undefined;
-        setActiveFlavour(undefined);
-        retriggerHeldChords(undefined);
-        return;
-      }
-
-      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
-      if (!chordName) return;
-
-      const flavour = pressedChordsRef.current.get(chordName);
-      pressedChordsRef.current.delete(chordName);
-      setKeyboardPressedChords((prev) => prev.filter((c) => c !== chordName));
-      triggerReleaseChord(chordName, flavour);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
-      pressedChordsRef.current.forEach((flavour, chordName) =>
-        triggerReleaseChord(chordName, flavour)
-      );
-      pressedChordsRef.current.clear();
-    };
-  }, []);
-
   const keyLabel = (index: number) =>
     preferSharp ? KEYS_SHARP[index] : KEYS[index];
   const isSelectedKey = (index: number) => selectedScale === KEYS[index];
@@ -361,28 +121,13 @@ export default function App() {
         : [...prev, modeName]
     );
 
-  const handleJoyrideEvent = useCallback((data: EventData) => {
-    const { action, index, status, type } = data;
-    if (type === EVENTS.STEP_AFTER) {
-      setTourStepIndex(index + 1);
-    }
-    if (status === STATUS.FINISHED || action === "skip") {
-      setTourRun(false);
-      localStorage.setItem("musical-modes-tour-seen", "true");
-    }
-  }, []);
-
-  const restartTour = () => {
-    setTourRun(true);
-    setTourStepIndex(0);
-  };
-
-  const visibleSteps = useMemo(() => {
-    if (isTouchDevice) {
-      return TOUR_STEPS.filter((s) => s.target !== "#modifier-hint");
-    }
-    return TOUR_STEPS;
-  }, [isTouchDevice, TOUR_STEPS]);
+  const {
+    visibleSteps,
+    tourRun,
+    tourStepIndex,
+    handleJoyrideEvent,
+    restartTour,
+  } = useOnboardingTour(isTouchDevice);
 
   return (
     <div>
@@ -491,6 +236,14 @@ export default function App() {
           modes={generateModes(selectedScale, preferSharp)}
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
+          onCopyEmbed={handleCopyEmbed}
+        />
+        <ProgressionBuilder
+          modes={generateModes(selectedScale, preferSharp)}
+          selectedScale={selectedScale}
+          preferSharp={preferSharp}
+          onPlay={handlePlayProgression}
+          activeProgressionId={activeProgressionId}
         />
         <div className="table-container">
           {activeModes.length === 0 ? (
@@ -551,184 +304,13 @@ export default function App() {
             </div>
           ))}
         </div>
-        <div className="key-detector">
-          <button
-            className="key-detector-toggle"
-            onClick={() => setKeyDetectorOpen((prev) => !prev)}
-            aria-expanded={keyDetectorOpen}
-          >
-            {t("keyDetector.toggleLabel")}{" "}
-            {keyDetectorOpen ? "\u25B4" : "\u25BE"}
-          </button>
-          <p className="key-detector-hint">
-            {t("keyDetector.experimentalHint")}
-          </p>
-          {keyDetectorOpen && (
-            <div className="key-detector-body">
-              {detectorSections.map((section, si) => {
-                const tokens = parseSection(section);
-                const invalidTokens = tokens.filter(
-                  (t) => !isValidChordToken(t)
-                );
-                return (
-                  <div key={si}>
-                    <div className="key-detector-section">
-                      <input
-                        type="text"
-                        className={`chord-input${
-                          invalidTokens.length > 0 ? " chord-input-invalid" : ""
-                        }`}
-                        placeholder={t("keyDetector.sectionPlaceholder", { n: si + 1 })}
-                        value={section}
-                        onChange={(e) => {
-                          const next = [...detectorSections];
-                          next[si] = e.target.value;
-                          setDetectorSections(next);
-                          setDetectionResults(null);
-                        }}
-                        autoCapitalize="off"
-                        autoCorrect="off"
-                        spellCheck={false}
-                      />
-                      {detectorSections.length > 1 && (
-                        <button
-                          className="remove-section-btn"
-                          onClick={() => {
-                            setDetectorSections((prev) =>
-                              prev.filter((_, i) => i !== si)
-                            );
-                            setDetectionResults(null);
-                          }}
-                          aria-label={t("keyDetector.removeSectionLabel", { n: si + 1 })}
-                        >
-                          &times;
-                        </button>
-                      )}
-                    </div>
-                    {invalidTokens.length > 0 && (
-                      <p className="chord-input-error">
-                        {t("keyDetector.notAChord", { tokens: invalidTokens.join(", ") })}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-              <button
-                className="add-section-btn"
-                onClick={() => setDetectorSections((prev) => [...prev, ""])}
-              >
-                {t("keyDetector.addSection")}
-              </button>
-              <button
-                className="detect-btn"
-                disabled={detectorSections.some((s) => {
-                  const tokens = parseSection(s);
-                  return tokens.some((t) => !isValidChordToken(t));
-                })}
-                onClick={() => {
-                  const results = detectKey(detectorSections, preferSharp);
-                  setDetectionResults(results);
-                }}
-              >
-                {t("keyDetector.detect")}
-              </button>
-              {detectionResults && detectionResults.length > 0 && (
-                <div className="detection-results">
-                  <p className="detection-disclaimer">
-                    {t("keyDetector.resultsDisclaimer")}
-                  </p>
-                  {(() => {
-                    const topScore = detectionResults[0].totalScore;
-                    const tied = detectionResults.filter(
-                      (r) => r.totalScore === topScore
-                    );
-                    const isTie = tied.length > 1;
-                    return (
-                      <>
-                        <p className="detection-heading">
-                          {isTie ? t("keyDetector.tiedResultsHeading") : t("keyDetector.bestGuessHeading")}
-                        </p>
-                        {tied.map((result, i) => (
-                          <div key={i} className="detection-result-group">
-                            <button
-                              className={`detection-result-btn${
-                                i === 0 ? " primary-result" : ""
-                              }`}
-                              onClick={() => {
-                                setSelectedScale(result.root);
-                                setActiveModes(
-                                  result.hasBorrowed
-                                    ? [result.mode, ...result.borrowedModes]
-                                    : [result.mode]
-                                );
-                                setKeyDetectorOpen(false);
-                                setDetectionResults(null);
-                              }}
-                            >
-                              <strong>{result.displayName}</strong>
-                            </button>
-                            <div className="detection-breakdown">
-                              {result.sections.map((section) => (
-                                <div
-                                  key={section.sectionIndex}
-                                  className="detection-section"
-                                >
-                                  <span className="detection-section-label">
-                                    {t("keyDetector.sectionLabel", { n: section.sectionIndex + 1 })}
-                                    {section.cadentialMatch && (
-                                      <span className="tag-note">
-                                        {" "}
-                                        &mdash; {t("keyDetector.resolvesToTonic")}
-                                      </span>
-                                    )}
-                                    :
-                                  </span>
-                                  <div className="detection-chord-list">
-                                    {section.matches.map((m, mi) => (
-                                      <span
-                                        key={mi}
-                                        className={`detection-chord-tag${
-                                          m.native
-                                            ? " tag-native"
-                                            : m.borrowed
-                                            ? " tag-borrowed"
-                                            : " tag-non-diatonic"
-                                        }`}
-                                      >
-                                        {m.chord}
-                                        {m.borrowed && m.borrowedFrom && (
-                                          <span className="tag-note">
-                                            {" "}
-                                            {t("keyDetector.borrowedFrom", { mode: m.borrowedFrom })}
-                                          </span>
-                                        )}
-                                        {m.nonDiatonic && (
-                                          <span className="tag-note">
-                                            {" "}
-                                            {t("keyDetector.nonDiatonic")}
-                                          </span>
-                                        )}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-              {detectionResults && detectionResults.length === 0 && (
-                <p className="detection-empty">
-                  {t("keyDetector.emptyState")}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        <KeyDetectorPanel
+          preferSharp={preferSharp}
+          onKeySelected={(root, modes) => {
+            setSelectedScale(root);
+            setActiveModes(modes);
+          }}
+        />
         <footer style={{ textAlign: "center" }}>
           © 2020-{new Date().getFullYear()}{" "}
           <a

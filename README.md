@@ -38,7 +38,19 @@ Working backwards from chords to key stops being guesswork too. Type what you've
 - **Roman numeral labels**: every chord shows its scale degree (`vi`) alongside its name (`Am`)
 - **Key finder**: type in a song's chords and get its key/mode guessed for you
 - **Chord progressions**: a library of real progressions, resolved to your current key and playable in one tap
+- **Progression builder**: build your own custom progression step by step (mode, degree, flavour, bars) — preview it and generate an embed snippet
+- **Embeddable widget**: copy an `<iframe>` embed for any progression (canned or custom) — plays back in place on any blog/site that allows iframes, no separate config needed
 - **PWA**: installable, works offline after first load
+
+## Embedding a progression
+
+Every progression (canned or custom) can be embedded elsewhere.
+
+**From the canned examples:** Open the progressions panel, hit the embed icon next to a progression, and an `<iframe>` snippet is copied to your clipboard — sized automatically and using whichever key/accidental you currently have selected.
+
+**From the builder:** Open "Build Your Own Progression", add steps (mode, degree, flavour, bars), set BPM, preview with the play button, then hit "Copy embed code" for a `?steps=`-based snippet that encodes your exact sequence in the URL.
+
+The embed is intentionally minimal: it plays back at the progression's own BPM (fixed at copy time, not reader-adjustable) and shows only the mode row(s) that progression actually touches — so a progression built on modal mixture (e.g. borrowing a chord from the parallel minor) shows both mode rows, with the highlight jumping between them as it plays.
 
 ## Tech Stack
 

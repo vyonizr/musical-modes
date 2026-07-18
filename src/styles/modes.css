@@ -907,3 +907,338 @@ td.progression-active {
   box-shadow: inset 0 0 0 3px var(--primary);
   background-color: rgba(66, 133, 244, 0.08);
 }
+
+/* Copy embed button */
+
+.progression-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.copy-embed-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--disabled);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--disabled);
+  cursor: pointer;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.copy-embed-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.copy-embed-done {
+  color: #155724;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+/* Embed Widget */
+
+.embed-widget {
+  background: #fff;
+  border: 1.5px solid var(--black);
+  border-radius: 6px;
+  padding: 12px;
+  width: 456px;
+  box-sizing: border-box;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+.embed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.embed-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.embed-progression-name {
+  font-weight: 700;
+  font-size: 0.95em;
+  color: var(--black);
+}
+
+.embed-progression-pattern {
+  font-size: 0.8em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.embed-progression-bpm {
+  font-size: 0.75em;
+  color: var(--disabled);
+  font-weight: 600;
+}
+
+.embed-play-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--primary);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.embed-play-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.embed-play-btn.playing {
+  background: var(--primary);
+  color: #fff;
+}
+
+.embed-table-container table {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.embed-backlink {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+.embed-backlink a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.embed-backlink a:hover {
+  text-decoration: underline;
+}
+
+/* Narrow embed table cells */
+
+@media (max-width: 375px) {
+  .embed-widget table {
+    font-size: 0.85em;
+  }
+  .embed-widget td {
+    padding: 2px 1px;
+    height: 42px;
+  }
+  .embed-widget .roman-label {
+    font-size: 0.6em;
+  }
+  .embed-widget .mode-name-header {
+    height: 20px;
+    font-size: 0.7em;
+  }
+}
+
+/* Progression Builder */
+
+.progression-builder {
+  width: 95%;
+  max-width: 515px;
+  margin: 0 auto 1em;
+}
+
+.progression-builder-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+}
+
+.progression-builder-toggle:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.progression-builder-body {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.progression-builder-controls {
+  margin-bottom: 10px;
+}
+
+.builder-bpm-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.builder-bpm-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: inherit;
+  text-align: center;
+}
+
+.builder-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.builder-step-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--disabled);
+  border-radius: 4px;
+  background: var(--light-gray);
+}
+
+.builder-select {
+  padding: 4px 6px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-family: inherit;
+  background: #fff;
+  color: var(--black);
+  cursor: pointer;
+}
+
+.builder-mode-select {
+  width: 90px;
+}
+
+.builder-degree-select {
+  width: 60px;
+}
+
+.builder-flavour-select {
+  width: 65px;
+}
+
+.builder-bars-input {
+  width: 40px;
+  padding: 4px 4px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-family: inherit;
+  text-align: center;
+}
+
+.builder-bars-label {
+  font-size: 0.75em;
+  color: var(--disabled);
+  white-space: nowrap;
+}
+
+.builder-remove-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--ionian);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ionian);
+  cursor: pointer;
+  font-size: 0.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.builder-remove-btn:hover {
+  background: var(--ionian);
+  color: #fff;
+}
+
+.builder-remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.builder-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.builder-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.builder-add-btn:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.builder-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-family: inherit;
+  margin-left: auto;
+}
+
+.builder-copy-btn:hover {
+  opacity: 0.9;
+}
