@@ -107,17 +107,6 @@ describe("a pitch is only ever held once", () => {
     expect(releases).toHaveLength(1);
   });
 
-  it("leaves a sustained chord alone when the new chord shares no note", () => {
-    setSustain(true);
-    // C is C/E/G, D is D/F#/A. No shared pitch class, so no shared note.
-    triggerReleaseChord(triggerAttackChord("C"));
-    releases.length = 0;
-
-    triggerAttackChord("D");
-
-    expect(releases).toHaveLength(0);
-  });
-
   it("does not damp a chord whose key is still down", () => {
     setSustain(true);
     triggerAttackChord("C");
@@ -128,6 +117,22 @@ describe("a pitch is only ever held once", () => {
     expect(releases).toHaveLength(0);
   });
 });
+
+describe("changing to a different chord clears whatever was sustained", () => {
+  it("a genuinely different chord damps a sustained chord even with no shared note", () => {
+    setSustain(true);
+    // C is C/E/G, D is D/F#/A. No shared pitch class, so no shared note —
+    // this used to leave C ringing (decision 3's original scope). A real
+    // chord change now always replaces whatever was sustained.
+    triggerReleaseChord(triggerAttackChord("C"));
+    releases.length = 0;
+
+    triggerAttackChord("D");
+
+    expect(releases).toHaveLength(1);
+  });
+});
+
 describe("a voicing correction is not a musician letting go", () => {
   it("a flavour modifier under the pedal damps the old voicing", () => {
     renderHook(() => useChordKeyboardInput("C", ["ionian"], false));
@@ -142,6 +147,31 @@ describe("a voicing correction is not a musician letting go", () => {
     });
 
     expect(releases).toHaveLength(1);
+  });
+
+  it("a flavour modifier on one held chord leaves an unrelated sustained chord ringing", () => {
+    setSustain(true);
+    const cHandle = triggerAttackChord("C");
+    triggerReleaseChord(cHandle); // C is now sustained, unrelated to Dm below.
+
+    renderHook(() => useChordKeyboardInput("C", ["ionian"], false));
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "w" })); // hold Dm
+    });
+    releases.length = 0;
+
+    act(() => {
+      // Revoice Dm -> Dm(maj7), which adds C#, not C — no accidental
+      // collision with the sustained C major's own root. A voicing
+      // correction, not a chord change, so it must not touch the
+      // unrelated sustained C either way.
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "." }));
+    });
+
+    expect(releases).toHaveLength(1);
+    expect(releases[0].notes).not.toEqual(
+      expect.arrayContaining(cHandle.notes as string[])
+    );
   });
 
   it("unmounting under the pedal leaves nothing ringing", () => {

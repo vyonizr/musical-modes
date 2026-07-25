@@ -331,24 +331,34 @@ export function dampChord(handle: ChordHandle | null | undefined): void {
 
 export function triggerAttackChord(
   chordName: string,
-  flavour?: ChordFlavor
+  flavour?: ChordFlavor,
+  // False only for a flavour retrigger of a chord the musician is still
+  // holding (src/utils/useChordKeyboardInput.ts's retriggerHeldChords) —
+  // that is a voicing correction, not the musician moving to a new chord.
+  isChordChange = true
 ): ChordHandle {
   // Calling ensurePiano first is what kicks off the sample download; until it
   // resolves this returns null and the synth answers immediately.
   const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
 
-  // A note can only be held once. Re-striking a pitch a sustained chord still
-  // owns would leave that chord's handle unable to release it, and the note
-  // would ring until a page reload. A real piano re-strikes the same string,
-  // so damping the older copy is also what the instrument does.
+  // A real chord change always replaces whatever was sustained, even a
+  // chord sharing no pitch with the new one: the pedal sustains the last
+  // thing you played, not a bag of unrelated ringing chords.
   //
-  // This is what bounds the sustained set: at most one handle per pitch, over
-  // the ~17 pitches chordToNotes spans, so no separate voice cap is needed.
+  // A voicing correction (isChordChange = false) keeps the narrower
+  // pitch-collision sweep instead: a note can only be held once, so
+  // re-striking a pitch a sustained chord still owns would leave that
+  // chord's handle unable to release it, and the note would ring until a
+  // page reload. A real piano re-strikes the same string, so damping the
+  // older copy is also what the instrument does. This is what bounds the
+  // sustained set in that case: at most one handle per pitch, over the
+  // ~17 pitches chordToNotes spans, so no separate voice cap is needed.
   if (sustained.size > 0) {
     const swept = Tone.now();
     sustained.forEach((held) => {
-      if (!held.notes.some((note) => notes.includes(note))) return;
+      const collides = held.notes.some((note) => notes.includes(note));
+      if (!isChordChange && !collides) return;
       sustained.delete(held);
       dampHandle(held, swept);
     });

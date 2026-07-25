@@ -83,7 +83,7 @@ describe("useChordKeyboardInput", () => {
 
     expect(result.current.activeFlavour).toBe("flat7");
     expect(dampChord).toHaveBeenCalledWith({ notes: ["C"] });
-    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7");
+    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7", false);
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "," }));

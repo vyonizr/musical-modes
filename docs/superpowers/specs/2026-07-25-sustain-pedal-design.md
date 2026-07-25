@@ -94,6 +94,28 @@ string rather than adding a second one. As a side effect it bounds the
 sustained set: at most one sustained handle per pitch, and `chordToNotes` spans
 about 17 pitches, so voice count stays bounded without a separate cap.
 
+### 3a. Amendment: a genuine chord change clears the whole sustained set
+
+Decision 3 as shipped only damped a sustained handle that shared a **pitch**
+with the incoming chord. Reported bug: with the pedal down, playing C then D
+left C ringing under D, because C major (C/E/G) and D major (D/F#/A) share no
+pitch class — decision 3's sweep had nothing to catch.
+
+That was too narrow. The pedal is meant to sustain the last thing the
+musician played, not accumulate a bag of unrelated ringing chords. Fix:
+`triggerAttackChord` takes a third parameter, `isChordChange` (default
+`true`). When `true`, every handle in `sustained` is damped and cleared,
+regardless of pitch overlap — a real chord change always replaces whatever
+was sustained. The original pitch-collision-only sweep still runs when
+`isChordChange` is `false`, which is exactly the case decision 4's flavour
+retrigger needs (see below): revoicing a chord the musician is still holding
+is not a chord change, and must not silence an unrelated sustained chord in
+another key.
+
+Every real key press or cell click (`handleKeyDown`, `TableContent`'s
+`attackCell`, progression playback) uses the default. Only
+`retriggerHeldChords`'s internal re-attack passes `false`.
+
 ### 4. A flavour retrigger bypasses the pedal
 
 `retriggerHeldChords` (`src/utils/useChordKeyboardInput.ts:88`) releases and

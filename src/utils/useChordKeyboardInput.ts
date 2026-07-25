@@ -93,7 +93,9 @@ export function useChordKeyboardInput(
         dampChord(held.handle);
         pressedChordsRef.current.set(key, {
           chordName: held.chordName,
-          handle: triggerAttackChord(held.chordName, nextFlavour),
+          // Not a chord change: an unrelated sustained chord must survive
+          // this revoicing (see chords.ts's triggerAttackChord).
+          handle: triggerAttackChord(held.chordName, nextFlavour, false),
         });
       });
     };
