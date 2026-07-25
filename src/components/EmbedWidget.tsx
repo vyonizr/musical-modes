@@ -108,7 +108,7 @@ export default function EmbedWidget() {
           onClick={handlePlay}
           aria-label={activeProgressionId === progression.id ? t("progressions.stopLabel") : t("progressions.playLabel")}
         >
-          {activeProgressionId === progression.id ? <Square size={14} /> : <Play size={14} />}
+          {activeProgressionId === progression.id ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
         </button>
       </div>
       <div className="embed-table-container">

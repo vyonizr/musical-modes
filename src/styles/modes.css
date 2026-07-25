@@ -1007,14 +1007,17 @@ td.progression-active {
   line-height: 1;
 }
 
-.embed-play-btn:hover {
-  background: var(--primary);
-  color: #fff;
+.embed-play-btn:not(.playing):hover {
+  background: rgba(66, 133, 244, 0.08);
 }
 
 .embed-play-btn.playing {
   background: var(--primary);
   color: #fff;
+}
+
+.embed-play-btn.playing:hover {
+  filter: brightness(0.92);
 }
 
 .embed-table-container table {
