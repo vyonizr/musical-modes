@@ -59,6 +59,19 @@ const TRIAD_SUS: Record<"sus4" | "sus2", QualityIntervals> = {
 // second note the loudest in the chord, which reads as wrong on a keyboard.
 const ATTACK_VELOCITY = 0.7;
 
+// A hand cannot strike five keys in the same microsecond, or at the same
+// force. Both offsets are drawn per note, per attack, so no note is
+// systematically first and none is systematically loudest. That systematic
+// part is what made the old fixed strum read as a guitar rather than a piano.
+//
+// 12 ms is under the threshold where a chord stops reading as a single event
+// and starts reading as rolled. 0.06 is roughly 8 steps of 127 in MIDI terms:
+// audible as touch, never as a wrong note. The resulting 0.64..0.76 cannot
+// leave the legal 0..1 velocity range, so no clamp is needed. Add one if
+// either constant is ever widened.
+const HUMANIZE_MAX_DELAY_S = 0.012;
+const HUMANIZE_VELOCITY_SPREAD = 0.06;
+
 // Damper fade. Long enough that release is not a cliff, short enough that
 // consecutive progression steps do not overlap audibly at fast BPM. Shared by
 // both engines so the fallback does not ring longer than the piano.
@@ -261,6 +274,13 @@ function ensurePiano(): Tone.Sampler | null {
 export interface ChordHandle {
   readonly notes: readonly string[];
   readonly engine: Tone.PolySynth | Tone.Sampler;
+  /**
+   * Latest scheduled attack time in this chord. Humanized notes are scheduled
+   * up to HUMANIZE_MAX_DELAY_S ahead of now, so a release issued at Tone.now()
+   * inside that window would land before a note has sounded and leave it
+   * ringing until a page reload. Every release clamps to at least this time.
+   */
+  readonly attackedThrough: number;
 }
 
 const sounding = new Set<ChordHandle>();
@@ -273,8 +293,23 @@ export function triggerAttackChord(
   // resolves this returns null and the synth answers immediately.
   const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
-  engine.triggerAttack(notes, Tone.now(), ATTACK_VELOCITY);
-  const handle: ChordHandle = { notes, engine };
+
+  // One base instant for the whole chord, so the offsets stay relative to each
+  // other. Every offset is positive, so the chord never starts later than an
+  // unhumanized one would.
+  const t0 = Tone.now();
+  let attackedThrough = t0;
+  for (const note of notes) {
+    const at = t0 + Math.random() * HUMANIZE_MAX_DELAY_S;
+    engine.triggerAttack(
+      note,
+      at,
+      ATTACK_VELOCITY + (Math.random() * 2 - 1) * HUMANIZE_VELOCITY_SPREAD
+    );
+    if (at > attackedThrough) attackedThrough = at;
+  }
+
+  const handle: ChordHandle = { notes, engine, attackedThrough };
   sounding.add(handle);
   return handle;
 }
@@ -282,12 +317,26 @@ export function triggerAttackChord(
 /** Idempotent: releasing an unknown or already-released handle is a no-op. */
 export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
   if (!handle || !sounding.delete(handle)) return;
-  handle.engine.triggerRelease(handle.notes as string[], Tone.now());
+  handle.engine.triggerRelease(
+    handle.notes as string[],
+    Math.max(Tone.now(), handle.attackedThrough)
+  );
 }
 
 /** Bounded stop, not an instant one: the release envelope still applies, so
- *  audio ends within RELEASE_S rather than immediately. */
+ *  audio ends within RELEASE_S rather than immediately. Chords attacked in the
+ *  last few milliseconds are released at their own attack time instead of now,
+ *  which is why this loops the handles rather than only calling releaseAll:
+ *  releaseAll fires at now, and a note scheduled after that would survive it.
+ *  The releaseAll calls stay as a backstop for anything not in the set. */
 export function releaseAllChords(): void {
+  const now = Tone.now();
+  sounding.forEach((handle) => {
+    handle.engine.triggerRelease(
+      handle.notes as string[],
+      Math.max(now, handle.attackedThrough)
+    );
+  });
   sounding.clear();
   synth?.releaseAll();
   piano?.releaseAll();

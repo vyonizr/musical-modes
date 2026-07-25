@@ -7,7 +7,7 @@ import { state, resetToneMock, stuckNotes } from "./toneMock";
 
 let chords: typeof import("./chords");
 
-const engines = () => state.attacks.map((attack) => attack.engine);
+const engines = () => [...new Set(state.attacks.map((attack) => attack.engine))];
 const samplesLoad = () => state.hooks.onload?.();
 const samplesFail = () => state.hooks.onerror?.(new Error("404"));
 
