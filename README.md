@@ -58,7 +58,7 @@ The embed is intentionally minimal: it plays back at the progression's own BPM (
 |---|---|
 | Framework | Vite + React |
 | Language | TypeScript |
-| Audio | Tone.js (PolySynth, guitar voicings) |
+| Audio | Tone.js (sampled piano, synth fallback) |
 | PWA | vite-plugin-pwa |
 | Styling | Plain CSS |
 | i18n | react-i18next (English only, structured for future locales) |
@@ -83,3 +83,5 @@ Open [http://localhost:5173](http://localhost:5173).
 ## License
 
 [GNU General Public License v3.0](LICENSE)
+
+Piano samples are [Salamander Grand Piano V3](https://archive.org/details/SalamanderGrandPianoV3) by Alexander Holm, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).

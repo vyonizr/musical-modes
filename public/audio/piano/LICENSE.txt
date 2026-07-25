@@ -1,0 +1,10 @@
+Salamander Grand Piano V3
+Recorded by Alexander Holm from a Yamaha C5.
+
+Licensed under Creative Commons Attribution 3.0 (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+
+Source: https://archive.org/details/SalamanderGrandPianoV3
+MP3 distribution: https://github.com/Tonejs/audio/tree/master/salamander
+
+These files are redistributed unmodified under the terms of that licence.

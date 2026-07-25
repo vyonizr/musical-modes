@@ -9,50 +9,19 @@ import {
   renderHook,
 } from "@testing-library/react";
 
-const sounding = new Map<string, number>();
+vi.mock("tone", async () => (await import("./toneMock")).createToneMock());
 
-vi.mock("tone", () => {
-  class Node {
-    connect() {
-      return this;
-    }
-    toDestination() {
-      return this;
-    }
-  }
-  class Volume extends Node {
-    volume = { value: 0 };
-  }
-  class PolySynth extends Node {
-    maxPolyphony = 0;
-    triggerAttack(note: string) {
-      sounding.set(note, (sounding.get(note) ?? 0) + 1);
-    }
-    triggerRelease(note: string) {
-      const count = sounding.get(note) ?? 0;
-      if (count > 0) sounding.set(note, count - 1);
-    }
-    releaseAll() {
-      sounding.clear();
-    }
-  }
-  return {
-    PolySynth,
-    Synth: class {},
-    Limiter: Node,
-    Reverb: Node,
-    Volume,
-    now: () => 0,
-  };
-});
+import { state, resetToneMock, stuckNotes } from "./toneMock";
 
+const attacks = state.attacks;
+const releases = state.releases;
+
+import { triggerAttackChord, triggerReleaseChord, releaseAllChords } from "./chords";
 import { useChordKeyboardInput } from "./useChordKeyboardInput";
 import { usePlayProgression } from "./usePlayProgression";
 import TableContent from "src/components/TableContent";
 import { Mode } from "src/utils/types";
 
-const stuckNotes = () =>
-  [...sounding.entries()].filter(([, count]) => count > 0).map(([note]) => note);
 
 const makeMode = (name: string, chords: string[]): Mode => ({
   name,
@@ -63,7 +32,7 @@ const makeMode = (name: string, chords: string[]): Mode => ({
 
 const ionian = makeMode("ionian", ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]);
 
-beforeEach(() => sounding.clear());
+beforeEach(resetToneMock);
 afterEach(cleanup);
 
 describe("no note survives the interaction that started it", () => {
@@ -199,6 +168,76 @@ describe("no note survives the interaction that started it", () => {
     expect(stuckNotes().length).toBeGreaterThan(0);
 
     unmount();
+    expect(stuckNotes()).toEqual([]);
+  });
+});
+
+
+describe("a chord is humanized, not strummed", () => {
+  // Mirrors ATTACK_VELOCITY, HUMANIZE_VELOCITY_SPREAD and
+  // HUMANIZE_MAX_DELAY_S in chords.ts. The mock's Tone.now() is 0, so the
+  // attack window starts at 0.
+  const VELOCITY_MIN = 0.64;
+  const VELOCITY_MAX = 0.76;
+  const MAX_DELAY = 0.012;
+
+  it("attacks each note on its own, one attack per note", () => {
+    const handle = triggerAttackChord("C");
+
+    expect(handle.notes).toHaveLength(5);
+    expect(attacks).toHaveLength(5);
+    expect(attacks.flatMap((attack) => attack.notes)).toEqual([...handle.notes]);
+    triggerReleaseChord(handle);
+  });
+
+  it("keeps every velocity inside the humanized band", () => {
+    const handle = triggerAttackChord("C");
+
+    attacks.forEach((attack) => {
+      expect(attack.velocity).toBeGreaterThanOrEqual(VELOCITY_MIN);
+      expect(attack.velocity).toBeLessThanOrEqual(VELOCITY_MAX);
+    });
+    triggerReleaseChord(handle);
+  });
+
+  it("keeps every onset inside the humanized window", () => {
+    const handle = triggerAttackChord("C");
+
+    attacks.forEach((attack) => {
+      expect(attack.time).toBeGreaterThanOrEqual(0);
+      expect(attack.time).toBeLessThanOrEqual(MAX_DELAY);
+    });
+    expect(handle.attackedThrough).toBe(
+      Math.max(...attacks.map((attack) => attack.time))
+    );
+    triggerReleaseChord(handle);
+  });
+
+  it("releases every note it attacked", () => {
+    const handle = triggerAttackChord("C");
+
+    triggerReleaseChord(handle);
+
+    expect(stuckNotes()).toEqual([]);
+  });
+
+  it("never releases a note before its scheduled attack", () => {
+    const handle = triggerAttackChord("C");
+
+    triggerReleaseChord(handle);
+
+    expect(releases).toHaveLength(1);
+    expect(releases[0].time).toBeGreaterThanOrEqual(handle.attackedThrough);
+    expect(stuckNotes()).toEqual([]);
+  });
+
+  it("panic stop never releases a note before its scheduled attack", () => {
+    const handle = triggerAttackChord("C");
+
+    releaseAllChords();
+
+    expect(releases).toHaveLength(1);
+    expect(releases[0].time).toBeGreaterThanOrEqual(handle.attackedThrough);
     expect(stuckNotes()).toEqual([]);
   });
 });
