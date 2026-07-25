@@ -1,3 +1,12 @@
+import { Accidental, ChordQuality, ModeName } from './types'
+
+export const FLAT: Accidental = 'flat'
+export const SHARP: Accidental = 'sharp'
+export const MAJOR: ChordQuality = 'major'
+export const MINOR: ChordQuality = 'minor'
+export const DIMINISHED: ChordQuality = 'diminished'
+export const IONIAN: ModeName = 'ionian'
+
 export const KEYS = [
   'C',
   'D♭',
@@ -34,90 +43,38 @@ export const NOTE_TO_SEMITONE: Record<string, number> = {
   'G♯': 8, 'A♭': 8, A: 9, 'A♯': 10, 'B♭': 10, B: 11,
 }
 
-export const MODES_LIST = {
+const flatMajor = `${FLAT} ${MAJOR}`
+const flatMinor = `${FLAT} ${MINOR}`
+const sharpDiminished = `${SHARP} ${DIMINISHED}`
+
+export const MODES_LIST: Record<ModeName, { degree: number; chords_quality: string[] }> = {
   ionian: {
     degree: 0,
-    chords_quality: [
-      'major',
-      'minor',
-      'minor',
-      'major',
-      'major',
-      'minor',
-      'diminished',
-    ],
+    chords_quality: [MAJOR, MINOR, MINOR, MAJOR, MAJOR, MINOR, DIMINISHED],
   },
   dorian: {
     degree: 1,
-    chords_quality: [
-      'minor',
-      'minor',
-      'flat major',
-      'major',
-      'minor',
-      'diminished',
-      'flat major',
-    ],
+    chords_quality: [MINOR, MINOR, flatMajor, MAJOR, MINOR, DIMINISHED, flatMajor],
   },
   phrygian: {
     degree: 2,
-    chords_quality: [
-      'minor',
-      'flat major',
-      'flat major',
-      'minor',
-      'diminished',
-      'flat major',
-      'flat minor',
-    ],
+    chords_quality: [MINOR, flatMajor, flatMajor, MINOR, DIMINISHED, flatMajor, flatMinor],
   },
   lydian: {
     degree: 3,
-    chords_quality: [
-      'major',
-      'major',
-      'minor',
-      'sharp diminished',
-      'major',
-      'minor',
-      'minor',
-    ],
+    chords_quality: [MAJOR, MAJOR, MINOR, sharpDiminished, MAJOR, MINOR, MINOR],
   },
   mixolydian: {
     degree: 4,
-    chords_quality: [
-      'major',
-      'minor',
-      'diminished',
-      'major',
-      'minor',
-      'minor',
-      'flat major',
-    ],
+    chords_quality: [MAJOR, MINOR, DIMINISHED, MAJOR, MINOR, MINOR, flatMajor],
   },
   aeolian: {
     degree: 5,
-    chords_quality: [
-      'minor',
-      'diminished',
-      'flat major',
-      'minor',
-      'minor',
-      'flat major',
-      'flat major',
-    ],
+    chords_quality: [MINOR, DIMINISHED, flatMajor, MINOR, MINOR, flatMajor, flatMajor],
   },
   locrian: {
     degree: 6,
-    chords_quality: [
-      'diminished',
-      'flat major',
-      'flat minor',
-      'minor',
-      'flat major',
-      'flat major',
-      'flat minor',
-    ],
+    chords_quality: [DIMINISHED, flatMajor, flatMinor, MINOR, flatMajor, flatMajor, flatMinor],
   },
 }
 

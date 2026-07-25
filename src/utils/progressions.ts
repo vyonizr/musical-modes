@@ -16,7 +16,7 @@ export interface Progression {
   spotifyUrl?: string
 }
 
-const BPM_DEFAULT = 120
+export const BPM_DEFAULT = 120
 
 export const PROGRESSIONS: Progression[] = [
   {

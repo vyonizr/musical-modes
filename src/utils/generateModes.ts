@@ -1,14 +1,14 @@
-import { Mode } from './types'
+import { MODE_NAMES, ModeName, Mode } from './types'
 
-import { KEYS, KEYS_SHARP, MODES_LIST, NOTE_TO_SEMITONE } from './constants'
+import { DIMINISHED, FLAT, IONIAN, KEYS, KEYS_SHARP, MAJOR, MINOR, MODES_LIST, NOTE_TO_SEMITONE, SHARP } from './constants'
 
 const modulo = (dividend: number, divisor: number) => ((dividend % divisor) + divisor) % divisor
 
 const generateModes = (scale: string = 'C', preferSharp = false) => {
-  const ionianShifter = (mode = 'ionian'): string[] => {
+  const ionianShifter = (mode: ModeName = IONIAN): string[] => {
     const intervals = ['W', 'W', 'H', 'W', 'W', 'W', 'H']
 
-    if (mode === 'ionian') {
+    if (mode === IONIAN) {
       return intervals
     }
 
@@ -22,9 +22,9 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
 
   const sharpOrFlat = (property: string[] = []): string => {
     let result = ''
-    if (property.includes('flat')) {
+    if (property.includes(FLAT)) {
       result += '♭'
-    } else if (property.includes('sharp')) {
+    } else if (property.includes(SHARP)) {
       result += '♯'
     }
     return result
@@ -36,20 +36,20 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
 
     numeral += sharpOrFlat(property)
 
-    if (property.includes('major')) {
+    if (property.includes(MAJOR)) {
       numeral += romanKeys[index].toUpperCase()
     } else {
       numeral += romanKeys[index]
     }
 
-    if (property.includes('diminished')) {
+    if (property.includes(DIMINISHED)) {
       numeral += '°'
     }
 
     return numeral
   }
 
-  const generateRomanNumerals = (currentMode = 'ionian'): string[] => {
+  const generateRomanNumerals = (currentMode: ModeName = IONIAN): string[] => {
     const usedMode = MODES_LIST[currentMode].chords_quality
     const romanNumerals = []
 
@@ -64,23 +64,23 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
   const parserKey = (property: string[] = [], currentKey = 'C'): string => {
     let finalKey = currentKey
 
-    if (property.includes('sharp')) {
+    if (property.includes(SHARP)) {
       const semitone = modulo(NOTE_TO_SEMITONE[currentKey] - 1, 12)
       finalKey = preferSharp ? KEYS_SHARP[semitone] : KEYS[semitone]
     }
 
-    if (property.includes('minor')) {
+    if (property.includes(MINOR)) {
       finalKey += 'm'
     }
 
-    if (property.includes('diminished')) {
+    if (property.includes(DIMINISHED)) {
       finalKey += 'dim'
     }
 
     return finalKey
   }
 
-  const generateChords = (usedScale = 'C', mode = 'ionian'): string[] => {
+  const generateChords = (usedScale = 'C', mode: ModeName = IONIAN): string[] => {
     const length = {
       H: 1,
       W: 2,
@@ -108,7 +108,7 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
     return chords
   }
 
-  const generateModeObj = (scale = 'C', mode = 'ionian'): Mode => {
+  const generateModeObj = (scale = 'C', mode: ModeName = IONIAN): Mode => {
     return {
       name: mode,
       intervals: ionianShifter(mode),
@@ -117,11 +117,10 @@ const generateModes = (scale: string = 'C', preferSharp = false) => {
     }
   }
 
-  const modeNames = Object.keys(MODES_LIST)
   const modes = []
 
-  for (let i = 0; i < modeNames.length; i++) {
-    const mode = modeNames[i]
+  for (let i = 0; i < MODE_NAMES.length; i++) {
+    const mode = MODE_NAMES[i]
     modes.push(generateModeObj(scale, mode))
   }
 

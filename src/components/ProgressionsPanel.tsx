@@ -1,15 +1,18 @@
-import { useState } from 'react'
-import { Play, Square } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Play, Square, Copy } from 'lucide-react'
 import { Progression } from 'src/utils/progressions'
 import { Mode } from 'src/utils/types'
 import { ChordFlavor } from 'src/utils/chords'
 import { analyzeLoop } from 'src/utils/loop'
+import { useTranslation } from 'react-i18next'
 
 interface IProps {
   progressions: Progression[]
   modes: Mode[]
   onPlay: (progression: Progression) => void
   activeProgressionId: string | null
+  onCopyEmbed?: (progression: Progression) => void
+  onOpen: () => void
 }
 
 function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
@@ -20,23 +23,35 @@ function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
   if (flavour === 'sus2') return roman + 'sus2'
   return roman
 }
-
-const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }: IProps) => {
+const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, onCopyEmbed, onOpen }: IProps) => {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+
+  const toggleOpen = () => {
+    if (!open) onOpen()
+    setOpen(o => !o)
+  }
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopy = useCallback((p: Progression) => {
+    onCopyEmbed?.(p)
+    setCopiedId(p.id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }, [onCopyEmbed])
 
   return (
     <div className="progressions-panel">
       <button
         className="progressions-toggle"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         aria-expanded={open}
       >
-        Chord Progressions {open ? '\u25B4' : '\u25BE'}
+        {t("progressions.toggleLabel")} {open ? '\u25B4' : '\u25BE'}
       </button>
       {open && (
         <div className="progressions-list">
           <p className="progressions-disclaimer">
-            Not official music theory terms. Names are just what I like to call them / how the progression feels.
+            {t("progressions.disclaimer")}
           </p>
           {progressions.map(p => {
             const romanNumerals = p.steps.map(step => {
@@ -57,7 +72,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
                       href={p.spotifyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Open playlist on Spotify"
+                      title={t("progressions.spotifyLinkTitle")}
                     >
                       {p.name}
                       <svg
@@ -78,16 +93,31 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId }:
                   )}
                   <span className="progression-pattern">
                     {pattern}
-                    {label && <span className="progression-cadence"> &mdash; {label}</span>}
+                    {label && <span className="progression-cadence"> — {label}</span>}
                   </span>
                   <span className="progression-songs">{p.songs.join(', ')}</span>
                 </div>
-                <button
-                  className={`play-progression-btn${activeProgressionId === p.id ? ' playing' : ''}`}
-                  onClick={() => onPlay(p)}
-                >
-                  {activeProgressionId === p.id ? <Square size={14} /> : <Play size={14} />}
-                </button>
+                <div className="progression-buttons">
+                  {onCopyEmbed && (
+                    <button
+                      className="copy-embed-btn"
+                      onClick={() => handleCopy(p)}
+                      title={copiedId === p.id ? t("progressions.embedCopied") : t("progressions.copyEmbedLabel")}
+                    >
+                      {copiedId === p.id ? (
+                        <span className="copy-embed-done">&check;</span>
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    className={`play-progression-btn${activeProgressionId === p.id ? ' playing' : ''}`}
+                    onClick={() => onPlay(p)}
+                  >
+                    {activeProgressionId === p.id ? <Square size={14} /> : <Play size={14} />}
+                  </button>
+                </div>
               </div>
             )
           })}

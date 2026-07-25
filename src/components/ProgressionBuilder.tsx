@@ -1,0 +1,207 @@
+import { useState, useCallback } from "react";
+import { Play, Square, Copy, Plus, Trash2, Eye } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { MODE_NAMES } from "src/utils/types";
+import { Progression, ProgressionStep, BPM_DEFAULT } from "src/utils/progressions";
+import { ChordFlavor } from "src/utils/chords";
+import { buildStepsEmbedSnippet, computeEmbedHeight } from "src/utils/embed";
+import { Mode } from "src/utils/types";
+
+const FLAVOUR_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "—" },
+  { value: "flat7", label: "7" },
+  { value: "maj7", label: "maj7" },
+  { value: "sus4", label: "sus4" },
+  { value: "sus2", label: "sus2" },
+];
+
+function emptyStep(): ProgressionStep {
+  return { mode: "ionian", degreeIndex: 0 };
+}
+
+interface IProps {
+  modes: Mode[]
+  selectedScale: string
+  preferSharp: boolean
+  onPlay: (progression: Progression) => void
+  activeProgressionId: string | null
+  onOpen: () => void
+}
+
+const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeProgressionId, onOpen }: IProps) => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  const toggleOpen = () => {
+    if (!open) onOpen();
+    setOpen((o) => !o);
+  };
+  const [steps, setSteps] = useState<ProgressionStep[]>([emptyStep()]);
+  const [bpm, setBpm] = useState(BPM_DEFAULT);
+  const [copied, setCopied] = useState(false);
+  const [previewSnippet, setPreviewSnippet] = useState<string | null>(null);
+
+  const builderProgression: Progression = {
+    id: "builder",
+    name: "Custom progression",
+    bpm,
+    steps,
+    songs: [],
+  };
+
+  const updateStep = (index: number, field: keyof ProgressionStep, value: string | number | undefined) => {
+    setSteps((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const addStep = () => {
+    setSteps((prev) => [...prev, emptyStep()]);
+  };
+
+  const removeStep = (index: number) => {
+    setSteps((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handlePlay = () => {
+    onPlay(builderProgression);
+  };
+
+  const handleCopyEmbed = useCallback(() => {
+    const snippet = buildStepsEmbedSnippet(steps, bpm, selectedScale, preferSharp, window.location.origin);
+    navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [steps, bpm, selectedScale, preferSharp]);
+
+  // Snapshot, not live. An Embed Snippet is frozen at copy time, so the
+  // preview of one is frozen too — re-press the button to take a new one.
+  const handlePreview = useCallback(() => {
+    setPreviewSnippet(
+      buildStepsEmbedSnippet(steps, bpm, selectedScale, preferSharp, window.location.origin)
+    );
+  }, [steps, bpm, selectedScale, preferSharp]);
+
+  const degreeOptionsForMode = (modeName: string) => {
+    const found = modes.find((m) => m.name === modeName) ?? modes[0];
+    return found
+      ? found.romanNumerals.map((rn, i) => ({ value: i, label: rn }))
+      : Array.from({ length: 7 }, (_, i) => ({ value: i, label: String(i) }));
+
+  };
+
+  return (
+    <div className="progression-builder">
+      <button
+        className="progression-builder-toggle"
+        onClick={toggleOpen}
+        aria-expanded={open}
+      >
+        {t("progressionBuilder.toggleLabel")} {open ? "\u25B4" : "\u25BE"}
+      </button>
+      {open && (
+        <div className="progression-builder-body">
+          <div className="progression-builder-controls">
+            <label className="builder-bpm-label">
+              {t("progressionBuilder.bpmLabel")}
+              <input
+                type="number"
+                className="builder-bpm-input"
+                min={20}
+                max={300}
+                value={bpm}
+                onChange={(e) => setBpm(Math.max(20, parseInt(e.target.value) || BPM_DEFAULT))}
+              />
+            </label>
+          </div>
+          <div className="builder-steps-list">
+            {steps.map((step, i) => (
+              <div key={i} className="builder-step-row">
+                <select
+                  className="builder-select builder-mode-select"
+                  value={step.mode}
+                  onChange={(e) => updateStep(i, "mode", e.target.value)}
+                >
+                  {MODE_NAMES.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  className="builder-select builder-degree-select"
+                  value={step.degreeIndex}
+                  onChange={(e) => updateStep(i, "degreeIndex", parseInt(e.target.value, 10))}
+                >
+                  {degreeOptionsForMode(step.mode).map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <select
+                  className="builder-select builder-flavour-select"
+                  value={step.flavour || ""}
+                  onChange={(e) => updateStep(i, "flavour", e.target.value || undefined)}
+                >
+                  {FLAVOUR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  className="builder-bars-input"
+                  min={1}
+                  max={16}
+                  value={step.bars ?? 1}
+                  onChange={(e) => updateStep(i, "bars", Math.max(1, parseInt(e.target.value) || 1))}
+                />
+                <span className="builder-bars-label">{t("progressionBuilder.barsLabel")}</span>
+                <button
+                  className="builder-remove-btn"
+                  onClick={() => removeStep(i)}
+                  disabled={steps.length <= 1}
+                  aria-label={t("progressionBuilder.removeStepLabel")}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="builder-actions">
+            <button className="builder-add-btn" onClick={addStep}>
+              <Plus size={14} /> {t("progressionBuilder.addStep")}
+            </button>
+            <button
+              className={`play-progression-btn${activeProgressionId === "builder" ? " playing" : ""}`}
+              onClick={handlePlay}
+            >
+              {activeProgressionId === "builder" ? <Square size={14} /> : <Play size={14} />}
+            </button>
+            <button className="builder-preview-btn" onClick={handlePreview}>
+              <Eye size={14} /> {previewSnippet ? t("progressionBuilder.refreshPreview") : t("progressionBuilder.previewEmbed")}
+            </button>
+            <button className="builder-copy-btn" onClick={handleCopyEmbed}>
+              <Copy size={14} /> {copied ? t("progressions.embedCopied") : t("progressionBuilder.copyEmbed")}
+            </button>
+          </div>
+          {previewSnippet && (
+            <div className="builder-preview">
+              <div className="builder-preview-heading">{t("progressionBuilder.previewHeading")}</div>
+              <code className="builder-preview-snippet">{previewSnippet}</code>
+              <iframe
+                className="builder-preview-frame"
+                title={t("progressionBuilder.previewFrameTitle")}
+                height={computeEmbedHeight(new Set(steps.map((s) => s.mode)).size) + 40}
+                srcDoc={`<!doctype html><meta charset="utf-8"><style>body{margin:0}</style>${previewSnippet}`}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProgressionBuilder;
