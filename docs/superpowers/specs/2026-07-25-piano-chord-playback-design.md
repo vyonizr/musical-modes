@@ -101,13 +101,15 @@ with nothing to indicate why.
 Source: **Salamander Grand Piano V3** (Yamaha C5) by Alexander Holm, MP3
 conversion. This is the standard piano source in the Tone.js ecosystem.
 
-Sample set: roughly one sample per major third from C2 to C5. `chordToNotes`
-spans about C2–E4 (`BASS_FLOOR` 36 through `UPPER_FLOOR + 16`), so ten files
-cover the range with no repitching beyond two semitones. `Tone.Sampler`
-repitches automatically between provided notes.
+Sample set: the canonical Tone.js Salamander distribution is sampled in **minor
+thirds** (C, D♯, F♯, A per octave). `chordToNotes` spans C2–E4 (`BASS_FLOOR` 36
+through `UPPER_FLOOR + 16`), so ten files — C2, D♯2, F♯2, A2, C3, D♯3, F♯3, A3,
+C4, D♯4 — cover the range with at most two semitones of repitch.
+`Tone.Sampler` repitches automatically between provided notes.
 
-**Budget: 1 MB total**, measured during implementation. If exceeded, widen the
-sampling interval or trim sample tails. Do not ship over budget.
+**Measured total: 866,600 bytes (846 KB)**, from `Content-Length` on
+`tonejs.github.io/audio/salamander/`. Under the 1 MB budget with no trimming
+required. Re-measure after any change to the file list; do not ship over 1 MB.
 
 ### 6. Runtime caching, not precaching
 
@@ -231,5 +233,5 @@ the **Size Contract**.
 
 ## Open risk
 
-Actual sample-set size is unmeasured. The 1 MB budget in decision 5 is a
-constraint on implementation, not a measurement.
+~~Actual sample-set size is unmeasured.~~ **Resolved 2026-07-25:** measured at
+846 KB for the ten-file set (decision 5). No open risks remain.
