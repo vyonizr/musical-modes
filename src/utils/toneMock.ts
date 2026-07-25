@@ -10,11 +10,18 @@ export interface Attack {
   engine: "synth" | "piano";
   notes: string[];
   velocity?: number;
+  time?: number;
+}
+
+export interface Release {
+  notes: string[];
+  time?: number;
 }
 
 export interface ToneMockState {
   sounding: Map<string, number>;
   attacks: Attack[];
+  releases: Release[];
   hooks: { onload?: () => void; onerror?: (error: Error) => void };
 }
 
@@ -23,12 +30,14 @@ const container = globalThis as unknown as { __toneMock?: ToneMockState };
 export const state: ToneMockState = (container.__toneMock ??= {
   sounding: new Map<string, number>(),
   attacks: [],
+  releases: [],
   hooks: {},
 });
 
 export function resetToneMock(): void {
   state.sounding.clear();
   state.attacks.length = 0;
+  state.releases.length = 0;
   state.hooks = {};
 }
 
@@ -53,13 +62,15 @@ export function createToneMock() {
   const asList = (notes: string | string[]) => (Array.isArray(notes) ? notes : [notes]);
   class Instrument extends Node {
     engine: "synth" | "piano" = "synth";
-    triggerAttack(notes: string | string[], _time?: number, velocity?: number) {
+    triggerAttack(notes: string | string[], time?: number, velocity?: number) {
       const list = asList(notes);
-      state.attacks.push({ engine: this.engine, notes: list, velocity });
+      state.attacks.push({ engine: this.engine, notes: list, velocity, time });
       list.forEach((note) => state.sounding.set(note, (state.sounding.get(note) ?? 0) + 1));
     }
-    triggerRelease(notes: string | string[]) {
-      asList(notes).forEach((note) => {
+    triggerRelease(notes: string | string[], time?: number) {
+      const list = asList(notes);
+      state.releases.push({ notes: list, time });
+      list.forEach((note) => {
         const count = state.sounding.get(note) ?? 0;
         if (count > 0) state.sounding.set(note, count - 1);
       });
