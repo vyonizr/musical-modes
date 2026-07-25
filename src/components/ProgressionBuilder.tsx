@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
-import { Play, Square, Copy, Plus, Trash2 } from "lucide-react";
+import { Play, Square, Copy, Plus, Trash2, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MODE_NAMES } from "src/utils/types";
 import { Progression, ProgressionStep, BPM_DEFAULT } from "src/utils/progressions";
 import { ChordFlavor } from "src/utils/chords";
-import { buildStepsEmbedSnippet } from "src/utils/embed";
+import { buildStepsEmbedSnippet, computeEmbedHeight } from "src/utils/embed";
 import { Mode } from "src/utils/types";
 
 const FLAVOUR_OPTIONS: { value: string; label: string }[] = [
@@ -33,6 +33,7 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
   const [steps, setSteps] = useState<ProgressionStep[]>([emptyStep()]);
   const [bpm, setBpm] = useState(BPM_DEFAULT);
   const [copied, setCopied] = useState(false);
+  const [previewSnippet, setPreviewSnippet] = useState<string | null>(null);
 
   const builderProgression: Progression = {
     id: "builder",
@@ -70,6 +71,14 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
     navigator.clipboard.writeText(snippet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }, [steps, bpm, selectedScale, preferSharp]);
+
+  // Snapshot, not live. An Embed Snippet is frozen at copy time, so the
+  // preview of one is frozen too — re-press the button to take a new one.
+  const handlePreview = useCallback(() => {
+    setPreviewSnippet(
+      buildStepsEmbedSnippet(steps, bpm, selectedScale, preferSharp, window.location.origin)
+    );
   }, [steps, bpm, selectedScale, preferSharp]);
 
   const degreeOptions = modes.length > 0
@@ -160,10 +169,25 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
             >
               {activeProgressionId === "builder" ? <Square size={14} /> : <Play size={14} />}
             </button>
+            <button className="builder-preview-btn" onClick={handlePreview}>
+              <Eye size={14} /> {previewSnippet ? t("progressionBuilder.refreshPreview") : t("progressionBuilder.previewEmbed")}
+            </button>
             <button className="builder-copy-btn" onClick={handleCopyEmbed}>
               <Copy size={14} /> {copied ? t("progressions.embedCopied") : t("progressionBuilder.copyEmbed")}
             </button>
           </div>
+          {previewSnippet && (
+            <div className="builder-preview">
+              <div className="builder-preview-heading">{t("progressionBuilder.previewHeading")}</div>
+              <code className="builder-preview-snippet">{previewSnippet}</code>
+              <iframe
+                className="builder-preview-frame"
+                title={t("progressionBuilder.previewFrameTitle")}
+                height={computeEmbedHeight(new Set(steps.map((s) => s.mode)).size) + 40}
+                srcDoc={`<!doctype html><meta charset="utf-8"><style>body{margin:0}</style>${previewSnippet}`}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
