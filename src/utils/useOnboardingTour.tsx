@@ -2,98 +2,139 @@ import { useCallback, useMemo, useState } from "react";
 import { Step, STATUS, EVENTS, EventData } from "react-joyride";
 import { useTranslation } from "react-i18next";
 
-const TOUR_SEEN_KEY = "musical-modes-tour-seen";
+const SEEN_KEY = "musical-modes-onboarding-seen";
+const LEGACY_SEEN_KEY = "musical-modes-tour-seen";
 
-export function useOnboardingTour(isTouchDevice: boolean) {
+export type TourId = "core" | "detector" | "progressions" | "builder";
+
+function readSeen(): TourId[] {
+  const raw = localStorage.getItem(SEEN_KEY);
+
+  if (raw) {
+    // The new key wins outright. Drop the legacy flag without reading it.
+    localStorage.removeItem(LEGACY_SEEN_KEY);
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as TourId[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (localStorage.getItem(LEGACY_SEEN_KEY)) {
+    // Someone who finished the old linear tour has seen the basics and
+    // nothing else. Panel tours stay unseen so they still fire.
+    const migrated: TourId[] = ["core"];
+    localStorage.setItem(SEEN_KEY, JSON.stringify(migrated));
+    localStorage.removeItem(LEGACY_SEEN_KEY);
+    return migrated;
+  }
+
+  return [];
+}
+
+export function useOnboardingTour() {
   const { t } = useTranslation();
 
-  const TOUR_STEPS: Step[] = [
-    {
-      target: "#modes",
-      content: t("tour.rootKeyStep"),
-      skipBeacon: true,
-    },
-    {
-      target: ".accidental-toggle",
-      content: (
-        <span>
-          Switch between flat (<code>♭</code>) and sharp (<code>♯</code>){" "}
-          spelling for accidental notes. Same sound, different notation.
-        </span>
-      ),
-    },
-    {
-      target: ".legends-wrapper",
-      content: t("tour.toggleModesStep"),
-    },
-    {
-      target: "table",
-      content: t("tour.playChordStep"),
-    },
-    {
-      target: "table",
-      content: (
-        <span>
-          Your keyboard maps to the chords too. <code>Q</code> through{" "}
-          <code>U</code> for the top row, <code>A</code> through <code>J</code>{" "}
-          for the second, <code>Z</code> through <code>M</code> for the third.
-        </span>
-      ),
-    },
-    {
-      target: "#modifier-hint",
-      content: (
-        <span>
-          Hold <code>,</code> or <code>.</code> for 7th chords; <code>k</code>{" "}
-          or <code>l</code> for sus chords. You can press a modifier before or
-          after a chord key. Hold a chord and add the modifier to hear it
-          transform instantly.
-        </span>
-      ),
-    },
-    {
-      target: ".key-detector-toggle",
-      content: t("tour.keyDetectorStep"),
-    },
-    {
-      target: ".progressions-toggle",
-      content: t("tour.progressionsStep"),
-    },
-  ];
+  const TOURS: Record<TourId, Step[]> = useMemo(
+    () => ({
+      core: [
+        {
+          target: "#modes",
+          content: t("tour.rootKeyStep"),
+          skipBeacon: true,
+        },
+        {
+          target: ".legends-wrapper",
+          content: t("tour.toggleModesStep"),
+        },
+        {
+          target: "table",
+          content: t("tour.playChordStep"),
+        },
+      ],
+      detector: [
+        {
+          target: ".key-detector-toggle",
+          content: t("tour.keyDetectorStep"),
+          skipBeacon: true,
+        },
+      ],
+      progressions: [
+        {
+          target: ".progressions-toggle",
+          content: t("tour.progressionsStep"),
+          skipBeacon: true,
+        },
+      ],
+      builder: [
+        {
+          target: ".builder-steps-list",
+          content: t("tour.builderStep"),
+          skipBeacon: true,
+        },
+        {
+          target: ".builder-copy-btn",
+          content: t("tour.builderEmbedStep"),
+        },
+      ],
+    }),
+    [t]
+  );
 
-  const [tourRun, setTourRun] = useState(
-    () => !localStorage.getItem(TOUR_SEEN_KEY)
+  const [seen, setSeen] = useState<TourId[]>(readSeen);
+  const [activeTour, setActiveTour] = useState<TourId | null>(
+    seen.includes("core") ? null : "core"
   );
   const [tourStepIndex, setTourStepIndex] = useState(0);
 
-  const handleJoyrideEvent = useCallback((data: EventData) => {
-    const { action, index, status, type } = data;
-    if (type === EVENTS.STEP_AFTER) {
-      setTourStepIndex(index + 1);
-    }
-    if (status === STATUS.FINISHED || action === "skip") {
-      setTourRun(false);
-      localStorage.setItem(TOUR_SEEN_KEY, "true");
-    }
+  const markSeen = useCallback((id: TourId) => {
+    setSeen((prev) => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
+
+  const handleJoyrideEvent = useCallback(
+    (data: EventData) => {
+      const { action, index, status, type } = data;
+      if (type === EVENTS.STEP_AFTER) {
+        setTourStepIndex(index + 1);
+      }
+      if (status === STATUS.FINISHED || action === "skip") {
+        if (activeTour) markSeen(activeTour);
+        setActiveTour(null);
+        setTourStepIndex(0);
+      }
+    },
+    [activeTour, markSeen]
+  );
+
+  const startTour = useCallback(
+    (id: TourId) => {
+      if (activeTour !== null) return;
+      if (seen.includes(id)) return;
+      setTourStepIndex(0);
+      setActiveTour(id);
+    },
+    [activeTour, seen]
+  );
 
   const restartTour = useCallback(() => {
-    setTourRun(true);
+    localStorage.removeItem(SEEN_KEY);
+    setSeen([]);
     setTourStepIndex(0);
+    setActiveTour("core");
   }, []);
 
-  const visibleSteps = useMemo(() => {
-    if (isTouchDevice) {
-      return TOUR_STEPS.filter((s) => s.target !== "#modifier-hint");
-    }
-    return TOUR_STEPS;
-  }, [isTouchDevice, t]);
-
   return {
-    visibleSteps,
-    tourRun,
+    visibleSteps: activeTour ? TOURS[activeTour] : [],
+    tourRun: activeTour !== null,
     tourStepIndex,
     handleJoyrideEvent,
     restartTour,
+    startTour,
   };
 }

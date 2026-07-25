@@ -57,6 +57,8 @@
     "playChordStep": "Tap any chord to play it. On desktop, you can hold it down to sustain.",
     "keyDetectorStep": "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
     "progressionsStep": "Browse chord progressions from real songs, resolved to your current key. Tap one to hear it played back.",
+    "builderStep": "Build your own progression. Pick a mode and a degree for each step, set how many bars it lasts, choose a BPM, then play it back.",
+    "builderEmbedStep": "Copy your progression as an embed for your own page. The copied code is a snapshot: editing the progression here will not change a page you already pasted it into.",
     "joyrideNext": "Next",
     "joyrideSkip": "Skip",
     "joyrideLast": "Done"

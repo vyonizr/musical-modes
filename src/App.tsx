@@ -127,7 +127,8 @@ export default function App() {
     tourStepIndex,
     handleJoyrideEvent,
     restartTour,
-  } = useOnboardingTour(isTouchDevice);
+    startTour,
+  } = useOnboardingTour();
 
   return (
     <div>
