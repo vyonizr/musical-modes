@@ -9,48 +9,11 @@ import {
   renderHook,
 } from "@testing-library/react";
 
-const sounding = new Map<string, number>();
-const attacks: { engine: "synth" | "piano"; notes: string[]; velocity?: number }[] = [];
+vi.mock("tone", async () => (await import("./toneMock")).createToneMock());
 
-vi.mock("tone", () => {
-  class Node {
-    connect() {
-      return this;
-    }
-    toDestination() {
-      return this;
-    }
-  }
-  class Volume extends Node {
-    volume = { value: 0 };
-  }
-  const asList = (notes: string | string[]) => (Array.isArray(notes) ? notes : [notes]);
-  class PolySynth extends Node {
-    maxPolyphony = 0;
-    triggerAttack(notes: string | string[], _time?: number, velocity?: number) {
-      const list = asList(notes);
-      attacks.push({ engine: "synth", notes: list, velocity });
-      list.forEach((note) => sounding.set(note, (sounding.get(note) ?? 0) + 1));
-    }
-    triggerRelease(notes: string | string[]) {
-      asList(notes).forEach((note) => {
-        const count = sounding.get(note) ?? 0;
-        if (count > 0) sounding.set(note, count - 1);
-      });
-    }
-    releaseAll() {
-      sounding.clear();
-    }
-  }
-  return {
-    PolySynth,
-    Synth: class {},
-    Limiter: Node,
-    Reverb: Node,
-    Volume,
-    now: () => 0,
-  };
-});
+import { state, resetToneMock, stuckNotes } from "./toneMock";
+
+const attacks = state.attacks;
 
 import { triggerAttackChord, triggerReleaseChord } from "./chords";
 import { useChordKeyboardInput } from "./useChordKeyboardInput";
@@ -58,8 +21,6 @@ import { usePlayProgression } from "./usePlayProgression";
 import TableContent from "src/components/TableContent";
 import { Mode } from "src/utils/types";
 
-const stuckNotes = () =>
-  [...sounding.entries()].filter(([, count]) => count > 0).map(([note]) => note);
 
 const makeMode = (name: string, chords: string[]): Mode => ({
   name,
@@ -70,10 +31,7 @@ const makeMode = (name: string, chords: string[]): Mode => ({
 
 const ionian = makeMode("ionian", ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]);
 
-beforeEach(() => {
-  sounding.clear();
-  attacks.length = 0;
-});
+beforeEach(resetToneMock);
 afterEach(cleanup);
 
 describe("no note survives the interaction that started it", () => {

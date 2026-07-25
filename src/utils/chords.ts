@@ -144,6 +144,8 @@ export function displaySusChordName(chordName: string, sus: "sus4" | "sus2"): st
 }
 
 let synth: Tone.PolySynth | null = null;
+let piano: Tone.Sampler | null = null;
+let pianoState: "idle" | "loading" | "ready" | "failed" = "idle";
 let reverb: Tone.Reverb | null = null;
 let limiter: Tone.Limiter | null = null;
 let volumeNode: Tone.Volume | null = null;
@@ -178,33 +180,87 @@ function installPanicHandlers(): void {
     if (document.hidden) releaseAllChords();
   });
 }
+// Sampled in minor thirds, C2 to D#4. chordToNotes spans C2-E4, so this covers
+// the range with at most two semitones of repitch. Tone.Sampler fills the gaps.
+const PIANO_SAMPLES: Record<string, string> = {
+  C2: "C2.mp3",
+  "D#2": "Ds2.mp3",
+  "F#2": "Fs2.mp3",
+  A2: "A2.mp3",
+  C3: "C3.mp3",
+  "D#3": "Ds3.mp3",
+  "F#3": "Fs3.mp3",
+  A3: "A3.mp3",
+  C4: "C4.mp3",
+  "D#4": "Ds4.mp3",
+};
 
-function ensureSynth(): Tone.PolySynth {
-  if (!synth) {
+function ensureOutput(): Tone.Reverb {
+  if (!reverb) {
     limiter = new Tone.Limiter(-2).toDestination();
     volumeNode = new Tone.Volume(volumeToDb(getStoredVolume())).connect(limiter);
     reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
+    // A held chord outlives the element/key that started it (focus loss, tab
+    // switch, bfcache). Without this the notes sustain until a page reload.
+    installPanicHandlers();
+  }
+  return reverb;
+}
+
+function ensureSynth(): Tone.PolySynth {
+  if (!synth) {
     synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: "triangle" },
       envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: RELEASE_S },
     });
     // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
     synth.maxPolyphony = 64;
-    synth.connect(reverb);
-    // A held chord outlives the element/key that started it (focus loss, tab
-    // switch, bfcache). Without this the notes sustain until a page reload.
-    installPanicHandlers();
+    synth.connect(ensureOutput());
   }
   return synth;
+}
+
+/**
+ * Returns the piano only once its samples are loaded, and starts that load on
+ * the first call. Null means "not ready" — callers fall back to the synth
+ * rather than waiting, because a chord must always sound immediately.
+ *
+ * A failed load is terminal for the session: retrying on every keypress would
+ * hammer a dead origin for no gain.
+ */
+function ensurePiano(): Tone.Sampler | null {
+  if (pianoState === "failed") return null;
+  if (!piano) {
+    pianoState = "loading";
+    piano = new Tone.Sampler({
+      urls: PIANO_SAMPLES,
+      baseUrl: "/audio/piano/",
+      release: RELEASE_S,
+      onload: () => {
+        pianoState = "ready";
+      },
+      onerror: () => {
+        pianoState = "failed";
+      },
+    });
+    piano.connect(ensureOutput());
+  }
+  return pianoState === "ready" ? piano : null;
 }
 
 /**
  * Receipt for one sounding chord. Release takes this instead of a chord name so
  * the notes released are always the notes attacked, even if the key, mode or
  * flavour the caller renders has changed in between.
+ *
+ * The engine is recorded for the same reason. A chord can be held while the
+ * samples finish loading; resolving "the current engine" at release time would
+ * tell the piano to release notes the synth is holding, and the synth would
+ * ring until a page reload.
  */
 export interface ChordHandle {
   readonly notes: readonly string[];
+  readonly engine: Tone.PolySynth | Tone.Sampler;
 }
 
 const sounding = new Set<ChordHandle>();
@@ -213,10 +269,12 @@ export function triggerAttackChord(
   chordName: string,
   flavour?: ChordFlavor
 ): ChordHandle {
-  const s = ensureSynth();
+  // Calling ensurePiano first is what kicks off the sample download; until it
+  // resolves this returns null and the synth answers immediately.
+  const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
-  s.triggerAttack(notes, Tone.now(), ATTACK_VELOCITY);
-  const handle: ChordHandle = { notes };
+  engine.triggerAttack(notes, Tone.now(), ATTACK_VELOCITY);
+  const handle: ChordHandle = { notes, engine };
   sounding.add(handle);
   return handle;
 }
@@ -224,11 +282,13 @@ export function triggerAttackChord(
 /** Idempotent: releasing an unknown or already-released handle is a no-op. */
 export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
   if (!handle || !sounding.delete(handle)) return;
-  const s = ensureSynth();
-  s.triggerRelease(handle.notes as string[], Tone.now());
+  handle.engine.triggerRelease(handle.notes as string[], Tone.now());
 }
 
+/** Bounded stop, not an instant one: the release envelope still applies, so
+ *  audio ends within RELEASE_S rather than immediately. */
 export function releaseAllChords(): void {
   sounding.clear();
   synth?.releaseAll();
+  piano?.releaseAll();
 }

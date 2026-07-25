@@ -58,7 +58,7 @@ The embed is intentionally minimal: it plays back at the progression's own BPM (
 |---|---|
 | Framework | Vite + React |
 | Language | TypeScript |
-| Audio | Tone.js (PolySynth, guitar voicings) |
+| Audio | Tone.js (sampled piano, synth fallback) |
 | PWA | vite-plugin-pwa |
 | Styling | Plain CSS |
 | i18n | react-i18next (English only, structured for future locales) |
