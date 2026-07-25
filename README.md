@@ -83,3 +83,5 @@ Open [http://localhost:5173](http://localhost:5173).
 ## License
 
 [GNU General Public License v3.0](LICENSE)
+
+Piano samples are [Salamander Grand Piano V3](https://archive.org/details/SalamanderGrandPianoV3) by Alexander Holm, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
