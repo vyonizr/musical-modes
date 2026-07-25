@@ -54,10 +54,15 @@ const TRIAD_SUS: Record<"sus4" | "sus2", QualityIntervals> = {
   },
 };
 
-// Velocity per string: bass string louder, upper strings softer
-const STRUM_VELOCITIES = [0.55, 0.7, 0.65, 0.6, 0.6];
+// A piano hammers every held key at once, so all notes of a chord share one
+// attack time and one velocity. The old per-string velocity curve made the
+// second note the loudest in the chord, which reads as wrong on a keyboard.
+const ATTACK_VELOCITY = 0.7;
 
-const STRUM_DELAY_S = 0.005; // 5ms between strings
+// Damper fade. Long enough that release is not a cliff, short enough that
+// consecutive progression steps do not overlap audibly at fast BPM. Shared by
+// both engines so the fallback does not ring longer than the piano.
+const RELEASE_S = 0.3;
 
 function parseChord(chordName: string): {
   root: string;
@@ -181,7 +186,7 @@ function ensureSynth(): Tone.PolySynth {
     reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
     synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: "triangle" },
-      envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: 1.2 },
+      envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: RELEASE_S },
     });
     // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
     synth.maxPolyphony = 64;
@@ -210,10 +215,7 @@ export function triggerAttackChord(
 ): ChordHandle {
   const s = ensureSynth();
   const notes = chordToNotes(chordName, flavour);
-  const now = Tone.now();
-  notes.forEach((note, i) => {
-    s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
-  });
+  s.triggerAttack(notes, Tone.now(), ATTACK_VELOCITY);
   const handle: ChordHandle = { notes };
   sounding.add(handle);
   return handle;
@@ -223,10 +225,7 @@ export function triggerAttackChord(
 export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
   if (!handle || !sounding.delete(handle)) return;
   const s = ensureSynth();
-  const now = Tone.now();
-  handle.notes.forEach((note, i) => {
-    s.triggerRelease(note, now + i * STRUM_DELAY_S);
-  });
+  s.triggerRelease(handle.notes as string[], Tone.now());
 }
 
 export function releaseAllChords(): void {

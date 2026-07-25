@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 
 const sounding = new Map<string, number>();
+const attacks: { engine: "synth" | "piano"; notes: string[]; velocity?: number }[] = [];
 
 vi.mock("tone", () => {
   class Node {
@@ -23,14 +24,19 @@ vi.mock("tone", () => {
   class Volume extends Node {
     volume = { value: 0 };
   }
+  const asList = (notes: string | string[]) => (Array.isArray(notes) ? notes : [notes]);
   class PolySynth extends Node {
     maxPolyphony = 0;
-    triggerAttack(note: string) {
-      sounding.set(note, (sounding.get(note) ?? 0) + 1);
+    triggerAttack(notes: string | string[], _time?: number, velocity?: number) {
+      const list = asList(notes);
+      attacks.push({ engine: "synth", notes: list, velocity });
+      list.forEach((note) => sounding.set(note, (sounding.get(note) ?? 0) + 1));
     }
-    triggerRelease(note: string) {
-      const count = sounding.get(note) ?? 0;
-      if (count > 0) sounding.set(note, count - 1);
+    triggerRelease(notes: string | string[]) {
+      asList(notes).forEach((note) => {
+        const count = sounding.get(note) ?? 0;
+        if (count > 0) sounding.set(note, count - 1);
+      });
     }
     releaseAll() {
       sounding.clear();
@@ -46,6 +52,7 @@ vi.mock("tone", () => {
   };
 });
 
+import { triggerAttackChord, triggerReleaseChord } from "./chords";
 import { useChordKeyboardInput } from "./useChordKeyboardInput";
 import { usePlayProgression } from "./usePlayProgression";
 import TableContent from "src/components/TableContent";
@@ -63,7 +70,10 @@ const makeMode = (name: string, chords: string[]): Mode => ({
 
 const ionian = makeMode("ionian", ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]);
 
-beforeEach(() => sounding.clear());
+beforeEach(() => {
+  sounding.clear();
+  attacks.length = 0;
+});
 afterEach(cleanup);
 
 describe("no note survives the interaction that started it", () => {
@@ -199,6 +209,20 @@ describe("no note survives the interaction that started it", () => {
     expect(stuckNotes().length).toBeGreaterThan(0);
 
     unmount();
+    expect(stuckNotes()).toEqual([]);
+  });
+});
+
+
+describe("a chord is struck like a keyboard, not strummed like a guitar", () => {
+  it("attacks every note in one call at a single velocity", () => {
+    const handle = triggerAttackChord("C");
+
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0].notes).toEqual([...handle.notes]);
+    expect(attacks[0].velocity).toBe(0.7);
+
+    triggerReleaseChord(handle);
     expect(stuckNotes()).toEqual([]);
   });
 });
