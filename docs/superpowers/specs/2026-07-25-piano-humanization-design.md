@@ -142,8 +142,12 @@ Recorded so it is not mistaken for a defect later.
 
 ## Testing
 
-`src/utils/toneMock.ts` currently drops the `time` argument in `triggerAttack`
-(`src/utils/toneMock.ts:56`). It must record it alongside `velocity`.
+`src/utils/toneMock.ts` drops the `time` argument in both `triggerAttack`
+(`src/utils/toneMock.ts:56`) and `triggerRelease` (`:61`). It must record the
+attack time alongside `velocity`, and gain a `releases` log of
+`{ notes, time }`. The release log is what makes decision 5 testable: the mock
+has no clock, so the only observable proof that a release cannot precede its
+attack is the time value the release was issued with.
 
 Rewrite the block at `src/utils/chordRelease.test.tsx:175`. Assert invariants,
 not exact values, so no test depends on a particular random draw:
@@ -154,19 +158,23 @@ not exact values, so no test depends on a particular random draw:
 2. Every velocity falls in `[0.64, 0.76]`.
 3. Every attack time falls in `[t0, t0 + 0.012]`.
 4. Release frees every note. Nothing left sounding.
-5. Release issued inside the 12 ms window still frees every note. Regression
-   test for decision 5.
-6. `releaseAllChords()` called immediately after an attack leaves nothing
-   sounding. Regression test for decision 5.
+5. Release issued for a chord passes a time at or after `handle.attackedThrough`,
+   and frees every note. Regression test for decision 5.
+6. `releaseAllChords()` called immediately after an attack does the same.
+   Regression test for decision 5.
 
 No RNG seeding or injection. Bounds assertions hold for every possible draw, so
 there is nothing to make deterministic. Do not add a test asserting that two
 attacks differ from each other, which is the one assertion here that could flake.
 
-Every assertion against the `attacks` array in this file lives inside the block
-being rewritten (`chordRelease.test.tsx:179-181`). The other tests (synth
-fallback, engine recorded on the handle, load failure) assert through
-`stuckNotes()` and need no changes.
+Every assertion against the `attacks` array in that file lives inside the block
+being rewritten (`chordRelease.test.tsx:179-181`). Its other tests assert
+through `stuckNotes()` and need no changes.
+
+`src/utils/chordEngine.test.ts` **does** break. Its `engines()` helper
+(`:10`) maps one entry per attack, so `expect(engines()).toEqual(["synth"])` at
+lines 26, 37 and 47 would see five entries instead of one. Dedupe the helper to
+the distinct engines used, which is what those three assertions actually mean.
 
 ## Non-goals
 
@@ -180,6 +188,7 @@ progression step *timing*, which stays exactly on the BPM grid.
 | File | Change |
 | --- | --- |
 | `src/utils/chords.ts` | Two constants, per-note attack loop, `attackedThrough` on the handle, release clamping in both release paths |
-| `src/utils/toneMock.ts` | Record the attack `time` argument |
+| `src/utils/toneMock.ts` | Record attack `time`, add a `releases` log |
 | `src/utils/chordRelease.test.tsx` | Rewrite the strum block, six tests |
+| `src/utils/chordEngine.test.ts` | Dedupe the `engines()` helper |
 | `docs/superpowers/specs/2026-07-25-piano-chord-playback-design.md` | Note that decision 7 is partly superseded by this spec |
