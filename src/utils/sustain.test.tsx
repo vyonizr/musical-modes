@@ -136,6 +136,7 @@ describe("a voicing correction is not a musician letting go", () => {
     const { unmount } = renderHook(() =>
       useChordKeyboardInput("C", ["ionian"], false)
     );
+    setSustain(true);
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
     });
