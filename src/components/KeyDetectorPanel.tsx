@@ -146,7 +146,7 @@ const KeyDetectorPanel = ({ preferSharp, onKeySelected }: IProps) => {
                                 {section.cadentialMatch && (
                                   <span className="tag-note">
                                     {" "}
-                                    &mdash; {t("keyDetector.resolvesToTonic")}
+                                    — {t("keyDetector.resolvesToTonic")}
                                   </span>
                                 )}
                                 :

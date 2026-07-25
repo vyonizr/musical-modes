@@ -139,7 +139,7 @@ export default function EmbedWidget() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          {t("embed.backlink")} &nearr;
+          {t("embed.backlink")} ↗
         </a>
       </div>
     </div>

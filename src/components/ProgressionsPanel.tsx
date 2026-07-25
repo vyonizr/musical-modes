@@ -88,7 +88,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
                   )}
                   <span className="progression-pattern">
                     {pattern}
-                    {label && <span className="progression-cadence"> &mdash; {label}</span>}
+                    {label && <span className="progression-cadence"> — {label}</span>}
                   </span>
                   <span className="progression-songs">{p.songs.join(', ')}</span>
                 </div>
