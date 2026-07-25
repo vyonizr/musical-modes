@@ -338,6 +338,22 @@ export function triggerAttackChord(
   const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
 
+  // A note can only be held once. Re-striking a pitch a sustained chord still
+  // owns would leave that chord's handle unable to release it, and the note
+  // would ring until a page reload. A real piano re-strikes the same string,
+  // so damping the older copy is also what the instrument does.
+  //
+  // This is what bounds the sustained set: at most one handle per pitch, over
+  // the ~17 pitches chordToNotes spans, so no separate voice cap is needed.
+  if (sustained.size > 0) {
+    const swept = Tone.now();
+    sustained.forEach((held) => {
+      if (!held.notes.some((note) => notes.includes(note))) return;
+      sustained.delete(held);
+      dampHandle(held, swept);
+    });
+  }
+
   // One base instant for the whole chord, so the offsets stay relative to each
   // other. Every offset is positive, so the chord never starts later than an
   // unhumanized one would.

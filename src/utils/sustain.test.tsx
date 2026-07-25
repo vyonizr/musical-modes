@@ -82,3 +82,36 @@ describe("the pedal decides when a chord stops, not the key", () => {
     expect(stuckNotes()).toEqual([]);
   });
 });
+
+describe("a pitch is only ever held once", () => {
+  it("re-striking a sustained chord damps the copy already ringing", () => {
+    setSustain(true);
+    triggerReleaseChord(triggerAttackChord("C"));
+    releases.length = 0;
+
+    triggerAttackChord("C");
+
+    expect(releases).toHaveLength(1);
+  });
+
+  it("leaves a sustained chord alone when the new chord shares no note", () => {
+    setSustain(true);
+    // C is C/E/G, D is D/F#/A. No shared pitch class, so no shared note.
+    triggerReleaseChord(triggerAttackChord("C"));
+    releases.length = 0;
+
+    triggerAttackChord("D");
+
+    expect(releases).toHaveLength(0);
+  });
+
+  it("does not damp a chord whose key is still down", () => {
+    setSustain(true);
+    triggerAttackChord("C");
+    releases.length = 0;
+
+    triggerAttackChord("C");
+
+    expect(releases).toHaveLength(0);
+  });
+});
