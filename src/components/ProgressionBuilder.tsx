@@ -25,11 +25,17 @@ interface IProps {
   preferSharp: boolean
   onPlay: (progression: Progression) => void
   activeProgressionId: string | null
+  onOpen: () => void
 }
 
-const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeProgressionId }: IProps) => {
+const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeProgressionId, onOpen }: IProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  const toggleOpen = () => {
+    if (!open) onOpen();
+    setOpen((o) => !o);
+  };
   const [steps, setSteps] = useState<ProgressionStep[]>([emptyStep()]);
   const [bpm, setBpm] = useState(BPM_DEFAULT);
   const [copied, setCopied] = useState(false);
@@ -86,13 +92,14 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
     return found
       ? found.romanNumerals.map((rn, i) => ({ value: i, label: rn }))
       : Array.from({ length: 7 }, (_, i) => ({ value: i, label: String(i) }));
+
   };
 
   return (
     <div className="progression-builder">
       <button
         className="progression-builder-toggle"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         aria-expanded={open}
       >
         {t("progressionBuilder.toggleLabel")} {open ? "\u25B4" : "\u25BE"}
