@@ -142,6 +142,13 @@ available offline thereafter.
 
 ### 7. Notes strike together, at one velocity
 
+> **Partly superseded 2026-07-25** by
+> `2026-07-25-piano-humanization-design.md`. Notes no longer strike at one
+> instant at one velocity: each gets a random offset inside 12 ms and a random
+> velocity inside 0.64..0.76. What this decision rejected still stands. The
+> replacement has no fixed direction and no systematically loudest note, which
+> were the actual defects in the strum removed here.
+
 Three constants in `src/utils/chords.ts` change:
 
 | Constant | Now | After | Why |
