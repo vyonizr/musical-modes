@@ -12,6 +12,7 @@ interface IProps {
   onPlay: (progression: Progression) => void
   activeProgressionId: string | null
   onCopyEmbed?: (progression: Progression) => void
+  onOpen: () => void
 }
 
 function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
@@ -22,10 +23,14 @@ function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
   if (flavour === 'sus2') return roman + 'sus2'
   return roman
 }
-
-const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, onCopyEmbed }: IProps) => {
+const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, onCopyEmbed, onOpen }: IProps) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+
+  const toggleOpen = () => {
+    if (!open) onOpen()
+    setOpen(o => !o)
+  }
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const handleCopy = useCallback((p: Progression) => {
@@ -38,7 +43,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
     <div className="progressions-panel">
       <button
         className="progressions-toggle"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         aria-expanded={open}
       >
         {t("progressions.toggleLabel")} {open ? '\u25B4' : '\u25BE'}

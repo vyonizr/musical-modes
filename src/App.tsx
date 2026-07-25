@@ -127,7 +127,8 @@ export default function App() {
     tourStepIndex,
     handleJoyrideEvent,
     restartTour,
-  } = useOnboardingTour(isTouchDevice);
+    startTour,
+  } = useOnboardingTour();
 
   return (
     <div>
@@ -237,6 +238,7 @@ export default function App() {
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
           onCopyEmbed={handleCopyEmbed}
+          onOpen={() => startTour("progressions")}
         />
         <ProgressionBuilder
           modes={generateModes(selectedScale, preferSharp)}
@@ -244,6 +246,7 @@ export default function App() {
           preferSharp={preferSharp}
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
+          onOpen={() => startTour("builder")}
         />
         <div className="table-container">
           {activeModes.length === 0 ? (
@@ -278,14 +281,28 @@ export default function App() {
           )}
         </div>
         {/* ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md */}
-        <p
-          id="modifier-hint"
-          className="black"
-          style={{ marginTop: "0.25rem" }}
-        >
-          Hold <code>,</code> &middot; <code>.</code> &middot; <code>k</code>{" "}
-          &middot; <code>l</code> for 7th / sus chords
-        </p>
+        {!isTouchDevice && (
+          <details
+            id="modifier-hint"
+            className="black"
+            style={{ marginTop: "0.25rem" }}
+          >
+            <summary className="pointer noselect">
+              Hold <code>,</code> &middot; <code>.</code> &middot; <code>k</code>{" "}
+              &middot; <code>l</code> for 7th / sus chords
+            </summary>
+            <p>
+              Your keyboard maps to the chords too. <code>Q</code> through{" "}
+              <code>U</code> for the top row, <code>A</code> through{" "}
+              <code>J</code> for the second, <code>Z</code> through{" "}
+              <code>M</code> for the third.
+            </p>
+            <p>
+              You can press a modifier before or after a chord key. Hold a
+              chord and add the modifier to hear it transform instantly.
+            </p>
+          </details>
+        )}
         <p className="black" style={{ marginTop: "1rem" }}>
           {t("table.toggleModesHint")}
         </p>
@@ -306,6 +323,7 @@ export default function App() {
         </div>
         <KeyDetectorPanel
           preferSharp={preferSharp}
+          onOpen={() => startTour("detector")}
           onKeySelected={(root, modes) => {
             setSelectedScale(root);
             setActiveModes(modes);

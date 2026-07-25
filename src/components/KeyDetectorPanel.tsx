@@ -5,11 +5,16 @@ import { detectKey, isValidChordToken, parseSection, DetectionResult } from "src
 interface IProps {
   preferSharp: boolean;
   onKeySelected: (root: string, modes: string[]) => void;
+  onOpen: () => void;
 }
-
-const KeyDetectorPanel = ({ preferSharp, onKeySelected }: IProps) => {
+const KeyDetectorPanel = ({ preferSharp, onKeySelected, onOpen }: IProps) => {
   const { t } = useTranslation();
   const [keyDetectorOpen, setKeyDetectorOpen] = useState(false);
+
+  const toggleOpen = () => {
+    if (!keyDetectorOpen) onOpen();
+    setKeyDetectorOpen((prev) => !prev);
+  };
   const [detectorSections, setDetectorSections] = useState<string[]>([""]);
   const [detectionResults, setDetectionResults] = useState<
     DetectionResult[] | null
@@ -19,7 +24,7 @@ const KeyDetectorPanel = ({ preferSharp, onKeySelected }: IProps) => {
     <div className="key-detector">
       <button
         className="key-detector-toggle"
-        onClick={() => setKeyDetectorOpen((prev) => !prev)}
+        onClick={toggleOpen}
         aria-expanded={keyDetectorOpen}
       >
         {t("keyDetector.toggleLabel")} {keyDetectorOpen ? "▴" : "▾"}

@@ -44,6 +44,7 @@ function openBuilder() {
       preferSharp={false}
       onPlay={vi.fn()}
       activeProgressionId={null}
+      onOpen={vi.fn()}
     />
   );
   fireEvent.click(screen.getByText(/Build Your Own Progression/));
@@ -98,5 +99,32 @@ describe("ProgressionBuilder degree numerals", () => {
 
     const dorianLabels = Array.from(degreeSelect.options).map((o) => o.textContent);
     expect(dorianLabels).toEqual(["i", "ii", "♭III", "IV", "v", "vi°", "♭VII"]);
+  });
+});
+
+describe("ProgressionBuilder open reporting", () => {
+  it("reports every closed-to-open transition and no close", () => {
+    const onOpen = vi.fn();
+    render(
+      <ProgressionBuilder
+        modes={modes}
+        selectedScale="C"
+        preferSharp={false}
+        onPlay={vi.fn()}
+        activeProgressionId={null}
+        onOpen={onOpen}
+      />
+    );
+
+    const toggle = screen.getByText(/Build Your Own Progression/);
+
+    fireEvent.click(toggle);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(toggle);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(toggle);
+    expect(onOpen).toHaveBeenCalledTimes(2);
   });
 });

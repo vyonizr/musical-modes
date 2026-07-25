@@ -18,42 +18,44 @@ const SEMITONE_TO_NOTE = [
 
 export type ChordFlavor = "flat7" | "maj7" | "sus4" | "sus2";
 
-type QualityVoicing = Record<"maj" | "min" | "dim", number[]>;
+type QualityIntervals = Record<"maj" | "min" | "dim", number[]>;
 
-const GUITAR_VOICING: QualityVoicing = {
-  maj: [0, 4, 7, 12, 16, 19],
-  min: [0, 3, 7, 12, 15, 19],
-  dim: [0, 3, 6, 12, 15, 18],
+// Chord tones as intervals above the root. The voicing picks which octave each
+// one sounds in, so these are pitch classes, not a fixed stack.
+const TRIAD: QualityIntervals = {
+  maj: [0, 4, 7],
+  min: [0, 3, 7],
+  dim: [0, 3, 6],
 };
 
-const GUITAR_VOICING_7TH: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityVoicing> = {
+const TRIAD_7TH: Record<Exclude<ChordFlavor, "sus4" | "sus2">, QualityIntervals> = {
   flat7: {
-    maj: [0, 4, 7, 10, 16, 19],
-    min: [0, 3, 7, 10, 15, 19],
-    dim: [0, 3, 6, 10, 15, 18],
+    maj: [0, 4, 7, 10],
+    min: [0, 3, 7, 10],
+    dim: [0, 3, 6, 10],
   },
   maj7: {
-    maj: [0, 4, 7, 11, 16, 19],
-    min: [0, 3, 7, 11, 15, 19],
-    dim: [0, 3, 6, 11, 15, 18],
+    maj: [0, 4, 7, 11],
+    min: [0, 3, 7, 11],
+    dim: [0, 3, 6, 11],
   },
 };
 
-const GUITAR_VOICING_SUS: Record<"sus4" | "sus2", QualityVoicing> = {
+const TRIAD_SUS: Record<"sus4" | "sus2", QualityIntervals> = {
   sus4: {
-    maj: [0, 5, 7, 12, 17, 19],
-    min: [0, 5, 7, 12, 17, 19],
-    dim: [0, 5, 6, 12, 17, 18],
+    maj: [0, 5, 7],
+    min: [0, 5, 7],
+    dim: [0, 5, 6],
   },
   sus2: {
-    maj: [0, 2, 7, 12, 14, 19],
-    min: [0, 2, 7, 12, 14, 19],
-    dim: [0, 2, 6, 12, 14, 18],
+    maj: [0, 2, 7],
+    min: [0, 2, 7],
+    dim: [0, 2, 6],
   },
 };
 
 // Velocity per string: bass string louder, upper strings softer
-const STRUM_VELOCITIES = [0.55, 0.7, 0.65, 0.6, 0.6, 0.55];
+const STRUM_VELOCITIES = [0.55, 0.7, 0.65, 0.6, 0.6];
 
 const STRUM_DELAY_S = 0.005; // 5ms between strings
 
@@ -77,29 +79,47 @@ function midiToNote(midi: number): string {
   return SEMITONE_TO_NOTE[noteIndex] + octave;
 }
 
-const ANCHOR_MIDI = 43;
+const mod12 = (n: number) => ((n % 12) + 12) % 12;
+
+// A chord is a bass note plus four upper voices held in a fixed register.
+//
+// The bass follows the root, so progressions keep their bassline. The upper
+// voices are the chord tones that happen to fall inside UPPER_FLOOR..+16, which
+// means neighbouring chords share most of their register and move by a few
+// semitones instead of teleporting. The old voicing transposed one rigid
+// six-note stack, so a chord whose root wrapped to the other end of the octave
+// jumped with it — C sounded a tenth above D in the key of C, and the bVI-bVII-I
+// cadence in E landed its tonic ten semitones below the chord before it.
+//
+// BASS_FLOOR + 11 < UPPER_FLOOR, so the bass can never collide with a voice.
+const BASS_FLOOR = 36; // C2
+const UPPER_FLOOR = 48; // C3
+const UPPER_VOICES = 4;
+
+function chordIntervals(
+  quality: "maj" | "min" | "dim",
+  flavour?: ChordFlavor
+): number[] {
+  if (flavour === "sus4" || flavour === "sus2") return TRIAD_SUS[flavour][quality];
+  if (flavour) return TRIAD_7TH[flavour][quality];
+  return TRIAD[quality];
+}
 
 export function chordToNotes(
   chordName: string,
   flavour?: ChordFlavor
 ): string[] {
   const { root, quality } = parseChord(chordName);
-  let rootMidi = NOTE_TO_SEMITONE[root] + 36;
-  while (rootMidi < ANCHOR_MIDI - 6) rootMidi += 12;
-  while (rootMidi >= ANCHOR_MIDI + 6) rootMidi -= 12;
+  const rootSemitone = NOTE_TO_SEMITONE[root];
+  const tones = new Set(
+    chordIntervals(quality, flavour).map((i) => mod12(rootSemitone + i))
+  );
 
-  if (flavour === "sus4" || flavour === "sus2") {
-    return GUITAR_VOICING_SUS[flavour][quality].map((offset) =>
-      midiToNote(rootMidi + offset)
-    );
+  const midis = [BASS_FLOOR + rootSemitone];
+  for (let midi = UPPER_FLOOR; midis.length <= UPPER_VOICES; midi++) {
+    if (tones.has(mod12(midi))) midis.push(midi);
   }
-  if (flavour) {
-    return GUITAR_VOICING_7TH[flavour][quality].map((offset) =>
-      midiToNote(rootMidi + offset)
-    );
-  }
-
-  return GUITAR_VOICING[quality].map((offset) => midiToNote(rootMidi + offset));
+  return midis.map(midiToNote);
 }
 
 export function display7thChordName(chordName: string, seventh: Exclude<ChordFlavor, "sus4" | "sus2">): string {
