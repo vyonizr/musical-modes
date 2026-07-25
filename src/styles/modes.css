@@ -1242,3 +1242,56 @@ td.progression-active {
 .builder-copy-btn:hover {
   opacity: 0.9;
 }
+
+/* Embed preview */
+
+.builder-preview-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.builder-preview-btn:hover {
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.builder-preview {
+  margin-top: 12px;
+}
+
+.builder-preview-heading {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--disabled);
+  margin-bottom: 4px;
+}
+
+.builder-preview-snippet {
+  display: block;
+  font-family: monospace;
+  font-size: 0.7em;
+  line-height: 1.4;
+  word-break: break-all;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.builder-preview-frame {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  border: 1px dashed var(--disabled);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.02);
+}
