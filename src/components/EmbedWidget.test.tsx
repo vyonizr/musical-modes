@@ -39,3 +39,13 @@ describe("EmbedWidget header name", () => {
     expect(screen.queryByText("Made with Musical Modes")).toBeNull();
   });
 });
+
+describe("EmbedWidget footer", () => {
+  it("names the destination domain rather than repeating the header", () => {
+    renderAt("/?embed=1&key=C&steps=ionian:0,aeolian:2");
+    // The backlink is the only anchor in the widget.
+    const link = screen.getByRole("link");
+    expect(link.textContent).toContain("modes.vyonizr.com");
+    expect(link.textContent).not.toContain("Made with");
+  });
+});
