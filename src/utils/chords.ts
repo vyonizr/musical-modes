@@ -145,6 +145,15 @@ export function getStoredVolume(): number {
   return Number.isFinite(parsed) ? parsed : 0.8;
 }
 
+function installPanicHandlers(): void {
+  if (typeof window === "undefined") return;
+  window.addEventListener("blur", releaseAllChords);
+  window.addEventListener("pagehide", releaseAllChords);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) releaseAllChords();
+  });
+}
+
 function ensureSynth(): Tone.PolySynth {
   if (!synth) {
     limiter = new Tone.Limiter(-2).toDestination();
@@ -157,30 +166,50 @@ function ensureSynth(): Tone.PolySynth {
     // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
     synth.maxPolyphony = 64;
     synth.connect(reverb);
+    // A held chord outlives the element/key that started it (focus loss, tab
+    // switch, bfcache). Without this the notes sustain until a page reload.
+    installPanicHandlers();
   }
   return synth;
 }
 
+/**
+ * Receipt for one sounding chord. Release takes this instead of a chord name so
+ * the notes released are always the notes attacked, even if the key, mode or
+ * flavour the caller renders has changed in between.
+ */
+export interface ChordHandle {
+  readonly notes: readonly string[];
+}
+
+const sounding = new Set<ChordHandle>();
+
 export function triggerAttackChord(
   chordName: string,
   flavour?: ChordFlavor
-): void {
+): ChordHandle {
   const s = ensureSynth();
   const notes = chordToNotes(chordName, flavour);
   const now = Tone.now();
   notes.forEach((note, i) => {
     s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
   });
+  const handle: ChordHandle = { notes };
+  sounding.add(handle);
+  return handle;
 }
 
-export function triggerReleaseChord(
-  chordName: string,
-  flavour?: ChordFlavor
-): void {
+/** Idempotent: releasing an unknown or already-released handle is a no-op. */
+export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
+  if (!handle || !sounding.delete(handle)) return;
   const s = ensureSynth();
-  const notes = chordToNotes(chordName, flavour);
   const now = Tone.now();
-  notes.forEach((note, i) => {
+  handle.notes.forEach((note, i) => {
     s.triggerRelease(note, now + i * STRUM_DELAY_S);
   });
+}
+
+export function releaseAllChords(): void {
+  sounding.clear();
+  synth?.releaseAll();
 }

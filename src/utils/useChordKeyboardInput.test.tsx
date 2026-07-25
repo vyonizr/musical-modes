@@ -14,8 +14,9 @@ vi.mock("src/utils/generateModes", () => ({
 }));
 
 vi.mock("src/utils/chords", () => ({
-  triggerAttackChord: vi.fn(),
+  triggerAttackChord: vi.fn((chordName: string) => ({ notes: [chordName] })),
   triggerReleaseChord: vi.fn(),
+  releaseAllChords: vi.fn(),
 }));
 
 import { triggerAttackChord, triggerReleaseChord } from "src/utils/chords";
@@ -65,7 +66,7 @@ describe("useChordKeyboardInput", () => {
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "q" }));
     });
     expect(result.current.keyboardPressedChords).toEqual([]);
-    expect(triggerReleaseChord).toHaveBeenCalledWith("C", undefined);
+    expect(triggerReleaseChord).toHaveBeenCalledWith({ notes: ["C"] });
   });
 
   it("tracks a held modifier as activeFlavour and retriggers held chords", () => {
@@ -81,7 +82,7 @@ describe("useChordKeyboardInput", () => {
     });
 
     expect(result.current.activeFlavour).toBe("flat7");
-    expect(triggerReleaseChord).toHaveBeenCalledWith("C", undefined);
+    expect(triggerReleaseChord).toHaveBeenCalledWith({ notes: ["C"] });
     expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7");
 
     act(() => {

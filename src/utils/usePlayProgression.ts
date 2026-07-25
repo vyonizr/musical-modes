@@ -1,7 +1,12 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mode } from "src/utils/types";
 import { Progression } from "src/utils/progressions";
-import { triggerAttackChord, triggerReleaseChord, ChordFlavor } from "src/utils/chords";
+import {
+  triggerAttackChord,
+  triggerReleaseChord,
+  ChordFlavor,
+  ChordHandle,
+} from "src/utils/chords";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -15,18 +20,23 @@ export function usePlayProgression() {
 
   const activeProgressionIdRef = useRef<string | null>(null);
   const playbackGenRef = useRef(0);
-  const activeProgressionChordRef = useRef<{
-    chord: string;
-    flavour?: ChordFlavor;
-  } | null>(null);
+  const activeProgressionChordRef = useRef<ChordHandle | null>(null);
+
+  // Unmounting mid-chord (embed teardown, route change) must not leave the
+  // last chord sounding.
+  useEffect(
+    () => () => {
+      playbackGenRef.current++;
+      triggerReleaseChord(activeProgressionChordRef.current);
+      activeProgressionChordRef.current = null;
+    },
+    []
+  );
 
   const handlePlayProgression = useCallback(
     async (progression: Progression, modes: Mode[]) => {
-      if (activeProgressionChordRef.current) {
-        const { chord, flavour } = activeProgressionChordRef.current;
-        triggerReleaseChord(chord, flavour);
-        activeProgressionChordRef.current = null;
-      }
+      triggerReleaseChord(activeProgressionChordRef.current);
+      activeProgressionChordRef.current = null;
 
       const wasPlayingThis = activeProgressionIdRef.current === progression.id;
       if (wasPlayingThis) {
@@ -52,13 +62,15 @@ export function usePlayProgression() {
           degreeIndex: step.degreeIndex,
           flavour: step.flavour,
         });
-        triggerAttackChord(chord, step.flavour);
-        activeProgressionChordRef.current = { chord, flavour: step.flavour };
+        activeProgressionChordRef.current = triggerAttackChord(
+          chord,
+          step.flavour
+        );
         const durationMs =
           (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 120));
         await delay(durationMs - 80);
         if (playbackGenRef.current !== gen) break;
-        triggerReleaseChord(chord, step.flavour);
+        triggerReleaseChord(activeProgressionChordRef.current);
         activeProgressionChordRef.current = null;
       }
 
