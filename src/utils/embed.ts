@@ -1,8 +1,13 @@
 import { Progression, BPM_DEFAULT } from "src/utils/progressions";
 
+// Measured against the real widget in Chromium at EMBED_WIDTH, not derived by
+// hand. 105 = 12px top padding + 50px header + 8px header margin-bottom
+// + 6px backlink margin-top + 14px backlink + 12px bottom padding + 3px borders.
+// 75 = one mode row: 24px .mode-name-header + 51px chord td.
+// If .embed-widget, .embed-header, .embed-backlink, .mode-name-header or the
+// embed td rules in modes.css change, re-measure and update these two numbers.
 export function computeEmbedHeight(modeCount: number): number {
-  // 12px padding top + ~40px header row + modeCount * 62px (20px header + 42px chord row) + ~20px backlink + 12px padding bottom
-  return 12 + 40 + modeCount * 62 + 20 + 12;
+  return 105 + modeCount * 75;
 }
 
 export function buildEmbedSnippet(

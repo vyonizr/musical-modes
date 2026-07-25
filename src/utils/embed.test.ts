@@ -3,11 +3,20 @@ import { computeEmbedHeight, buildEmbedSnippet } from "./embed";
 import { Progression } from "./progressions";
 
 describe("computeEmbedHeight", () => {
-  it("grows linearly with mode count", () => {
-    expect(computeEmbedHeight(1)).toBe(12 + 40 + 62 + 20 + 12);
-    expect(computeEmbedHeight(3)).toBe(12 + 40 + 62 * 3 + 20 + 12);
+  // Measured in Chromium against the real widget at a 456px frame width.
+  // See docs/superpowers/plans/2026-07-25-embed-size-contract-fix.md.
+  it("matches the widget's measured rendered height", () => {
+    expect(computeEmbedHeight(1)).toBe(180);
+    expect(computeEmbedHeight(2)).toBe(255);
+    expect(computeEmbedHeight(3)).toBe(330);
+    expect(computeEmbedHeight(4)).toBe(405);
+    expect(computeEmbedHeight(7)).toBe(630);
   });
-});
+
+  it("grows by exactly one mode row per mode", () => {
+    expect(computeEmbedHeight(3) - computeEmbedHeight(2)).toBe(75);
+  });
+})
 
 describe("buildEmbedSnippet", () => {
   const progression: Progression = {
