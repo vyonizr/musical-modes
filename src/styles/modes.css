@@ -405,33 +405,6 @@ td {
   text-overflow: ellipsis;
 }
 
-.play-progression-btn {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid var(--primary);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--primary);
-  cursor: pointer;
-  font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
-}
-
-.play-progression-btn:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
-.play-progression-btn.playing {
-  background: var(--primary);
-  color: #fff;
-}
-
 .piano-keyboard {
   position: relative;
   display: flex;
@@ -916,13 +889,17 @@ td {
   line-height: 1;
 }
 
-.play-progression-btn:hover {
+.play-progression-btn:not(.playing):hover {
   background: rgba(66, 133, 244, 0.08);
 }
 
 .play-progression-btn.playing {
   background: var(--primary);
   color: #fff;
+}
+
+.play-progression-btn.playing:hover {
+  filter: brightness(0.92);
 }
 
 /* Progression highlight on grid cells */
@@ -1030,14 +1007,17 @@ td.progression-active {
   line-height: 1;
 }
 
-.embed-play-btn:hover {
-  background: var(--primary);
-  color: #fff;
+.embed-play-btn:not(.playing):hover {
+  background: rgba(66, 133, 244, 0.08);
 }
 
 .embed-play-btn.playing {
   background: var(--primary);
   color: #fff;
+}
+
+.embed-play-btn.playing:hover {
+  filter: brightness(0.92);
 }
 
 .embed-table-container table {
