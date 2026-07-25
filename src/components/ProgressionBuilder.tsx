@@ -177,7 +177,7 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
               className={`play-progression-btn${activeProgressionId === "builder" ? " playing" : ""}`}
               onClick={handlePlay}
             >
-              {activeProgressionId === "builder" ? <Square size={14} /> : <Play size={14} />}
+              {activeProgressionId === "builder" ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
             </button>
             <button className="builder-preview-btn" onClick={handlePreview}>
               <Eye size={14} /> {previewSnippet ? t("progressionBuilder.refreshPreview") : t("progressionBuilder.previewEmbed")}

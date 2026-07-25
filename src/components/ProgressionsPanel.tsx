@@ -115,7 +115,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
                     className={`play-progression-btn${activeProgressionId === p.id ? ' playing' : ''}`}
                     onClick={() => onPlay(p)}
                   >
-                    {activeProgressionId === p.id ? <Square size={14} /> : <Play size={14} />}
+                    {activeProgressionId === p.id ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
                   </button>
                 </div>
               </div>
