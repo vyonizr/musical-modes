@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 
 vi.mock("tone", async () => (await import("./toneMock")).createToneMock());
 
@@ -15,6 +15,7 @@ import {
   setSustain,
   dampChord,
 } from "./chords";
+import { useChordKeyboardInput } from "./useChordKeyboardInput";
 
 beforeEach(() => {
   resetToneMock();
@@ -115,3 +116,45 @@ describe("a pitch is only ever held once", () => {
     expect(releases).toHaveLength(0);
   });
 });
+describe("a voicing correction is not a musician letting go", () => {
+  it("a flavour modifier under the pedal damps the old voicing", () => {
+    renderHook(() => useChordKeyboardInput("C", ["ionian"], false));
+    setSustain(true);
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
+    });
+    releases.length = 0;
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "," }));
+    });
+
+    expect(releases).toHaveLength(1);
+  });
+
+  it("unmounting under the pedal leaves nothing ringing", () => {
+    const { unmount } = renderHook(() =>
+      useChordKeyboardInput("C", ["ionian"], false)
+    );
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
+    });
+
+    act(() => { unmount(); });
+
+    expect(stuckNotes()).toEqual([]);
+  });
+
+  it("a chord key going up under the pedal still sustains", () => {
+    renderHook(() => useChordKeyboardInput("C", ["ionian"], false));
+    setSustain(true);
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
+      document.dispatchEvent(new KeyboardEvent("keyup", { key: "q" }));
+    });
+
+    expect(stuckNotes().length).toBeGreaterThan(0);
+  });
+});
+
