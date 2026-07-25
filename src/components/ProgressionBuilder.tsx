@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MODE_NAMES } from "src/utils/types";
 import { Progression, ProgressionStep, BPM_DEFAULT } from "src/utils/progressions";
 import { ChordFlavor } from "src/utils/chords";
-import { encodeSteps } from "src/utils/steps";
-import { computeEmbedHeight } from "src/utils/embed";
+import { buildStepsEmbedSnippet } from "src/utils/embed";
 import { Mode } from "src/utils/types";
 
 const FLAVOUR_OPTIONS: { value: string; label: string }[] = [
@@ -67,15 +66,11 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
   };
 
   const handleCopyEmbed = useCallback(() => {
-    const modeNames = Array.from(new Set(steps.map((s) => s.mode)));
-    const height = computeEmbedHeight(modeNames.length);
-    const encoded = encodeSteps(steps);
-    const src = `${window.location.origin}/?embed=1&key=${selectedScale.replace("♭", "b")}&acc=${preferSharp ? "sharp" : "flat"}&bpm=${bpm}&steps=${encoded}`;
-    const iframe = `<iframe src="${src}" width="375" height="${height}" frameborder="0" loading="lazy" title="Custom progression — Musical Modes"></iframe>`;
-    navigator.clipboard.writeText(iframe);
+    const snippet = buildStepsEmbedSnippet(steps, bpm, selectedScale, preferSharp, window.location.origin);
+    navigator.clipboard.writeText(snippet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [steps, selectedScale, preferSharp, bpm]);
+  }, [steps, bpm, selectedScale, preferSharp]);
 
   const degreeOptions = modes.length > 0
     ? modes[0].romanNumerals.map((rn, i) => ({ value: i, label: rn }))
