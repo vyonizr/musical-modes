@@ -1,7 +1,7 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { Joyride } from "react-joyride";
 
-import { generateModes } from "./utils";
+import { generateModes, orderActiveModes } from "./utils";
 import { Mode } from "./utils/types";
 import {
   KEYS,
@@ -271,25 +271,20 @@ export default function App() {
                 {t("table.playHint")}
               </p>
               <table>
-                {(() => {
-                  let activeRowCount = 0;
-                  return generateModes(selectedScale, preferSharp).map(
-                    (mode: Mode, index: number) => (
-                      <Fragment key={index}>
-                        {activeModes.includes(mode.name) && (
-                          <TableContent
-                            mode={mode}
-                            index={index}
-                            activeRowIndex={activeRowCount++}
-                            keyboardPressedChords={keyboardPressedChords}
-                            activeFlavour={activeFlavour}
-                            activeProgressionStep={activeProgressionStep}
-                          />
-                        )}
-                      </Fragment>
-                    )
-                  );
-                })()}
+                {orderActiveModes(
+                  generateModes(selectedScale, preferSharp),
+                  activeModes
+                ).map((mode: Mode, rowIndex: number) => (
+                  <TableContent
+                    key={mode.name}
+                    mode={mode}
+                    index={COLOR_CLASSNAMES.indexOf(mode.name)}
+                    activeRowIndex={rowIndex}
+                    keyboardPressedChords={keyboardPressedChords}
+                    activeFlavour={activeFlavour}
+                    activeProgressionStep={activeProgressionStep}
+                  />
+                ))}
               </table>
             </Fragment>
           )}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import generateModes from "src/utils/generateModes";
+import orderActiveModes from "src/utils/orderActiveModes";
 import { KEY_ROWS } from "src/utils/constants";
 import { Mode } from "src/utils/types";
 import {
@@ -76,8 +77,9 @@ export function useChordKeyboardInput(
 
   useEffect(() => {
     const getActiveModes = () =>
-      generateModes(selectedScaleRef.current, preferSharpRef.current).filter(
-        (m) => activeModesRef.current.includes(m.name)
+      orderActiveModes(
+        generateModes(selectedScaleRef.current, preferSharpRef.current),
+        activeModesRef.current
       );
 
     const syncPressedChords = () =>
