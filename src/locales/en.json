@@ -41,7 +41,11 @@
     "barsLabel": "bars",
     "addStep": "Add step",
     "removeStepLabel": "Remove step",
-    "copyEmbed": "Copy embed code"
+    "copyEmbed": "Copy embed code",
+    "previewEmbed": "Preview embed",
+    "refreshPreview": "Refresh preview",
+    "previewHeading": "This is exactly what gets copied:",
+    "previewFrameTitle": "Embed preview"
   },
   "embed": {
     "backlink": "Musical Modes"
