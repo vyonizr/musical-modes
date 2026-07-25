@@ -5,8 +5,18 @@ import { Mode } from "src/utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
+  releaseAllChords,
   ChordFlavor,
+  ChordHandle,
 } from "src/utils/chords";
+
+// Keyed by the keyboard key, not the chord name: two keys can resolve to the
+// same chord, and the chord a key resolves to changes when the user switches
+// key or mode mid-press.
+type HeldChord = {
+  chordName: string;
+  handle: ChordHandle;
+};
 
 const MODIFIER_KEYS: Record<string, ChordFlavor> = {
   ",": "flat7",
@@ -49,7 +59,7 @@ export function useChordKeyboardInput(
   const activeModesRef = useRef(activeModes);
   const preferSharpRef = useRef(preferSharp);
   const sevenFlavourRef = useRef<ChordFlavor | undefined>(undefined);
-  const pressedChordsRef = useRef(new Map<string, ChordFlavor | undefined>());
+  const pressedChordsRef = useRef(new Map<string, HeldChord>());
 
   const [activeFlavour, setActiveFlavour] = useState<ChordFlavor | undefined>(
     undefined
@@ -70,12 +80,27 @@ export function useChordKeyboardInput(
         (m) => activeModesRef.current.includes(m.name)
       );
 
+    const syncPressedChords = () =>
+      setKeyboardPressedChords(
+        Array.from(pressedChordsRef.current.values(), (h) => h.chordName)
+      );
+
     const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
-      pressedChordsRef.current.forEach((oldFlavour, chordName) => {
-        triggerReleaseChord(chordName, oldFlavour);
-        triggerAttackChord(chordName, nextFlavour);
-        pressedChordsRef.current.set(chordName, nextFlavour);
+      pressedChordsRef.current.forEach((held, key) => {
+        triggerReleaseChord(held.handle);
+        pressedChordsRef.current.set(key, {
+          chordName: held.chordName,
+          handle: triggerAttackChord(held.chordName, nextFlavour),
+        });
       });
+    };
+
+    // The browser swallows keyup while the window is unfocused, so a held
+    // chord would sustain forever. Drop everything we think is held instead.
+    const handleWindowBlur = () => {
+      pressedChordsRef.current.clear();
+      syncPressedChords();
+      releaseAllChords();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,13 +116,16 @@ export function useChordKeyboardInput(
         return;
       }
 
-      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
+      const key = e.key.toUpperCase();
+      const chordName = findChordForKey(key, getActiveModes());
       if (!chordName) return;
+      if (pressedChordsRef.current.has(key)) return;
 
-      const activeFlavour = sevenFlavourRef.current;
-      pressedChordsRef.current.set(chordName, activeFlavour);
-      setKeyboardPressedChords((prev) => [...prev, chordName]);
-      triggerAttackChord(chordName, activeFlavour);
+      pressedChordsRef.current.set(key, {
+        chordName,
+        handle: triggerAttackChord(chordName, sevenFlavourRef.current),
+      });
+      syncPressedChords();
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -109,23 +137,24 @@ export function useChordKeyboardInput(
         return;
       }
 
-      const chordName = findChordForKey(e.key.toUpperCase(), getActiveModes());
-      if (!chordName) return;
+      const held = pressedChordsRef.current.get(e.key.toUpperCase());
+      if (!held) return;
 
-      const flavour = pressedChordsRef.current.get(chordName);
-      pressedChordsRef.current.delete(chordName);
-      setKeyboardPressedChords((prev) => prev.filter((c) => c !== chordName));
-      triggerReleaseChord(chordName, flavour);
+      pressedChordsRef.current.delete(e.key.toUpperCase());
+      syncPressedChords();
+      triggerReleaseChord(held.handle);
     };
 
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleWindowBlur);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
-      pressedChordsRef.current.forEach((flavour, chordName) =>
-        triggerReleaseChord(chordName, flavour)
+      window.removeEventListener("blur", handleWindowBlur);
+      pressedChordsRef.current.forEach((held) =>
+        triggerReleaseChord(held.handle)
       );
       pressedChordsRef.current.clear();
     };

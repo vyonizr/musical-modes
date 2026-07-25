@@ -1,7 +1,7 @@
 import React from 'react'
 import { Mode } from 'src/utils/types'
 import { COLOR_CLASSNAMES, KEY_ROWS } from 'src/utils/constants'
-import { triggerAttackChord, triggerReleaseChord, ChordFlavor, display7thChordName, displaySusChordName } from 'src/utils/chords'
+import { triggerAttackChord, triggerReleaseChord, ChordFlavor, ChordHandle, display7thChordName, displaySusChordName } from 'src/utils/chords'
 
 interface IProps {
   index: number
@@ -23,6 +23,30 @@ const TableContent = ({
   showKeyHint = true,
 }: IProps) => {
   const capitalizedName = mode.name.charAt(0).toUpperCase() + mode.name.slice(1)
+
+  // Keyed by column, not by chord name: the handle must outlive any re-render
+  // that changes the chord or flavour under the pointer.
+  const heldRef = React.useRef(new Map<number, ChordHandle>())
+
+  const releaseCell = (chordIndex: number) => {
+    const handle = heldRef.current.get(chordIndex)
+    if (!handle) return
+    heldRef.current.delete(chordIndex)
+    triggerReleaseChord(handle)
+  }
+
+  const attackCell = (chordIndex: number, chord: string) => {
+    releaseCell(chordIndex)
+    heldRef.current.set(chordIndex, triggerAttackChord(chord, activeFlavour))
+  }
+
+  React.useEffect(() => {
+    const held = heldRef.current
+    return () => {
+      held.forEach(triggerReleaseChord)
+      held.clear()
+    }
+  }, [])
 
   return (
     <tbody>
@@ -54,12 +78,12 @@ const TableContent = ({
             }${
               activeProgressionStep && activeProgressionStep.mode === mode.name && activeProgressionStep.degreeIndex === chordIndex ? ' progression-active' : ''
             }`}
-            onMouseDown={() => triggerAttackChord(chord, activeFlavour)}
-            onMouseUp={() => triggerReleaseChord(chord, activeFlavour)}
-            onMouseLeave={() => triggerReleaseChord(chord, activeFlavour)}
-            onTouchStart={(e) => { e.preventDefault(); triggerAttackChord(chord, activeFlavour) }}
-            onTouchEnd={() => triggerReleaseChord(chord, activeFlavour)}
-            onTouchCancel={() => triggerReleaseChord(chord, activeFlavour)}
+            onMouseDown={() => attackCell(chordIndex, chord)}
+            onMouseUp={() => releaseCell(chordIndex)}
+            onMouseLeave={() => releaseCell(chordIndex)}
+            onTouchStart={(e) => { e.preventDefault(); attackCell(chordIndex, chord) }}
+            onTouchEnd={() => releaseCell(chordIndex)}
+            onTouchCancel={() => releaseCell(chordIndex)}
           >
             <div className='chord-container'>
               <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>
