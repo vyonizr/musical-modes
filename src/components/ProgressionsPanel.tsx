@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Play, Square, Copy } from 'lucide-react'
+import { Play, Square, Copy, Check } from 'lucide-react'
 import { Progression } from 'src/utils/progressions'
 import { Mode } from 'src/utils/types'
 import { ChordFlavor } from 'src/utils/chords'
@@ -105,7 +105,7 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
                       title={copiedId === p.id ? t("progressions.embedCopied") : t("progressions.copyEmbedLabel")}
                     >
                       {copiedId === p.id ? (
-                        <span className="copy-embed-done">&check;</span>
+                        <Check size={14} className="copy-embed-done" />
                       ) : (
                         <Copy size={14} />
                       )}
