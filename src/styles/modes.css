@@ -405,33 +405,6 @@ td {
   text-overflow: ellipsis;
 }
 
-.play-progression-btn {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid var(--primary);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--primary);
-  cursor: pointer;
-  font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
-}
-
-.play-progression-btn:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
-.play-progression-btn.playing {
-  background: var(--primary);
-  color: #fff;
-}
-
 .piano-keyboard {
   position: relative;
   display: flex;
