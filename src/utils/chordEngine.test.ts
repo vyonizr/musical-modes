@@ -69,3 +69,37 @@ describe("no note survives the interaction that started it", () => {
     expect(stuckNotes()).toEqual([]);
   });
 });
+
+describe("the piano starts loading before the first chord", () => {
+  it("starts the sample load without attacking anything", () => {
+    chords.preloadPiano();
+
+    expect(state.samplerCount).toBe(1);
+    expect(state.attacks).toEqual([]);
+  });
+
+  it("plays the very first chord on the piano once the preload finished", () => {
+    chords.preloadPiano();
+    samplesLoad();
+
+    chords.triggerAttackChord("C");
+
+    expect(engines()).toEqual(["piano"]);
+  });
+
+  it("builds one sampler however often it is called", () => {
+    chords.preloadPiano();
+    chords.preloadPiano();
+    chords.triggerAttackChord("C");
+
+    expect(state.samplerCount).toBe(1);
+  });
+
+  it("still answers on the synth if the first chord beats the preload", () => {
+    chords.preloadPiano();
+
+    chords.triggerAttackChord("C");
+
+    expect(engines()).toEqual(["synth"]);
+  });
+});

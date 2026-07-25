@@ -262,6 +262,18 @@ function ensurePiano(): Tone.Sampler | null {
 }
 
 /**
+ * Starts the sample download before any chord is played, so the first chord of
+ * a session is already the piano instead of the synth fallback.
+ *
+ * Safe before any user gesture: decoding does not need a running AudioContext,
+ * only a created one. Idempotent, because ensurePiano only ever builds one
+ * Sampler.
+ */
+export function preloadPiano(): void {
+  ensurePiano();
+}
+
+/**
  * Receipt for one sounding chord. Release takes this instead of a chord name so
  * the notes released are always the notes attacked, even if the key, mode or
  * flavour the caller renders has changed in between.
