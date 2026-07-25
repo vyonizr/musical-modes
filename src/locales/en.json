@@ -2,7 +2,8 @@
   "header": {
     "title": "Musical Modes",
     "rootKeyLabel": "Root Key",
-    "volumeLabel": "Volume"
+    "volumeLabel": "Volume",
+    "sustainLabel": "Sustain"
   },
   "table": {
     "playHint": "Tap or use keyboard to play the chords",

@@ -54,10 +54,28 @@ const TRIAD_SUS: Record<"sus4" | "sus2", QualityIntervals> = {
   },
 };
 
-// Velocity per string: bass string louder, upper strings softer
-const STRUM_VELOCITIES = [0.55, 0.7, 0.65, 0.6, 0.6];
+// A piano hammers every held key at once, so all notes of a chord share one
+// attack time and one velocity. The old per-string velocity curve made the
+// second note the loudest in the chord, which reads as wrong on a keyboard.
+const ATTACK_VELOCITY = 0.7;
 
-const STRUM_DELAY_S = 0.005; // 5ms between strings
+// A hand cannot strike five keys in the same microsecond, or at the same
+// force. Both offsets are drawn per note, per attack, so no note is
+// systematically first and none is systematically loudest. That systematic
+// part is what made the old fixed strum read as a guitar rather than a piano.
+//
+// 12 ms is under the threshold where a chord stops reading as a single event
+// and starts reading as rolled. 0.06 is roughly 8 steps of 127 in MIDI terms:
+// audible as touch, never as a wrong note. The resulting 0.64..0.76 cannot
+// leave the legal 0..1 velocity range, so no clamp is needed. Add one if
+// either constant is ever widened.
+const HUMANIZE_MAX_DELAY_S = 0.012;
+const HUMANIZE_VELOCITY_SPREAD = 0.06;
+
+// Damper fade. Long enough that release is not a cliff, short enough that
+// consecutive progression steps do not overlap audibly at fast BPM. Shared by
+// both engines so the fallback does not ring longer than the piano.
+const RELEASE_S = 0.3;
 
 function parseChord(chordName: string): {
   root: string;
@@ -139,6 +157,8 @@ export function displaySusChordName(chordName: string, sus: "sus4" | "sus2"): st
 }
 
 let synth: Tone.PolySynth | null = null;
+let piano: Tone.Sampler | null = null;
+let pianoState: "idle" | "loading" | "ready" | "failed" = "idle";
 let reverb: Tone.Reverb | null = null;
 let limiter: Tone.Limiter | null = null;
 let volumeNode: Tone.Volume | null = null;
@@ -173,63 +193,227 @@ function installPanicHandlers(): void {
     if (document.hidden) releaseAllChords();
   });
 }
+// Sampled in minor thirds, C2 to D#4. chordToNotes spans C2-E4, so this covers
+// the range with at most two semitones of repitch. Tone.Sampler fills the gaps.
+const PIANO_SAMPLES: Record<string, string> = {
+  C2: "C2.mp3",
+  "D#2": "Ds2.mp3",
+  "F#2": "Fs2.mp3",
+  A2: "A2.mp3",
+  C3: "C3.mp3",
+  "D#3": "Ds3.mp3",
+  "F#3": "Fs3.mp3",
+  A3: "A3.mp3",
+  C4: "C4.mp3",
+  "D#4": "Ds4.mp3",
+};
 
-function ensureSynth(): Tone.PolySynth {
-  if (!synth) {
+function ensureOutput(): Tone.Reverb {
+  if (!reverb) {
     limiter = new Tone.Limiter(-2).toDestination();
     volumeNode = new Tone.Volume(volumeToDb(getStoredVolume())).connect(limiter);
     reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
-    synth = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: "triangle" },
-      envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: 1.2 },
-    });
-    // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
-    synth.maxPolyphony = 64;
-    synth.connect(reverb);
     // A held chord outlives the element/key that started it (focus loss, tab
     // switch, bfcache). Without this the notes sustain until a page reload.
     installPanicHandlers();
   }
+  return reverb;
+}
+
+function ensureSynth(): Tone.PolySynth {
+  if (!synth) {
+    synth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: "triangle" },
+      envelope: { attack: 0.012, decay: 0.8, sustain: 0.4, release: RELEASE_S },
+    });
+    // ponytail: 64 voices — 6 notes/chord × ~10 overlapping releases at fast strum tempo
+    synth.maxPolyphony = 64;
+    synth.connect(ensureOutput());
+  }
   return synth;
+}
+
+/**
+ * Returns the piano only once its samples are loaded, and starts that load on
+ * the first call. Null means "not ready" — callers fall back to the synth
+ * rather than waiting, because a chord must always sound immediately.
+ *
+ * A failed load is terminal for the session: retrying on every keypress would
+ * hammer a dead origin for no gain.
+ */
+function ensurePiano(): Tone.Sampler | null {
+  if (pianoState === "failed") return null;
+  if (!piano) {
+    pianoState = "loading";
+    piano = new Tone.Sampler({
+      urls: PIANO_SAMPLES,
+      baseUrl: "/audio/piano/",
+      release: RELEASE_S,
+      onload: () => {
+        pianoState = "ready";
+      },
+      onerror: () => {
+        pianoState = "failed";
+      },
+    });
+    piano.connect(ensureOutput());
+  }
+  return pianoState === "ready" ? piano : null;
 }
 
 /**
  * Receipt for one sounding chord. Release takes this instead of a chord name so
  * the notes released are always the notes attacked, even if the key, mode or
  * flavour the caller renders has changed in between.
+ *
+ * The engine is recorded for the same reason. A chord can be held while the
+ * samples finish loading; resolving "the current engine" at release time would
+ * tell the piano to release notes the synth is holding, and the synth would
+ * ring until a page reload.
  */
 export interface ChordHandle {
   readonly notes: readonly string[];
+  readonly engine: Tone.PolySynth | Tone.Sampler;
+  /**
+   * Latest scheduled attack time in this chord. Humanized notes are scheduled
+   * up to HUMANIZE_MAX_DELAY_S ahead of now, so a release issued at Tone.now()
+   * inside that window would land before a note has sounded and leave it
+   * ringing until a page reload. Every release clamps to at least this time.
+   */
+  readonly attackedThrough: number;
 }
 
 const sounding = new Set<ChordHandle>();
 
+// Chords whose key has been let go while the pedal was down. They are still
+// ringing; only lifting the pedal, a colliding attack, or a panic stop damps
+// them.
+const sustained = new Set<ChordHandle>();
+
+let pedalDown = false;
+
+// The one place a chord actually stops. Clamping to attackedThrough is why:
+// a release issued inside the humanize window would otherwise land before a
+// note has sounded and leave it ringing until a page reload.
+function dampHandle(handle: ChordHandle, now: number): void {
+  handle.engine.triggerRelease(
+    handle.notes as string[],
+    Math.max(now, handle.attackedThrough)
+  );
+}
+
+/**
+ * Raises or lowers the pedal. Lowering damps every chord the pedal was
+ * holding. Chords whose key is still physically down live in `sounding`, not
+ * `sustained`, so lowering the pedal does not cut them.
+ */
+export function setSustain(down: boolean): void {
+  pedalDown = down;
+  if (down) return;
+  const now = Tone.now();
+  sustained.forEach((handle) => dampHandle(handle, now));
+  sustained.clear();
+}
+
+/**
+ * Stops a chord regardless of the pedal. For releases that are not the
+ * musician letting go: voicing corrections, authored playback, teardown.
+ *
+ * Idempotent: damping an unknown or already-damped handle is a no-op.
+ */
+export function dampChord(handle: ChordHandle | null | undefined): void {
+  if (!handle) return;
+  const wasSounding = sounding.delete(handle);
+  const wasSustained = sustained.delete(handle);
+  if (!wasSounding && !wasSustained) return;
+  dampHandle(handle, Tone.now());
+}
+
 export function triggerAttackChord(
   chordName: string,
-  flavour?: ChordFlavor
+  flavour?: ChordFlavor,
+  // False only for a flavour retrigger of a chord the musician is still
+  // holding (src/utils/useChordKeyboardInput.ts's retriggerHeldChords) —
+  // that is a voicing correction, not the musician moving to a new chord.
+  isChordChange = true
 ): ChordHandle {
-  const s = ensureSynth();
+  // Calling ensurePiano first is what kicks off the sample download; until it
+  // resolves this returns null and the synth answers immediately.
+  const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
-  const now = Tone.now();
-  notes.forEach((note, i) => {
-    s.triggerAttack(note, now + i * STRUM_DELAY_S, STRUM_VELOCITIES[i]);
-  });
-  const handle: ChordHandle = { notes };
+
+  // A real chord change always replaces whatever was sustained, even a
+  // chord sharing no pitch with the new one: the pedal sustains the last
+  // thing you played, not a bag of unrelated ringing chords.
+  //
+  // A voicing correction (isChordChange = false) keeps the narrower
+  // pitch-collision sweep instead: a note can only be held once, so
+  // re-striking a pitch a sustained chord still owns would leave that
+  // chord's handle unable to release it, and the note would ring until a
+  // page reload. A real piano re-strikes the same string, so damping the
+  // older copy is also what the instrument does. This is what bounds the
+  // sustained set in that case: at most one handle per pitch, over the
+  // ~17 pitches chordToNotes spans, so no separate voice cap is needed.
+  if (sustained.size > 0) {
+    const swept = Tone.now();
+    sustained.forEach((held) => {
+      const collides = held.notes.some((note) => notes.includes(note));
+      if (!isChordChange && !collides) return;
+      sustained.delete(held);
+      dampHandle(held, swept);
+    });
+  }
+
+  // One base instant for the whole chord, so the offsets stay relative to each
+  // other. Every offset is positive, so the chord never starts later than an
+  // unhumanized one would.
+  const t0 = Tone.now();
+  let attackedThrough = t0;
+  for (const note of notes) {
+    const at = t0 + Math.random() * HUMANIZE_MAX_DELAY_S;
+    engine.triggerAttack(
+      note,
+      at,
+      ATTACK_VELOCITY + (Math.random() * 2 - 1) * HUMANIZE_VELOCITY_SPREAD
+    );
+    if (at > attackedThrough) attackedThrough = at;
+  }
+
+  const handle: ChordHandle = { notes, engine, attackedThrough };
   sounding.add(handle);
   return handle;
 }
 
-/** Idempotent: releasing an unknown or already-released handle is a no-op. */
+/**
+ * The musician letting go of a chord. With the pedal up this damps. With the
+ * pedal down the chord keeps ringing and `setSustain(false)` damps it later.
+ *
+ * Idempotent: releasing an unknown or already-released handle is a no-op.
+ */
 export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
   if (!handle || !sounding.delete(handle)) return;
-  const s = ensureSynth();
-  const now = Tone.now();
-  handle.notes.forEach((note, i) => {
-    s.triggerRelease(note, now + i * STRUM_DELAY_S);
-  });
+  if (pedalDown) {
+    sustained.add(handle);
+    return;
+  }
+  dampHandle(handle, Tone.now());
 }
 
+/** Bounded stop, not an instant one: the release envelope still applies, so
+ *  audio ends within RELEASE_S rather than immediately. Chords attacked in the
+ *  last few milliseconds are released at their own attack time instead of now,
+ *  which is why this loops the handles rather than only calling releaseAll:
+ *  releaseAll fires at now, and a note scheduled after that would survive it.
+ *  The releaseAll calls stay as a backstop for anything not in the set.
+ *
+ *  The pedal flag is deliberately left alone. Sound stops; the latch stays
+ *  where the musician put it, the way a physical pedal stays down. */
 export function releaseAllChords(): void {
+  const now = Tone.now();
+  sounding.forEach((handle) => dampHandle(handle, now));
+  sustained.forEach((handle) => dampHandle(handle, now));
   sounding.clear();
+  sustained.clear();
   synth?.releaseAll();
+  piano?.releaseAll();
 }

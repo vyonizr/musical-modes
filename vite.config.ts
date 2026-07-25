@@ -12,6 +12,9 @@ export default defineConfig({
       filename: 'sw.ts',
       registerSW: false,
       manifest: false,
+      // Samples are runtime-cached on first sound instead, so an install that
+      // never plays a chord costs nothing.
+      injectManifest: { globIgnores: ['**/audio/**'] },
     }),
   ],
   resolve: {

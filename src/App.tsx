@@ -1,7 +1,7 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { Joyride } from "react-joyride";
 
-import { generateModes } from "./utils";
+import { generateModes, orderActiveModes } from "./utils";
 import { Mode } from "./utils/types";
 import {
   KEYS,
@@ -21,6 +21,7 @@ import ProgressionsPanel from "./components/ProgressionsPanel";
 import ProgressionBuilder from "./components/ProgressionBuilder";
 import KeyDetectorPanel from "./components/KeyDetectorPanel";
 import { usePlayProgression } from "./utils/usePlayProgression";
+import { useSustainPedal } from "./utils/useSustainPedal";
 import { useOnboardingTour } from "./utils/useOnboardingTour";
 import { useChordKeyboardInput } from "./utils/useChordKeyboardInput";
 import { buildEmbedSnippet } from "./utils/embed";
@@ -41,6 +42,7 @@ export default function App() {
     preferSharp
   );
   const { activeProgressionStep, activeProgressionId, handlePlayProgression: hookPlayProgression } = usePlayProgression();
+  const { sustainOn, toggleSustain } = useSustainPedal();
 
   useEffect(() => {
     setIsTouchDevice(
@@ -231,6 +233,18 @@ export default function App() {
               onTouchEnd={(e) => e.currentTarget.blur()}
             />
           </div>
+          <div className="sustain-control">
+            <button
+              type="button"
+              className={`sustain-btn${sustainOn ? " active" : ""}`}
+              onClick={toggleSustain}
+              onMouseUp={(e) => e.currentTarget.blur()}
+              onTouchEnd={(e) => e.currentTarget.blur()}
+              aria-pressed={sustainOn}
+            >
+              {t("header.sustainLabel")}
+            </button>
+          </div>
         </div>
         <ProgressionsPanel
           progressions={PROGRESSIONS}
@@ -257,25 +271,20 @@ export default function App() {
                 {t("table.playHint")}
               </p>
               <table>
-                {(() => {
-                  let activeRowCount = 0;
-                  return generateModes(selectedScale, preferSharp).map(
-                    (mode: Mode, index: number) => (
-                      <Fragment key={index}>
-                        {activeModes.includes(mode.name) && (
-                          <TableContent
-                            mode={mode}
-                            index={index}
-                            activeRowIndex={activeRowCount++}
-                            keyboardPressedChords={keyboardPressedChords}
-                            activeFlavour={activeFlavour}
-                            activeProgressionStep={activeProgressionStep}
-                          />
-                        )}
-                      </Fragment>
-                    )
-                  );
-                })()}
+                {orderActiveModes(
+                  generateModes(selectedScale, preferSharp),
+                  activeModes
+                ).map((mode: Mode, rowIndex: number) => (
+                  <TableContent
+                    key={mode.name}
+                    mode={mode}
+                    index={COLOR_CLASSNAMES.indexOf(mode.name)}
+                    activeRowIndex={rowIndex}
+                    keyboardPressedChords={keyboardPressedChords}
+                    activeFlavour={activeFlavour}
+                    activeProgressionStep={activeProgressionStep}
+                  />
+                ))}
               </table>
             </Fragment>
           )}

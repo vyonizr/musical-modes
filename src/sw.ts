@@ -33,6 +33,14 @@ const serwist = new Serwist({
         expiration: { maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 },
       },
     },
+    {
+      matcher: /\.mp3$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "audio",
+        expiration: { maxEntries: 16, maxAgeSeconds: 30 * 24 * 60 * 60 },
+      },
+    },
   ],
 });
 

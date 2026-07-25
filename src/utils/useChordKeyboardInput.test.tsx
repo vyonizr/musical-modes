@@ -16,10 +16,10 @@ vi.mock("src/utils/generateModes", () => ({
 vi.mock("src/utils/chords", () => ({
   triggerAttackChord: vi.fn((chordName: string) => ({ notes: [chordName] })),
   triggerReleaseChord: vi.fn(),
+  dampChord: vi.fn(),
   releaseAllChords: vi.fn(),
 }));
-
-import { triggerAttackChord, triggerReleaseChord } from "src/utils/chords";
+import { triggerAttackChord, triggerReleaseChord, dampChord } from "src/utils/chords";
 
 afterEach(() => {
   cleanup();
@@ -82,8 +82,8 @@ describe("useChordKeyboardInput", () => {
     });
 
     expect(result.current.activeFlavour).toBe("flat7");
-    expect(triggerReleaseChord).toHaveBeenCalledWith({ notes: ["C"] });
-    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7");
+    expect(dampChord).toHaveBeenCalledWith({ notes: ["C"] });
+    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7", false);
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "," }));
