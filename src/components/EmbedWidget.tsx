@@ -36,7 +36,7 @@ function buildProgression(params: URLSearchParams): Progression {
       const bpm = params.get("bpm") ? parseInt(params.get("bpm")!, 10) : undefined;
       return {
         id: "custom",
-        name: "Custom progression",
+        name: "",
         bpm,
         steps,
         songs: [],
@@ -97,7 +97,9 @@ export default function EmbedWidget() {
     <div className="embed-widget">
       <div className="embed-header">
         <div className="embed-header-info">
-          <span className="embed-progression-name">{progression.name}</span>
+          <span className="embed-progression-name">
+            {progression.id === "custom" ? t("embed.customName") : progression.name}
+          </span>
           <span className="embed-progression-pattern">{pattern}</span>
           <span className="embed-progression-bpm">{effectiveBpm} BPM</span>
         </div>
