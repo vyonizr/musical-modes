@@ -62,6 +62,29 @@ reaches the tail, and a Salamander sample is near-silence well before 6 s.
 Observable behaviour change: a held or pedalled note now fades out at 6 s
 instead of ringing 16-22 s.
 
+#### Why 6 s and not 10 s
+
+Measured with `ffmpeg volumedetect` over one-second windows, relative to each
+sample's own peak:
+
+| | peak (0-1 s) | at 6 s | at 10 s | gain from 4 extra sec |
+|---|---|---|---|---|
+| C2 (lowest, longest ring) | -8.2 dB | -34.3 dB | -40.3 dB | 6 dB |
+| C3 | -9.0 dB | -40.9 dB | -46.7 dB | 6 dB |
+| C4 | -8.0 dB | -43.0 dB | -45.3 dB | 2 dB |
+
+At the 6 s cut the worst case, C2, is already 26 dB below its peak. At the
+default volume of 0.8 (-8 dB) that is about -42 dBFS absolute, below what a
+phone speaker clears in a normal room. Ten seconds costs 200 KB and 14 MB more
+for 2-6 dB of extra near-silence.
+
+Nothing in normal use reaches either limit. Progression steps are
+`(bars ?? 1) * 4 * (60000 / bpm)` (`usePlayProgression.ts:69-70`); no
+progression sets `bars`, and BPM is 120 everywhere except one at 60, giving
+steps of 2.0 s and at worst 4.0 s, with each step damping the previous chord.
+Manual key holds run well under 2 s. The only path past 6 s is playing a
+pedalled chord and then idling.
+
 `public/audio/piano/LICENSE.txt` currently claims the files are "redistributed
 unmodified". Reword to state they are trimmed to 6 s with a fade-out. CC BY 3.0
 permits derivatives; attribution to Alexander Holm stays.
