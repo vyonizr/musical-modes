@@ -1,4 +1,5 @@
 export { default as generateModes } from './generateModes'
+export { default as orderActiveModes } from './orderActiveModes'
 export { detectKey, isValidChordToken, parseSection } from './detectKey'
 export type { DetectionResult, SectionAnalysis, ChordMatch } from './detectKey'
 export { classifyCadence } from './cadence'
