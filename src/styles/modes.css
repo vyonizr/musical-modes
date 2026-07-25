@@ -292,6 +292,30 @@ td {
   accent-color: var(--primary);
 }
 
+.sustain-control {
+  display: flex;
+  justify-content: center;
+  margin: 6px auto 0;
+}
+
+.sustain-btn {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sustain-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* Progressions Panel */
 
 .progressions-panel {

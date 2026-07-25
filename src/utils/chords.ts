@@ -285,14 +285,84 @@ export interface ChordHandle {
 
 const sounding = new Set<ChordHandle>();
 
+// Chords whose key has been let go while the pedal was down. They are still
+// ringing; only lifting the pedal, a colliding attack, or a panic stop damps
+// them.
+const sustained = new Set<ChordHandle>();
+
+let pedalDown = false;
+
+// The one place a chord actually stops. Clamping to attackedThrough is why:
+// a release issued inside the humanize window would otherwise land before a
+// note has sounded and leave it ringing until a page reload.
+function dampHandle(handle: ChordHandle, now: number): void {
+  handle.engine.triggerRelease(
+    handle.notes as string[],
+    Math.max(now, handle.attackedThrough)
+  );
+}
+
+/**
+ * Raises or lowers the pedal. Lowering damps every chord the pedal was
+ * holding. Chords whose key is still physically down live in `sounding`, not
+ * `sustained`, so lowering the pedal does not cut them.
+ */
+export function setSustain(down: boolean): void {
+  pedalDown = down;
+  if (down) return;
+  const now = Tone.now();
+  sustained.forEach((handle) => dampHandle(handle, now));
+  sustained.clear();
+}
+
+/**
+ * Stops a chord regardless of the pedal. For releases that are not the
+ * musician letting go: voicing corrections, authored playback, teardown.
+ *
+ * Idempotent: damping an unknown or already-damped handle is a no-op.
+ */
+export function dampChord(handle: ChordHandle | null | undefined): void {
+  if (!handle) return;
+  const wasSounding = sounding.delete(handle);
+  const wasSustained = sustained.delete(handle);
+  if (!wasSounding && !wasSustained) return;
+  dampHandle(handle, Tone.now());
+}
+
 export function triggerAttackChord(
   chordName: string,
-  flavour?: ChordFlavor
+  flavour?: ChordFlavor,
+  // False only for a flavour retrigger of a chord the musician is still
+  // holding (src/utils/useChordKeyboardInput.ts's retriggerHeldChords) —
+  // that is a voicing correction, not the musician moving to a new chord.
+  isChordChange = true
 ): ChordHandle {
   // Calling ensurePiano first is what kicks off the sample download; until it
   // resolves this returns null and the synth answers immediately.
   const engine = ensurePiano() ?? ensureSynth();
   const notes = chordToNotes(chordName, flavour);
+
+  // A real chord change always replaces whatever was sustained, even a
+  // chord sharing no pitch with the new one: the pedal sustains the last
+  // thing you played, not a bag of unrelated ringing chords.
+  //
+  // A voicing correction (isChordChange = false) keeps the narrower
+  // pitch-collision sweep instead: a note can only be held once, so
+  // re-striking a pitch a sustained chord still owns would leave that
+  // chord's handle unable to release it, and the note would ring until a
+  // page reload. A real piano re-strikes the same string, so damping the
+  // older copy is also what the instrument does. This is what bounds the
+  // sustained set in that case: at most one handle per pitch, over the
+  // ~17 pitches chordToNotes spans, so no separate voice cap is needed.
+  if (sustained.size > 0) {
+    const swept = Tone.now();
+    sustained.forEach((held) => {
+      const collides = held.notes.some((note) => notes.includes(note));
+      if (!isChordChange && !collides) return;
+      sustained.delete(held);
+      dampHandle(held, swept);
+    });
+  }
 
   // One base instant for the whole chord, so the offsets stay relative to each
   // other. Every offset is positive, so the chord never starts later than an
@@ -314,13 +384,19 @@ export function triggerAttackChord(
   return handle;
 }
 
-/** Idempotent: releasing an unknown or already-released handle is a no-op. */
+/**
+ * The musician letting go of a chord. With the pedal up this damps. With the
+ * pedal down the chord keeps ringing and `setSustain(false)` damps it later.
+ *
+ * Idempotent: releasing an unknown or already-released handle is a no-op.
+ */
 export function triggerReleaseChord(handle: ChordHandle | null | undefined): void {
   if (!handle || !sounding.delete(handle)) return;
-  handle.engine.triggerRelease(
-    handle.notes as string[],
-    Math.max(Tone.now(), handle.attackedThrough)
-  );
+  if (pedalDown) {
+    sustained.add(handle);
+    return;
+  }
+  dampHandle(handle, Tone.now());
 }
 
 /** Bounded stop, not an instant one: the release envelope still applies, so
@@ -328,16 +404,16 @@ export function triggerReleaseChord(handle: ChordHandle | null | undefined): voi
  *  last few milliseconds are released at their own attack time instead of now,
  *  which is why this loops the handles rather than only calling releaseAll:
  *  releaseAll fires at now, and a note scheduled after that would survive it.
- *  The releaseAll calls stay as a backstop for anything not in the set. */
+ *  The releaseAll calls stay as a backstop for anything not in the set.
+ *
+ *  The pedal flag is deliberately left alone. Sound stops; the latch stays
+ *  where the musician put it, the way a physical pedal stays down. */
 export function releaseAllChords(): void {
   const now = Tone.now();
-  sounding.forEach((handle) => {
-    handle.engine.triggerRelease(
-      handle.notes as string[],
-      Math.max(now, handle.attackedThrough)
-    );
-  });
+  sounding.forEach((handle) => dampHandle(handle, now));
+  sustained.forEach((handle) => dampHandle(handle, now));
   sounding.clear();
+  sustained.clear();
   synth?.releaseAll();
   piano?.releaseAll();
 }

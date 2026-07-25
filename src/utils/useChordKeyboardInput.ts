@@ -5,6 +5,7 @@ import { Mode } from "src/utils/types";
 import {
   triggerAttackChord,
   triggerReleaseChord,
+  dampChord,
   releaseAllChords,
   ChordFlavor,
   ChordHandle,
@@ -24,8 +25,7 @@ const MODIFIER_KEYS: Record<string, ChordFlavor> = {
   k: "sus2",
   l: "sus4",
 };
-
-function isTextInput(target: EventTarget | null): boolean {
+export function isTextInput(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
   if (tag === "input" || tag === "textarea" || tag === "select") return true;
@@ -85,12 +85,17 @@ export function useChordKeyboardInput(
         Array.from(pressedChordsRef.current.values(), (h) => h.chordName)
       );
 
+    // A flavour change rewrites the voicing of a chord the musician is still
+    // holding. That is a correction, not a release, so it damps past the
+    // pedal — otherwise the pre-modifier voicing would ring underneath.
     const retriggerHeldChords = (nextFlavour: ChordFlavor | undefined) => {
       pressedChordsRef.current.forEach((held, key) => {
-        triggerReleaseChord(held.handle);
+        dampChord(held.handle);
         pressedChordsRef.current.set(key, {
           chordName: held.chordName,
-          handle: triggerAttackChord(held.chordName, nextFlavour),
+          // Not a chord change: an unrelated sustained chord must survive
+          // this revoicing (see chords.ts's triggerAttackChord).
+          handle: triggerAttackChord(held.chordName, nextFlavour, false),
         });
       });
     };
@@ -153,9 +158,7 @@ export function useChordKeyboardInput(
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleWindowBlur);
-      pressedChordsRef.current.forEach((held) =>
-        triggerReleaseChord(held.handle)
-      );
+      pressedChordsRef.current.forEach((held) => dampChord(held.handle));
       pressedChordsRef.current.clear();
     };
   }, []);

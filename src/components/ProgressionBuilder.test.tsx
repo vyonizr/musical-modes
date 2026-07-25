@@ -7,6 +7,7 @@ import { Mode } from "src/utils/types";
 
 vi.mock("src/utils/chords", () => ({
   triggerAttackChord: vi.fn(),
+  dampChord: vi.fn(),
   triggerReleaseChord: vi.fn(),
 }));
 

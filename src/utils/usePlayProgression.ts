@@ -3,7 +3,7 @@ import { Mode } from "src/utils/types";
 import { Progression } from "src/utils/progressions";
 import {
   triggerAttackChord,
-  triggerReleaseChord,
+  dampChord,
   ChordFlavor,
   ChordHandle,
 } from "src/utils/chords";
@@ -27,7 +27,7 @@ export function usePlayProgression() {
   useEffect(
     () => () => {
       playbackGenRef.current++;
-      triggerReleaseChord(activeProgressionChordRef.current);
+      dampChord(activeProgressionChordRef.current);
       activeProgressionChordRef.current = null;
     },
     []
@@ -35,7 +35,7 @@ export function usePlayProgression() {
 
   const handlePlayProgression = useCallback(
     async (progression: Progression, modes: Mode[]) => {
-      triggerReleaseChord(activeProgressionChordRef.current);
+      dampChord(activeProgressionChordRef.current);
       activeProgressionChordRef.current = null;
 
       const wasPlayingThis = activeProgressionIdRef.current === progression.id;
@@ -70,7 +70,10 @@ export function usePlayProgression() {
           (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 120));
         await delay(durationMs - 80);
         if (playbackGenRef.current !== gen) break;
-        triggerReleaseChord(activeProgressionChordRef.current);
+        // Playback timing is authored, not performed: the step duration above
+        // already says how long this chord rings. A latched pedal must not
+        // smear the progression into one cluster.
+        dampChord(activeProgressionChordRef.current);
         activeProgressionChordRef.current = null;
       }
 

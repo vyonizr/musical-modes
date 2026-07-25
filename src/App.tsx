@@ -21,6 +21,7 @@ import ProgressionsPanel from "./components/ProgressionsPanel";
 import ProgressionBuilder from "./components/ProgressionBuilder";
 import KeyDetectorPanel from "./components/KeyDetectorPanel";
 import { usePlayProgression } from "./utils/usePlayProgression";
+import { useSustainPedal } from "./utils/useSustainPedal";
 import { useOnboardingTour } from "./utils/useOnboardingTour";
 import { useChordKeyboardInput } from "./utils/useChordKeyboardInput";
 import { buildEmbedSnippet } from "./utils/embed";
@@ -41,6 +42,7 @@ export default function App() {
     preferSharp
   );
   const { activeProgressionStep, activeProgressionId, handlePlayProgression: hookPlayProgression } = usePlayProgression();
+  const { sustainOn, toggleSustain } = useSustainPedal();
 
   useEffect(() => {
     setIsTouchDevice(
@@ -230,6 +232,18 @@ export default function App() {
               onMouseUp={(e) => e.currentTarget.blur()}
               onTouchEnd={(e) => e.currentTarget.blur()}
             />
+          </div>
+          <div className="sustain-control">
+            <button
+              type="button"
+              className={`sustain-btn${sustainOn ? " active" : ""}`}
+              onClick={toggleSustain}
+              onMouseUp={(e) => e.currentTarget.blur()}
+              onTouchEnd={(e) => e.currentTarget.blur()}
+              aria-pressed={sustainOn}
+            >
+              {t("header.sustainLabel")}
+            </button>
           </div>
         </div>
         <ProgressionsPanel
