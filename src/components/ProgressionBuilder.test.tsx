@@ -15,6 +15,10 @@ const modes: Mode[] = [
     name: "ionian",
     romanNumerals: ["I", "ii", "iii", "IV", "V", "vi", "vii°"],
   } as Mode,
+  {
+    name: "dorian",
+    romanNumerals: ["i", "ii", "♭III", "IV", "v", "vi°", "♭VII"],
+  } as Mode,
 ];
 
 let written: string[] = [];
@@ -73,5 +77,26 @@ describe("ProgressionBuilder embed preview", () => {
     const after = (screen.getByTitle("Embed preview") as HTMLIFrameElement).srcdoc;
     expect(after).not.toBe(before);
     expect(after).toContain("bpm=90");
+  });
+});
+
+describe("ProgressionBuilder degree numerals", () => {
+  it("shows the selected step's own mode numerals, not the first mode's", () => {
+    openBuilder();
+
+    const degreeSelect = document.querySelector(
+      ".builder-degree-select"
+    ) as HTMLSelectElement;
+    const modeSelect = document.querySelector(
+      ".builder-mode-select"
+    ) as HTMLSelectElement;
+
+    const ionianLabels = Array.from(degreeSelect.options).map((o) => o.textContent);
+    expect(ionianLabels).toEqual(["I", "ii", "iii", "IV", "V", "vi", "vii°"]);
+
+    fireEvent.change(modeSelect, { target: { value: "dorian" } });
+
+    const dorianLabels = Array.from(degreeSelect.options).map((o) => o.textContent);
+    expect(dorianLabels).toEqual(["i", "ii", "♭III", "IV", "v", "vi°", "♭VII"]);
   });
 });

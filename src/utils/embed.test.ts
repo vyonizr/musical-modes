@@ -87,4 +87,15 @@ describe("buildStepsEmbedSnippet", () => {
     expect(html).toContain("key=Bb");
     expect(html).toContain("acc=sharp");
   });
+
+  it("titles the frame with the key so screen readers get a real description", () => {
+    const html = buildStepsEmbedSnippet(steps, 120, "C", false, "https://example.com");
+    expect(html).toContain('title="Chord progression in C — Musical Modes"');
+  });
+
+  it("keeps the flat glyph in the human-readable title while the url stays ascii", () => {
+    const html = buildStepsEmbedSnippet(steps, 120, "B♭", true, "https://example.com");
+    expect(html).toContain('title="Chord progression in B♭ — Musical Modes"');
+    expect(html).toContain("key=Bb");
+  });
 });

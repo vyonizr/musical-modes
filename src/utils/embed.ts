@@ -40,5 +40,5 @@ export function buildStepsEmbedSnippet(
   origin: string
 ): string {
   const src = `${origin}/?embed=1&key=${selectedScale.replace("♭", "b")}&acc=${preferSharp ? "sharp" : "flat"}&bpm=${bpm}&steps=${encodeSteps(steps)}`;
-  return iframeTag(src, steps, "Custom progression — Musical Modes");
+  return iframeTag(src, steps, `Chord progression in ${selectedScale} — Musical Modes`);
 }

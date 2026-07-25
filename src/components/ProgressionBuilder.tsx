@@ -81,9 +81,12 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
     );
   }, [steps, bpm, selectedScale, preferSharp]);
 
-  const degreeOptions = modes.length > 0
-    ? modes[0].romanNumerals.map((rn, i) => ({ value: i, label: rn }))
-    : Array.from({ length: 7 }, (_, i) => ({ value: i, label: String(i) }));
+  const degreeOptionsForMode = (modeName: string) => {
+    const found = modes.find((m) => m.name === modeName) ?? modes[0];
+    return found
+      ? found.romanNumerals.map((rn, i) => ({ value: i, label: rn }))
+      : Array.from({ length: 7 }, (_, i) => ({ value: i, label: String(i) }));
+  };
 
   return (
     <div className="progression-builder">
@@ -126,7 +129,7 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
                   value={step.degreeIndex}
                   onChange={(e) => updateStep(i, "degreeIndex", parseInt(e.target.value, 10))}
                 >
-                  {degreeOptions.map((opt) => (
+                  {degreeOptionsForMode(step.mode).map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>

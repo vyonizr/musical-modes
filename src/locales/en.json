@@ -48,7 +48,8 @@
     "previewFrameTitle": "Embed preview"
   },
   "embed": {
-    "backlink": "Musical Modes"
+    "backlink": "modes.vyonizr.com",
+    "customName": "Made with Musical Modes"
   },
   "tour": {
     "rootKeyStep": "Tap a note on the keyboard to set the root key. Every chord on the page updates to match.",
