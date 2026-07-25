@@ -238,6 +238,7 @@ export default function App() {
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
           onCopyEmbed={handleCopyEmbed}
+          onOpen={() => startTour("progressions")}
         />
         <ProgressionBuilder
           modes={generateModes(selectedScale, preferSharp)}
@@ -245,6 +246,7 @@ export default function App() {
           preferSharp={preferSharp}
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
+          onOpen={() => startTour("builder")}
         />
         <div className="table-container">
           {activeModes.length === 0 ? (
@@ -321,6 +323,7 @@ export default function App() {
         </div>
         <KeyDetectorPanel
           preferSharp={preferSharp}
+          onOpen={() => startTour("detector")}
           onKeySelected={(root, modes) => {
             setSelectedScale(root);
             setActiveModes(modes);
