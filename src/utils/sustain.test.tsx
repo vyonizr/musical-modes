@@ -17,6 +17,7 @@ import {
 } from "./chords";
 import { useChordKeyboardInput } from "./useChordKeyboardInput";
 import { usePlayProgression } from "./usePlayProgression";
+import { useSustainPedal } from "./useSustainPedal";
 import { Mode } from "src/utils/types";
 
 const makeMode = (name: string, chords: string[]): Mode => ({
@@ -192,6 +193,89 @@ describe("authored playback ignores the pedal", () => {
         [ionian]
       );
     });
+
+    expect(stuckNotes()).toEqual([]);
+  });
+});
+describe("Space is the pedal, except where Space already means something", () => {
+  const pressSpace = (target?: HTMLElement) =>
+    act(() => {
+      (target ?? document.body).dispatchEvent(
+        new KeyboardEvent("keydown", {
+          code: "Space",
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+
+  it("Space toggles the pedal", () => {
+    const { result } = renderHook(() => useSustainPedal());
+
+    pressSpace();
+    expect(result.current.sustainOn).toBe(true);
+
+    pressSpace();
+    expect(result.current.sustainOn).toBe(false);
+  });
+
+  it("a raised pedal actually sustains", () => {
+    renderHook(() => useSustainPedal());
+
+    pressSpace();
+    triggerReleaseChord(triggerAttackChord("C"));
+
+    expect(stuckNotes().length).toBeGreaterThan(0);
+  });
+
+  it("ignores Space while a text input is focused", () => {
+    const { result } = renderHook(() => useSustainPedal());
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+
+    pressSpace(input);
+
+    expect(result.current.sustainOn).toBe(false);
+    document.body.removeChild(input);
+  });
+
+  it("ignores Space while a button is focused, so the button still works", () => {
+    const { result } = renderHook(() => useSustainPedal());
+    const button = document.createElement("button");
+    document.body.appendChild(button);
+    button.focus();
+
+    pressSpace(button);
+
+    expect(result.current.sustainOn).toBe(false);
+    document.body.removeChild(button);
+  });
+
+  it("ignores auto-repeat, so holding Space does not chatter the pedal", () => {
+    const { result } = renderHook(() => useSustainPedal());
+
+    pressSpace();
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          code: "Space",
+          repeat: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+
+    expect(result.current.sustainOn).toBe(true);
+  });
+
+  it("lowers the pedal on unmount", () => {
+    const { unmount } = renderHook(() => useSustainPedal());
+    pressSpace();
+    triggerReleaseChord(triggerAttackChord("C"));
+
+    unmount();
 
     expect(stuckNotes()).toEqual([]);
   });
