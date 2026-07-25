@@ -10,6 +10,7 @@ import EmbedWidget from "./EmbedWidget";
 // or TableContent throws on import.
 vi.mock("src/utils/chords", () => ({
   triggerAttackChord: vi.fn(),
+  dampChord: vi.fn(),
   triggerReleaseChord: vi.fn(),
   display7thChordName: (chordName: string) => chordName,
   displaySusChordName: (chordName: string) => chordName,

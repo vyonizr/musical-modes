@@ -16,6 +16,17 @@ import {
   dampChord,
 } from "./chords";
 import { useChordKeyboardInput } from "./useChordKeyboardInput";
+import { usePlayProgression } from "./usePlayProgression";
+import { Mode } from "src/utils/types";
+
+const makeMode = (name: string, chords: string[]): Mode => ({
+  name,
+  intervals: [],
+  romanNumerals: chords.map(() => ""),
+  chords,
+});
+
+const ionian = makeMode("ionian", ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]);
 
 beforeEach(() => {
   resetToneMock();
@@ -159,3 +170,29 @@ describe("a voicing correction is not a musician letting go", () => {
   });
 });
 
+describe("authored playback ignores the pedal", () => {
+  it("each step is damped at its own step boundary", async () => {
+    const { result } = renderHook(() => usePlayProgression());
+    setSustain(true);
+
+    // 6000 bpm makes a one-bar step 40 ms, and the loop's 80 ms pre-roll
+    // subtraction makes the delay resolve on the next tick.
+    await act(async () => {
+      await result.current.handlePlayProgression(
+        {
+          id: "test",
+          name: "test",
+          bpm: 6000,
+          steps: [
+            { mode: "ionian", degreeIndex: 0 },
+            { mode: "ionian", degreeIndex: 3 },
+          ],
+          songs: [],
+        },
+        [ionian]
+      );
+    });
+
+    expect(stuckNotes()).toEqual([]);
+  });
+});
