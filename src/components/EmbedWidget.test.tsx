@@ -12,6 +12,7 @@ vi.mock("src/utils/chords", () => ({
   triggerAttackChord: vi.fn(),
   dampChord: vi.fn(),
   triggerReleaseChord: vi.fn(),
+  preloadPiano: vi.fn(),
   display7thChordName: (chordName: string) => chordName,
   displaySusChordName: (chordName: string) => chordName,
 }));

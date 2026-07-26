@@ -12,7 +12,7 @@ import {
   CHROMATIC_ROW1,
   CHROMATIC_ROW2,
 } from "./utils/constants";
-import { setVolume, getStoredVolume } from "./utils/chords";
+import { setVolume, getStoredVolume, preloadPiano } from "./utils/chords";
 
 import { useTranslation } from "react-i18next";
 import TableContent from "./components/TableContent";
@@ -52,6 +52,13 @@ export default function App() {
 
   useEffect(() => {
     setVolumeState(getStoredVolume());
+  }, []);
+
+  // Loads the piano samples before the first chord is played, so the session
+  // never opens on the synth fallback. Runs after first paint, so it does not
+  // compete with the critical path.
+  useEffect(() => {
+    preloadPiano();
   }, []);
 
   const handleVolumeChange = useCallback((next: number) => {

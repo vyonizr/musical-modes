@@ -12,9 +12,10 @@ export default defineConfig({
       filename: 'sw.ts',
       registerSW: false,
       manifest: false,
-      // Samples are runtime-cached on first sound instead, so an install that
-      // never plays a chord costs nothing.
-      injectManifest: { globIgnores: ['**/audio/**'] },
+      // vite-plugin-pwa's injectManifest defaults globPatterns to
+      // **/*.{js,wasm,css,html} and would otherwise never precache the piano
+      // samples — this explicitly adds mp3 to that same default set.
+      injectManifest: { globPatterns: ['**/*.{js,wasm,css,html,mp3}'] },
     }),
   ],
   resolve: {
