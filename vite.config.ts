@@ -12,6 +12,9 @@ export default defineConfig({
       filename: 'sw.ts',
       registerSW: false,
       manifest: false,
+      // vite-plugin-pwa's injectManifest defaults globPatterns to
+      // **/*.{js,wasm,css,html} and would otherwise never precache the piano
+      // samples — this explicitly adds mp3 to that same default set.
       injectManifest: { globPatterns: ['**/*.{js,wasm,css,html,mp3}'] },
     }),
   ],

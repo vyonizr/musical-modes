@@ -276,7 +276,7 @@ function unlockAudio(): void {
   if (audioUnlocked || typeof window === "undefined") return;
   audioUnlocked = true;
   const unlock = () => {
-    void Tone.start();
+    void Tone.start().catch(() => {});
     document.removeEventListener("pointerdown", unlock, true);
     document.removeEventListener("keydown", unlock, true);
   };

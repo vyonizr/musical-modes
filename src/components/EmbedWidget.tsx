@@ -1,11 +1,11 @@
-import { Fragment, useMemo, useCallback } from "react";
+import { Fragment, useMemo, useCallback, useEffect } from "react";
 import { Play, Square } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { generateModes } from "src/utils";
 import { KEYS } from "src/utils/constants";
 import { usePlayProgression } from "src/utils/usePlayProgression";
 import { PROGRESSIONS, Progression, ProgressionStep } from "src/utils/progressions";
-import { ChordFlavor } from "src/utils/chords";
+import { ChordFlavor, preloadPiano } from "src/utils/chords";
 import { decodeSteps } from "src/utils/steps";
 import TableContent from "src/components/TableContent";
 
@@ -50,6 +50,13 @@ function buildProgression(params: URLSearchParams): Progression {
 
 export default function EmbedWidget() {
   const { t } = useTranslation();
+
+  // Loads the piano samples before the first chord is played, so an embedded
+  // widget never opens on the synth fallback either.
+  useEffect(() => {
+    preloadPiano();
+  }, []);
+
   const params = new URLSearchParams(location.search);
 
   const keyParam = params.get("key") || "C";
