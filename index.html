@@ -26,9 +26,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" />
   <title>Musical Modes: hear every mode's chords, in any key</title>
+  <style>
+    .app-loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8f9fa;
+    }
+    .app-loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(66, 133, 244, 0.2);
+      border-top-color: #4285f4;
+      border-radius: 50%;
+      animation: app-loading-spin 0.8s linear infinite;
+    }
+    @keyframes app-loading-spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .app-loading-spinner { animation: none; }
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div class="app-loading" role="status" aria-label="Loading">
+      <div class="app-loading-spinner"></div>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
