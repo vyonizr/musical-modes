@@ -7,4 +7,6 @@ https://creativecommons.org/licenses/by/3.0/
 Source: https://archive.org/details/SalamanderGrandPianoV3
 MP3 distribution: https://github.com/Tonejs/audio/tree/master/salamander
 
-These files are redistributed unmodified under the terms of that licence.
+Modified from the originals: each sample is trimmed to 6 seconds with a
+0.4 second fade-out and re-encoded at 40 kbps, to cut download size and
+decoded memory. CC BY 3.0 permits these derivatives.

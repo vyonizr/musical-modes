@@ -33,15 +33,15 @@ const serwist = new Serwist({
         expiration: { maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 },
       },
     },
-    {
-      matcher: /\.mp3$/,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "audio",
-        expiration: { maxEntries: 16, maxAgeSeconds: 30 * 24 * 60 * 60 },
-      },
-    },
   ],
+});
+
+// One-time cleanup: the old runtime 'audio' cache (removed when samples
+// moved into the precache manifest) is never touched by Serwist's own
+// cleanup, since that only tracks precache-named caches. Delete it
+// explicitly so returning users don't keep an orphaned ~850KB cache forever.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete("audio"));
 });
 
 serwist.addEventListeners();
