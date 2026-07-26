@@ -24,6 +24,7 @@ export interface ToneMockState {
   releases: Release[];
   hooks: { onload?: () => void; onerror?: (error: Error) => void };
   samplerCount: number;
+  startCalls: number;
 }
 
 const container = globalThis as unknown as { __toneMock?: ToneMockState };
@@ -34,6 +35,7 @@ export const state: ToneMockState = (container.__toneMock ??= {
   releases: [],
   hooks: {},
   samplerCount: 0,
+  startCalls: 0,
 });
 
 export function resetToneMock(): void {
@@ -42,6 +44,7 @@ export function resetToneMock(): void {
   state.releases.length = 0;
   state.hooks = {};
   state.samplerCount = 0;
+  state.startCalls = 0;
 }
 
 export function stuckNotes(): string[] {
@@ -102,5 +105,9 @@ export function createToneMock() {
     Reverb: Node,
     Volume,
     now: () => 0,
+    start: () => {
+      state.startCalls += 1;
+      return Promise.resolve();
+    },
   };
 }

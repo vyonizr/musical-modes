@@ -162,6 +162,7 @@ let pianoState: "idle" | "loading" | "ready" | "failed" = "idle";
 let reverb: Tone.Reverb | null = null;
 let limiter: Tone.Limiter | null = null;
 let volumeNode: Tone.Volume | null = null;
+let audioUnlocked = false;
 
 const VOLUME_STORAGE_KEY = "musical-modes-volume";
 
@@ -262,6 +263,28 @@ function ensurePiano(): Tone.Sampler | null {
 }
 
 /**
+ * Resumes the AudioContext on the first user gesture.
+ *
+ * Before preloading existed the context was always created inside a gesture,
+ * so browsers started it `running` and nothing had to resume it. Preloading
+ * builds the graph at page load instead, which browsers create `suspended`, so
+ * without this every chord would be silent.
+ *
+ * Capture phase, so it runs ahead of the React handlers that attack chords.
+ */
+function unlockAudio(): void {
+  if (audioUnlocked || typeof window === "undefined") return;
+  audioUnlocked = true;
+  const unlock = () => {
+    void Tone.start();
+    document.removeEventListener("pointerdown", unlock, true);
+    document.removeEventListener("keydown", unlock, true);
+  };
+  document.addEventListener("pointerdown", unlock, true);
+  document.addEventListener("keydown", unlock, true);
+}
+
+/**
  * Starts the sample download before any chord is played, so the first chord of
  * a session is already the piano instead of the synth fallback.
  *
@@ -270,6 +293,7 @@ function ensurePiano(): Tone.Sampler | null {
  * Sampler.
  */
 export function preloadPiano(): void {
+  unlockAudio();
   ensurePiano();
 }
 
