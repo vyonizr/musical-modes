@@ -109,7 +109,7 @@ describe("no note survives the interaction that started it", () => {
       </table>
     );
 
-    fireEvent.mouseDown(getAllByText("C")[0].closest("td")!);
+    fireEvent.pointerDown(getAllByText("C")[0].closest("td")!);
     expect(stuckNotes().length).toBeGreaterThan(0);
 
     rerender(
@@ -117,7 +117,7 @@ describe("no note survives the interaction that started it", () => {
         <TableContent {...props} activeFlavour="flat7" />
       </table>
     );
-    fireEvent.mouseUp(getAllByText("C7")[0].closest("td")!);
+    fireEvent.pointerUp(getAllByText("C7")[0].closest("td")!);
 
     expect(stuckNotes()).toEqual([]);
   });
@@ -135,7 +135,7 @@ describe("no note survives the interaction that started it", () => {
       </table>
     );
 
-    fireEvent.mouseDown(getAllByText("C")[0].closest("td")!);
+    fireEvent.pointerDown(getAllByText("C")[0].closest("td")!);
     rerender(
       <table>
         <TableContent
@@ -144,7 +144,7 @@ describe("no note survives the interaction that started it", () => {
         />
       </table>
     );
-    fireEvent.mouseUp(getAllByText("D")[0].closest("td")!);
+    fireEvent.pointerUp(getAllByText("D")[0].closest("td")!);
 
     expect(stuckNotes()).toEqual([]);
   });

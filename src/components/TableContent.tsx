@@ -78,12 +78,20 @@ const TableContent = ({
             }${
               activeProgressionStep && activeProgressionStep.mode === mode.name && activeProgressionStep.degreeIndex === chordIndex ? ' progression-active' : ''
             }`}
-            onMouseDown={() => attackCell(chordIndex, chord)}
-            onMouseUp={() => releaseCell(chordIndex)}
-            onMouseLeave={() => releaseCell(chordIndex)}
-            onTouchStart={(e) => { e.preventDefault(); attackCell(chordIndex, chord) }}
-            onTouchEnd={() => releaseCell(chordIndex)}
-            onTouchCancel={() => releaseCell(chordIndex)}
+            onPointerDown={(event) => {
+              if (
+                event.pointerType === "touch" &&
+                typeof event.currentTarget.setPointerCapture === "function"
+              ) {
+                event.currentTarget.setPointerCapture(event.pointerId)
+              }
+              attackCell(chordIndex, chord)
+            }}
+            onPointerUp={() => releaseCell(chordIndex)}
+            onPointerCancel={() => releaseCell(chordIndex)}
+            onPointerLeave={(event) => {
+              if (event.pointerType === "mouse") releaseCell(chordIndex)
+            }}
           >
             <div className='chord-container'>
               <span style={fontSize ? { fontSize } : undefined}>{displayName}</span>

@@ -49,7 +49,7 @@ An in-app rendering of an Embed Snippet, shown to the author before they copy
 it. Its purpose is to answer "will this snippet work when I paste it
 somewhere?" — not merely "what does the widget look like?".
 
-A preview is only trustworthy if it renders the *same* snippet the author will
+A preview is only trustworthy if it renders the _same_ snippet the author will
 copy. A preview that re-derives its own equivalent snippet is not an Embed
 Preview; it is a mock-up, and can silently disagree with the clipboard.
 
@@ -64,3 +64,19 @@ Preview; it is a mock-up, and can silently disagree with the clipboard.
 
 - **Framing policy** — whether a third-party site is permitted to frame the
   widget at all. That is a deployment concern, not an authoring concern.
+
+## Audio Artifact
+
+An unintended click or pop heard at the attack or release of a played chord.
+It is distinct from the intended piano sound and from continuous distortion.
+
+## Duplicate Touch Attack
+
+Two attacks of one Chord Cell caused by a single touch interaction. A Chord Cell
+touch must create exactly one attack and one corresponding release.
+
+## Chord Cell Gesture
+
+One continuous contact with a Chord Cell. It attacks exactly one chord at
+contact start and releases that chord when contact ends, is cancelled, or
+becomes a page scroll. Moving across Chord Cells does not attack another chord.
