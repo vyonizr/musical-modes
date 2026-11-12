@@ -97,7 +97,7 @@ export function useChordKeyboardInput(
           chordName: held.chordName,
           // Not a chord change: an unrelated sustained chord must survive
           // this revoicing (see chords.ts's triggerAttackChord).
-          handle: triggerAttackChord(held.chordName, nextFlavour, false),
+          handle: triggerAttackChord(held.chordName, nextFlavour, false, "keyboard"),
         });
       });
     };
@@ -130,7 +130,7 @@ export function useChordKeyboardInput(
 
       pressedChordsRef.current.set(key, {
         chordName,
-        handle: triggerAttackChord(chordName, sevenFlavourRef.current),
+        handle: triggerAttackChord(chordName, sevenFlavourRef.current, true, "keyboard"),
       });
       syncPressedChords();
     };

@@ -18,10 +18,16 @@ export interface Release {
   time?: number;
 }
 
+export interface Connection {
+  from: string;
+  to: string;
+}
+
 export interface ToneMockState {
   sounding: Map<string, number>;
   attacks: Attack[];
   releases: Release[];
+  connections: Connection[];
   hooks: { onload?: () => void; onerror?: (error: Error) => void };
   samplerCount: number;
   startCalls: number;
@@ -33,6 +39,7 @@ export const state: ToneMockState = (container.__toneMock ??= {
   sounding: new Map<string, number>(),
   attacks: [],
   releases: [],
+  connections: [],
   hooks: {},
   samplerCount: 0,
   startCalls: 0,
@@ -42,6 +49,7 @@ export function resetToneMock(): void {
   state.sounding.clear();
   state.attacks.length = 0;
   state.releases.length = 0;
+  state.connections.length = 0;
   state.hooks = {};
   state.samplerCount = 0;
   state.startCalls = 0;
@@ -55,18 +63,29 @@ export function stuckNotes(): string[] {
 
 export function createToneMock() {
   class Node {
-    connect() {
+    kind = "node";
+    connect(target: Node) {
+      state.connections.push({ from: this.kind, to: target.kind });
       return this;
     }
     toDestination() {
+      state.connections.push({ from: this.kind, to: "destination" });
       return this;
     }
   }
   class Volume extends Node {
+    kind = "volume";
     volume = { value: 0 };
+  }
+  class Limiter extends Node {
+    kind = "limiter";
+  }
+  class Reverb extends Node {
+    kind = "reverb";
   }
   const asList = (notes: string | string[]) => (Array.isArray(notes) ? notes : [notes]);
   class Instrument extends Node {
+    kind = "synth";
     engine: "synth" | "piano" = "synth";
     triggerAttack(notes: string | string[], time?: number, velocity?: number) {
       const list = asList(notes);
@@ -92,6 +111,7 @@ export function createToneMock() {
     constructor(options: { onload?: () => void; onerror?: (error: Error) => void }) {
       super();
       this.engine = "piano";
+      this.kind = "piano";
       state.samplerCount += 1;
       state.hooks.onload = options.onload;
       state.hooks.onerror = options.onerror;
@@ -101,8 +121,8 @@ export function createToneMock() {
     PolySynth,
     Sampler,
     Synth: class {},
-    Limiter: Node,
-    Reverb: Node,
+    Limiter,
+    Reverb,
     Volume,
     now: () => 0,
     start: () => {

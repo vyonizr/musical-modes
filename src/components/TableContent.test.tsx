@@ -46,6 +46,7 @@ describe("Chord Cell Gesture", () => {
     fireEvent.mouseUp(cell);
 
     expect(triggerAttackChord).toHaveBeenCalledTimes(1);
+    expect(triggerAttackChord).toHaveBeenCalledWith("C", undefined, true, "cell");
     expect(triggerReleaseChord).toHaveBeenCalledTimes(1);
   });
 

@@ -70,6 +70,13 @@ Preview; it is a mock-up, and can silently disagree with the clipboard.
 An unintended click or pop heard at the attack or release of a played chord.
 It is distinct from the intended piano sound and from continuous distortion.
 
+## Intermittent Playback Crackle
+
+An unpredictable crackling sound occurring while an app-generated chord is
+sounding. It is distinct from an **Audio Artifact**, which is an unintended
+click or pop at an attack or release, and it does not describe ordinary media
+playback outside the app.
+
 ## Duplicate Touch Attack
 
 Two attacks of one Chord Cell caused by a single touch interaction. A Chord Cell
