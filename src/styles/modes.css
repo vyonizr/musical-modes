@@ -212,11 +212,15 @@ td {
   position: absolute;
   top: 2px;
   right: 3px;
+  padding: 0 3px;
   font-size: 0.65em;
-  opacity: 0.45;
-  font-weight: normal;
-  line-height: 1;
+  opacity: 0.8;
+  font-weight: 600;
+  line-height: 1.3;
   font-family: 'Courier New', monospace;
+  color: var(--black);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 3px;
 }
 
 td {
@@ -314,6 +318,40 @@ td {
 .sustain-btn.active {
   background: var(--primary);
   color: #fff;
+}
+
+.sustain-icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+  transition: fill 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sustain-btn.active .sustain-icon {
+  fill: currentColor;
+}
+
+.keycap {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 0.35em;
+  text-align: center;
+  font: 600 0.8em/1.5 "Courier New", monospace;
+  background: var(--light-gray);
+  border: 1px solid #c9c9c9;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+.shortcut-keys {
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.5rem;
+  color: var(--disabled);
+  cursor: help;
+}
+
+.shortcut-keys-label {
+  font-size: 0.75rem;
 }
 
 /* Progressions Panel */
@@ -557,8 +595,18 @@ td {
 
 .key-detector-hint {
   margin: 4px 0 0 4px;
-  font-size: 0.75em;
-  color: var(--disabled);
+}
+
+.beta-badge {
+  padding: 1px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8a5a00;
+  background: #fff3cd;
+  border-radius: 4px;
+  cursor: help;
 }
 
 .key-detector-body {
@@ -671,15 +719,6 @@ td {
   border: 1.5px solid var(--black);
   border-radius: 4px;
   background: #fff;
-}
-
-.detection-disclaimer {
-  margin: 0 0 12px 0;
-  padding: 8px 12px;
-  background: #fff3cd;
-  border-radius: 4px;
-  font-size: 0.8em;
-  color: #856404;
 }
 
 .detection-heading {
@@ -1270,13 +1309,6 @@ td.progression-active {
 
 .builder-preview {
   margin-top: 12px;
-}
-
-.builder-preview-heading {
-  font-size: 0.8em;
-  font-weight: 700;
-  color: var(--disabled);
-  margin-bottom: 4px;
 }
 
 .builder-preview-snippet {

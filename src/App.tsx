@@ -20,6 +20,8 @@ import { PROGRESSIONS, Progression } from "./utils/progressions";
 import ProgressionsPanel from "./components/ProgressionsPanel";
 import ProgressionBuilder from "./components/ProgressionBuilder";
 import KeyDetectorPanel from "./components/KeyDetectorPanel";
+import ShortcutHint from "./components/ShortcutHint";
+import PedalIcon from "./components/PedalIcon";
 import { usePlayProgression } from "./utils/usePlayProgression";
 import { useSustainPedal } from "./utils/useSustainPedal";
 import { useOnboardingTour } from "./utils/useOnboardingTour";
@@ -136,7 +138,6 @@ export default function App() {
     tourStepIndex,
     handleJoyrideEvent,
     restartTour,
-    startTour,
   } = useOnboardingTour();
 
   return (
@@ -249,6 +250,7 @@ export default function App() {
               onTouchEnd={(e) => e.currentTarget.blur()}
               aria-pressed={sustainOn}
             >
+              <PedalIcon />
               {t("header.sustainLabel")}
             </button>
           </div>
@@ -259,7 +261,6 @@ export default function App() {
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
           onCopyEmbed={handleCopyEmbed}
-          onOpen={() => startTour("progressions")}
         />
         <ProgressionBuilder
           modes={generateModes(selectedScale, preferSharp)}
@@ -267,16 +268,12 @@ export default function App() {
           preferSharp={preferSharp}
           onPlay={handlePlayProgression}
           activeProgressionId={activeProgressionId}
-          onOpen={() => startTour("builder")}
         />
         <div className="table-container">
           {activeModes.length === 0 ? (
             <h3>{t("table.nothingToPlay")}</h3>
           ) : (
             <Fragment>
-              <p className="black" style={{ marginTop: "0.5rem" }}>
-                {t("table.playHint")}
-              </p>
               <table>
                 {orderActiveModes(
                   generateModes(selectedScale, preferSharp),
@@ -296,32 +293,7 @@ export default function App() {
             </Fragment>
           )}
         </div>
-        {/* ponytail: JSX left inline, not a pure string — see 2026-07-10-extract-ui-strings.md */}
-        {!isTouchDevice && (
-          <details
-            id="modifier-hint"
-            className="black"
-            style={{ marginTop: "0.25rem" }}
-          >
-            <summary className="pointer noselect">
-              Hold <code>,</code> &middot; <code>.</code> &middot; <code>k</code>{" "}
-              &middot; <code>l</code> for 7th / sus chords
-            </summary>
-            <p>
-              Your keyboard maps to the chords too. <code>Q</code> through{" "}
-              <code>U</code> for the top row, <code>A</code> through{" "}
-              <code>J</code> for the second, <code>Z</code> through{" "}
-              <code>M</code> for the third.
-            </p>
-            <p>
-              You can press a modifier before or after a chord key. Hold a
-              chord and add the modifier to hear it transform instantly.
-            </p>
-          </details>
-        )}
-        <p className="black" style={{ marginTop: "1rem" }}>
-          {t("table.toggleModesHint")}
-        </p>
+        {!isTouchDevice && <ShortcutHint />}
         <div className="legends-wrapper">
           {COLOR_CLASSNAMES.map((modeName: string, index: number) => (
             <div
@@ -339,7 +311,6 @@ export default function App() {
         </div>
         <KeyDetectorPanel
           preferSharp={preferSharp}
-          onOpen={() => startTour("detector")}
           onKeySelected={(root, modes) => {
             setSelectedScale(root);
             setActiveModes(modes);

@@ -12,7 +12,6 @@ interface IProps {
   onPlay: (progression: Progression) => void
   activeProgressionId: string | null
   onCopyEmbed?: (progression: Progression) => void
-  onOpen: () => void
 }
 
 function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
@@ -23,14 +22,9 @@ function romanWithFlavour(roman: string, flavour?: ChordFlavor): string {
   if (flavour === 'sus2') return roman + 'sus2'
   return roman
 }
-const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, onCopyEmbed, onOpen }: IProps) => {
+const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, onCopyEmbed }: IProps) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-
-  const toggleOpen = () => {
-    if (!open) onOpen()
-    setOpen(o => !o)
-  }
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const handleCopy = useCallback((p: Progression) => {
@@ -43,16 +37,14 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
     <div className="progressions-panel">
       <button
         className="progressions-toggle"
-        onClick={toggleOpen}
+        onClick={() => setOpen(o => !o)}
         aria-expanded={open}
+        title={t("progressions.disclaimer")}
       >
         {t("progressions.toggleLabel")} {open ? '\u25B4' : '\u25BE'}
       </button>
       {open && (
         <div className="progressions-list">
-          <p className="progressions-disclaimer">
-            {t("progressions.disclaimer")}
-          </p>
           {progressions.map(p => {
             const romanNumerals = p.steps.map(step => {
               const mode = modes.find(m => m.name === step.mode)

@@ -30,7 +30,6 @@ describe("ProgressionsPanel copy confirmation", () => {
         onPlay={() => {}}
         activeProgressionId={null}
         onCopyEmbed={() => {}}
-        onOpen={() => {}}
       />
     );
 

@@ -87,3 +87,15 @@ touch must create exactly one attack and one corresponding release.
 One continuous contact with a Chord Cell. It attacks exactly one chord at
 contact start and releases that chord when contact ends, is cancelled, or
 becomes a page scroll. Moving across Chord Cells does not attack another chord.
+
+## Keycap Hint
+
+The small key letter shown in the corner of a Chord Cell, naming the computer
+keyboard key that plays it. It is the only per-cell keyboard guidance; the
+**Shortcut Hint** covers the modifiers.
+
+## Shortcut Hint
+
+The row of modifier keycaps (`,` `.` `k` `l`) below the chord table, marking the
+keys that turn a held chord into a 7th or sus chord. It is shown only on
+devices with a fine pointer, where a computer keyboard is plausible.

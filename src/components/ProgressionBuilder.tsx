@@ -25,17 +25,12 @@ interface IProps {
   preferSharp: boolean
   onPlay: (progression: Progression) => void
   activeProgressionId: string | null
-  onOpen: () => void
 }
 
-const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeProgressionId, onOpen }: IProps) => {
+const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeProgressionId }: IProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
-  const toggleOpen = () => {
-    if (!open) onOpen();
-    setOpen((o) => !o);
-  };
   const [steps, setSteps] = useState<ProgressionStep[]>([emptyStep()]);
   const [bpm, setBpm] = useState(BPM_DEFAULT);
   const [copied, setCopied] = useState(false);
@@ -99,7 +94,7 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
     <div className="progression-builder">
       <button
         className="progression-builder-toggle"
-        onClick={toggleOpen}
+        onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
       >
         {t("progressionBuilder.toggleLabel")} {open ? "\u25B4" : "\u25BE"}
@@ -182,13 +177,12 @@ const ProgressionBuilder = ({ modes, selectedScale, preferSharp, onPlay, activeP
             <button className="builder-preview-btn" onClick={handlePreview}>
               <Eye size={14} /> {previewSnippet ? t("progressionBuilder.refreshPreview") : t("progressionBuilder.previewEmbed")}
             </button>
-            <button className="builder-copy-btn" onClick={handleCopyEmbed}>
+            <button className="builder-copy-btn" onClick={handleCopyEmbed} title={t("progressionBuilder.embedNote")}>
               <Copy size={14} /> {copied ? t("progressions.embedCopied") : t("progressionBuilder.copyEmbed")}
             </button>
           </div>
           {previewSnippet && (
             <div className="builder-preview">
-              <div className="builder-preview-heading">{t("progressionBuilder.previewHeading")}</div>
               <code className="builder-preview-snippet">{previewSnippet}</code>
               <iframe
                 className="builder-preview-frame"
