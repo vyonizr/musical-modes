@@ -5,16 +5,11 @@ import { detectKey, isValidChordToken, parseSection, DetectionResult } from "src
 interface IProps {
   preferSharp: boolean;
   onKeySelected: (root: string, modes: string[]) => void;
-  onOpen: () => void;
 }
-const KeyDetectorPanel = ({ preferSharp, onKeySelected, onOpen }: IProps) => {
+const KeyDetectorPanel = ({ preferSharp, onKeySelected }: IProps) => {
   const { t } = useTranslation();
   const [keyDetectorOpen, setKeyDetectorOpen] = useState(false);
 
-  const toggleOpen = () => {
-    if (!keyDetectorOpen) onOpen();
-    setKeyDetectorOpen((prev) => !prev);
-  };
   const [detectorSections, setDetectorSections] = useState<string[]>([""]);
   const [detectionResults, setDetectionResults] = useState<
     DetectionResult[] | null
@@ -24,12 +19,16 @@ const KeyDetectorPanel = ({ preferSharp, onKeySelected, onOpen }: IProps) => {
     <div className="key-detector">
       <button
         className="key-detector-toggle"
-        onClick={toggleOpen}
+        onClick={() => setKeyDetectorOpen((prev) => !prev)}
         aria-expanded={keyDetectorOpen}
       >
         {t("keyDetector.toggleLabel")} {keyDetectorOpen ? "▴" : "▾"}
       </button>
-      <p className="key-detector-hint">{t("keyDetector.experimentalHint")}</p>
+      <p className="key-detector-hint">
+        <span className="beta-badge" title={t("keyDetector.experimentalHint")}>
+          {t("keyDetector.betaBadge")}
+        </span>
+      </p>
       {keyDetectorOpen && (
         <div className="key-detector-body">
           {detectorSections.map((section, si) => {
@@ -105,9 +104,6 @@ const KeyDetectorPanel = ({ preferSharp, onKeySelected, onOpen }: IProps) => {
           </button>
           {detectionResults && detectionResults.length > 0 && (
             <div className="detection-results">
-              <p className="detection-disclaimer">
-                {t("keyDetector.resultsDisclaimer")}
-              </p>
               {(() => {
                 const topScore = detectionResults[0].totalScore;
                 const tied = detectionResults.filter(

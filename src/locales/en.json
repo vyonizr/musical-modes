@@ -6,19 +6,21 @@
     "sustainLabel": "Sustain"
   },
   "table": {
-    "playHint": "Tap or use keyboard to play the chords",
-    "nothingToPlay": "Nothing to play 😕",
-    "toggleModesHint": "Toggle modes"
+    "nothingToPlay": "Nothing to play 😕"
+  },
+  "shortcuts": {
+    "modifierLabel": "7th / sus",
+    "tooltip": "Q–U, A–J and Z–M play the chord rows. Hold , . k or l for a 7th or sus chord, before or after a chord key."
   },
   "keyDetector": {
-    "toggleLabel": "Don't know the key? Detect it from chords",
-    "experimentalHint": "⚠️ Experimental — best-guess detection for ionian and aeolian modes only",
+    "toggleLabel": "Detect key",
+    "betaBadge": "Beta",
+    "experimentalHint": "Experimental: ionian and aeolian only",
     "sectionPlaceholder": "Section {{n}} chords (e.g. C G Am F)",
     "removeSectionLabel": "Remove section {{n}}",
     "notAChord": "Not a chord: {{tokens}}",
     "addSection": "+ Add section",
     "detect": "Detect Key",
-    "resultsDisclaimer": "Based on chord matching, not a definitive analysis",
     "tiedResultsHeading": "Top results (tied):",
     "bestGuessHeading": "Best guess:",
     "resolvesToTonic": "resolves to tonic",
@@ -29,7 +31,7 @@
   },
   "progressions": {
     "toggleLabel": "Chord Progressions",
-    "disclaimer": "Not official music theory terms. Names are just what I like to call them / how the progression feels.",
+    "disclaimer": "Informal names, not official theory terms",
     "spotifyLinkTitle": "Open playlist on Spotify",
     "copyEmbedLabel": "Copy embed code",
     "embedCopied": "Embed code copied!",
@@ -37,7 +39,7 @@
     "stopLabel": "Stop"
   },
   "progressionBuilder": {
-    "toggleLabel": "Build Your Own Progression",
+    "toggleLabel": "Build a Progression",
     "bpmLabel": "BPM:",
     "barsLabel": "bars",
     "addStep": "Add step",
@@ -45,7 +47,7 @@
     "copyEmbed": "Copy embed code",
     "previewEmbed": "Preview embed",
     "refreshPreview": "Refresh preview",
-    "previewHeading": "This is exactly what gets copied:",
+    "embedNote": "Snapshot: later edits won't update pasted embeds",
     "previewFrameTitle": "Embed preview"
   },
   "embed": {
@@ -53,13 +55,9 @@
     "customName": "Made with Musical Modes"
   },
   "tour": {
-    "rootKeyStep": "Tap a note on the keyboard to set the root key. Every chord on the page updates to match.",
-    "toggleModesStep": "Toggle which modes are shown. Each coloured button is a different musical mode.",
-    "playChordStep": "Tap any chord to play it. On desktop, you can hold it down to sustain.",
-    "keyDetectorStep": "Not sure what key you're in? Type a few chords and the detector will guess the key for you.",
-    "progressionsStep": "Browse chord progressions from real songs, resolved to your current key. Tap one to hear it played back.",
-    "builderStep": "Build your own progression. Pick a mode and a degree for each step, set how many bars it lasts, choose a BPM, then play it back.",
-    "builderEmbedStep": "Copy your progression as an embed for your own page. The copied code is a snapshot: editing the progression here will not change a page you already pasted it into.",
+    "rootKeyStep": "Pick a root key",
+    "toggleModesStep": "Show or hide modes",
+    "playChordStep": "Tap a chord to play it. Hold to sustain.",
     "joyrideNext": "Next",
     "joyrideSkip": "Skip",
     "joyrideLast": "Done"
