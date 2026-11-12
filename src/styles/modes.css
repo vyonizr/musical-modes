@@ -323,11 +323,11 @@ td {
 .sustain-icon {
   margin-right: 6px;
   vertical-align: -2px;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: fill 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sustain-btn.active .sustain-icon {
-  transform: translateY(2px);
+  fill: currentColor;
 }
 
 .keycap {
