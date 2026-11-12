@@ -21,7 +21,7 @@ export const BPM_DEFAULT = 120
 export const PROGRESSIONS: Progression[] = [
   {
     id: "melancholic-uplift",
-    name: "Melancholic Uplift",
+    name: "Borrowed ♭III–IV",
     bpm: BPM_DEFAULT,
     steps: [
       { mode: "aeolian", degreeIndex:2 },
@@ -36,7 +36,7 @@ export const PROGRESSIONS: Progression[] = [
   },
   {
     id: "melancholic-return",
-    name: "Melancholic Return",
+    name: "Dorian ♭III–IV",
     bpm: BPM_DEFAULT,
     steps: [
       { mode: "dorian", degreeIndex:2 },
@@ -81,7 +81,7 @@ export const PROGRESSIONS: Progression[] = [
   },
   {
     id: "backdoor-vamp",
-    name: "Backdoor Vamp",
+    name: "Double Plagal Vamp",
     bpm: BPM_DEFAULT/2,
     steps: [
       { mode: "ionian", degreeIndex: 0 },
@@ -96,7 +96,7 @@ export const PROGRESSIONS: Progression[] = [
   },
   {
     id: "haunting-progression",
-    name: "Haunting Progression",
+    name: "Borrowed ♭VI–iv",
     bpm: BPM_DEFAULT,
     steps: [
       { mode: "aeolian", degreeIndex: 5 },

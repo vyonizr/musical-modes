@@ -17,8 +17,8 @@ tooltips; the rest is deleted.
 - Delete the play hint, the toggle-modes hint, the detector results disclaimer
   and the embed preview heading.
 - Experimental detection becomes a **Beta** badge; the caveat is its tooltip.
-- The progression disclaimer becomes the tooltip of the Chord Progressions
-  toggle.
+- The progression disclaimer was first moved into a tooltip, then deleted by
+  `2026-11-13-progression-names.md` once the names no longer needed it.
 - The embed-snapshot warning becomes the tooltip of the Copy embed code button.
 - The keyboard-shortcut block becomes the Shortcut Hint; the full explanation is
   its tooltip. Keycap Hints on Chord Cells are always visible.
@@ -29,8 +29,8 @@ tooltips; the rest is deleted.
 
 ## Consequences
 
-- Tooltips do not exist on touch devices. The embed-snapshot warning and the
-  progression disclaimer are therefore invisible there.
+- Tooltips do not exist on touch devices, so the embed-snapshot warning is
+  invisible there.
 - Users who already finished a panel tour keep a stored flag that is now
   ignored; no migration is needed.
 
