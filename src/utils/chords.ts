@@ -163,6 +163,10 @@ let reverb: Tone.Reverb | null = null;
 let limiter: Tone.Limiter | null = null;
 let volumeNode: Tone.Volume | null = null;
 let audioUnlocked = false;
+const dryAudioDiagnostic =
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).get("audioDebug") === "dry";
+let diagnosticAttackSequence = 0;
 
 const VOLUME_STORAGE_KEY = "musical-modes-volume";
 
@@ -209,16 +213,18 @@ const PIANO_SAMPLES: Record<string, string> = {
   "D#4": "Ds4.mp3",
 };
 
-function ensureOutput(): Tone.Reverb {
-  if (!reverb) {
+function ensureOutput() {
+  if (!volumeNode) {
     limiter = new Tone.Limiter(-2).toDestination();
     volumeNode = new Tone.Volume(volumeToDb(getStoredVolume())).connect(limiter);
-    reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
+    if (!dryAudioDiagnostic) {
+      reverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).connect(volumeNode);
+    }
     // A held chord outlives the element/key that started it (focus loss, tab
     // switch, bfcache). Without this the notes sustain until a page reload.
     installPanicHandlers();
   }
-  return reverb;
+  return dryAudioDiagnostic ? volumeNode! : reverb!;
 }
 
 function ensureSynth(): Tone.PolySynth {
@@ -371,7 +377,8 @@ export function triggerAttackChord(
   // False only for a flavour retrigger of a chord the musician is still
   // holding (src/utils/useChordKeyboardInput.ts's retriggerHeldChords) —
   // that is a voicing correction, not the musician moving to a new chord.
-  isChordChange = true
+  isChordChange = true,
+  source: "cell" | "keyboard" | "progression" | "unknown" = "unknown"
 ): ChordHandle {
   // Calling ensurePiano first is what kicks off the sample download; until it
   // resolves this returns null and the synth answers immediately.
@@ -405,6 +412,7 @@ export function triggerAttackChord(
   // unhumanized one would.
   const t0 = Tone.now();
   let attackedThrough = t0;
+  const scheduledTimes: number[] | null = dryAudioDiagnostic ? [] : null;
   for (const note of notes) {
     const at = t0 + Math.random() * HUMANIZE_MAX_DELAY_S;
     engine.triggerAttack(
@@ -412,7 +420,18 @@ export function triggerAttackChord(
       at,
       ATTACK_VELOCITY + (Math.random() * 2 - 1) * HUMANIZE_VELOCITY_SPREAD
     );
+    scheduledTimes?.push(at);
     if (at > attackedThrough) attackedThrough = at;
+  }
+
+  if (scheduledTimes) {
+    console.info("[audio-debug]", {
+      sequence: ++diagnosticAttackSequence,
+      source,
+      chord: chordName,
+      noteCount: notes.length,
+      scheduledTimes,
+    });
   }
 
   const handle: ChordHandle = { notes, engine, attackedThrough };

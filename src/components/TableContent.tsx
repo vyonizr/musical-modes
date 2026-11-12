@@ -37,7 +37,7 @@ const TableContent = ({
 
   const attackCell = (chordIndex: number, chord: string) => {
     releaseCell(chordIndex)
-    heldRef.current.set(chordIndex, triggerAttackChord(chord, activeFlavour))
+    heldRef.current.set(chordIndex, triggerAttackChord(chord, activeFlavour, true, "cell"))
   }
 
   React.useEffect(() => {

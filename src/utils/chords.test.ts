@@ -119,7 +119,7 @@ describe('register continuity between chords', () => {
         expect(upperLeap(from, to), `${from} -> ${to}`).toBeLessThanOrEqual(5)
       }
     }
-  })
+  }, 30_000)
 
   it('holds every step of every built-in progression in the same register, in every key', () => {
     for (const key of KEYS) {

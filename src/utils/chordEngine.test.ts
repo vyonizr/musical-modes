@@ -14,6 +14,7 @@ const samplesFail = () => state.hooks.onerror?.(new Error("404"));
 beforeEach(async () => {
   // chords.ts caches its engines in module scope, so each case needs a fresh
   // copy to start from "no samples loaded".
+  window.history.replaceState(null, "", "/");
   vi.resetModules();
   resetToneMock();
   chords = await import("./chords");
@@ -111,6 +112,58 @@ describe("the piano starts loading before the first chord", () => {
     chords.triggerAttackChord("C");
 
     expect(engines()).toEqual(["synth"]);
+  });
+});
+
+describe("the playback-crackle diagnostic", () => {
+  it("keeps the reverb in the normal output path", () => {
+    chords.triggerAttackChord("C");
+
+    expect(state.connections).toContainEqual({ from: "synth", to: "reverb" });
+  });
+
+  it("does not log attacks outside diagnostic mode", () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    chords.triggerAttackChord("C");
+
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it("bypasses only the reverb for the dry diagnostic URL", async () => {
+    window.history.replaceState(null, "", "?audioDebug=dry");
+    vi.resetModules();
+    resetToneMock();
+    chords = await import("./chords");
+
+    chords.triggerAttackChord("C");
+
+    expect(state.connections).toContainEqual({ from: "synth", to: "volume" });
+    expect(state.connections).not.toContainEqual({ from: "synth", to: "reverb" });
+  });
+
+  it("logs one complete attack record in dry diagnostic mode", async () => {
+    window.history.replaceState(null, "", "?audioDebug=dry");
+    vi.resetModules();
+    resetToneMock();
+    chords = await import("./chords");
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    chords.triggerAttackChord("C", undefined, true, "cell");
+
+    expect(log).toHaveBeenCalledWith(
+      "[audio-debug]",
+      expect.objectContaining({
+        sequence: 1,
+        source: "cell",
+        chord: "C",
+        noteCount: 5,
+        scheduledTimes: expect.any(Array),
+      })
+    );
+    expect(log.mock.calls[0][1].scheduledTimes).toHaveLength(5);
+    log.mockRestore();
   });
 });
 

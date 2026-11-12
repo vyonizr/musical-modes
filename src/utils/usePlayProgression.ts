@@ -64,7 +64,9 @@ export function usePlayProgression() {
         });
         activeProgressionChordRef.current = triggerAttackChord(
           chord,
-          step.flavour
+          step.flavour,
+          true,
+          "progression"
         );
         const durationMs =
           (step.bars ?? 1) * 4 * (60000 / (progression.bpm ?? 120));

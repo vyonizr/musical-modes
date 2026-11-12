@@ -60,7 +60,7 @@ describe("useChordKeyboardInput", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
     });
     expect(result.current.keyboardPressedChords).toEqual(["C"]);
-    expect(triggerAttackChord).toHaveBeenCalledWith("C", undefined);
+    expect(triggerAttackChord).toHaveBeenCalledWith("C", undefined, true, "keyboard");
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "q" }));
@@ -83,7 +83,7 @@ describe("useChordKeyboardInput", () => {
 
     expect(result.current.activeFlavour).toBe("flat7");
     expect(dampChord).toHaveBeenCalledWith({ notes: ["C"] });
-    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7", false);
+    expect(triggerAttackChord).toHaveBeenCalledWith("C", "flat7", false, "keyboard");
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "," }));
