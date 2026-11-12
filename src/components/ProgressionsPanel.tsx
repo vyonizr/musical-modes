@@ -39,7 +39,6 @@ const ProgressionsPanel = ({ progressions, modes, onPlay, activeProgressionId, o
         className="progressions-toggle"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        title={t("progressions.disclaimer")}
       >
         {t("progressions.toggleLabel")} {open ? '\u25B4' : '\u25BE'}
       </button>

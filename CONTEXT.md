@@ -99,3 +99,12 @@ keyboard key that plays it. It is the only per-cell keyboard guidance; the
 The row of modifier keycaps (`,` `.` `k` `l`) below the chord table, marking the
 keys that turn a held chord into a 7th or sus chord. It is shown only on
 devices with a fine pointer, where a computer keyboard is plausible.
+
+## Progression Name
+
+The label shown for a predefined progression. It names the music, so it follows
+this order: an established theory term; else a widely used community name that
+a textbook acknowledges; else a plain description of the harmonic mechanism.
+A name never borrows a theory term for a different progression, and it is
+display-only: a progression's identity, which embeds depend on, does not change
+when its name does.
