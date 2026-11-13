@@ -22,13 +22,12 @@ const KeyDetectorPanel = ({ preferSharp, onKeySelected }: IProps) => {
         onClick={() => setKeyDetectorOpen((prev) => !prev)}
         aria-expanded={keyDetectorOpen}
       >
-        {t("keyDetector.toggleLabel")} {keyDetectorOpen ? "▴" : "▾"}
-      </button>
-      <p className="key-detector-hint">
+        {t("keyDetector.toggleLabel")}
         <span className="beta-badge" title={t("keyDetector.experimentalHint")}>
           {t("keyDetector.betaBadge")}
-        </span>
-      </p>
+        </span>{" "}
+        {keyDetectorOpen ? "▴" : "▾"}
+      </button>
       {keyDetectorOpen && (
         <div className="key-detector-body">
           {detectorSections.map((section, si) => {

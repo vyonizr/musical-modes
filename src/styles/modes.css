@@ -380,22 +380,33 @@ td {
   background: rgba(66, 133, 244, 0.08);
 }
 
+/* Disclosure panels: an open toggle and its body read as one card */
+.progressions-toggle[aria-expanded="true"],
+.key-detector-toggle[aria-expanded="true"],
+.progression-builder-toggle[aria-expanded="true"] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .progressions-list {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding: 4px 12px;
+  border: 1.5px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background: #fff;
 }
 
 .progression-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border: 1.5px solid var(--black);
-  border-radius: 4px;
-  background: #fff;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--disabled);
   gap: 8px;
+}
+
+.progression-row:last-child {
+  border-bottom: none;
 }
 
 .progression-info {
@@ -593,11 +604,8 @@ td {
   background: rgba(66, 133, 244, 0.08);
 }
 
-.key-detector-hint {
-  margin: 4px 0 0 4px;
-}
-
 .beta-badge {
+  margin-left: 6px;
   padding: 1px 6px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -610,7 +618,11 @@ td {
 }
 
 .key-detector-body {
-  margin-top: 12px;
+  padding: 12px;
+  border: 1.5px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background: #fff;
 }
 
 .key-detector-section {
@@ -835,52 +847,6 @@ td {
   font-size: 0.85em;
   opacity: 0.8;
   white-space: nowrap;
-}
-
-/* Progressions Panel */
-
-.progressions-panel {
-  width: 95%;
-  max-width: 515px;
-  margin-bottom: 1em;
-}
-
-.progressions-toggle {
-  width: 100%;
-  padding: 10px 16px;
-  border: 1.5px solid var(--primary);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--primary);
-  cursor: pointer;
-  font-size: 0.95em;
-  font-weight: 700;
-  font-family: inherit;
-  text-align: left;
-}
-
-.progressions-toggle:hover {
-  background: rgba(66, 133, 244, 0.08);
-}
-
-.progressions-list {
-  margin-top: 8px;
-}
-
-.progression-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border: 1.5px solid var(--black);
-  border-radius: 4px;
-  margin-bottom: 6px;
-  background: #fff;
-  gap: 8px;
-}
-
-.progression-row:last-child {
-  margin-bottom: 0;
 }
 
 .progression-info {
@@ -1127,10 +1093,10 @@ td.progression-active {
 }
 
 .progression-builder-body {
-  margin-top: 8px;
   padding: 12px;
-  border: 1.5px solid var(--black);
-  border-radius: 4px;
+  border: 1.5px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
   background: #fff;
 }
 
