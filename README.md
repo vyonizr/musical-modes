@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/apple-touch-icon.png" alt="Musical Modes logo" width="96" height="96">
+</p>
+
 # Musical Modes
 
 Musical Modes shows every diatonic mode in all 12 root keys and plays its chords. It's built with React, Vite, TypeScript, and Tone.js.
