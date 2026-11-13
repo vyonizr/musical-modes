@@ -8,7 +8,6 @@ Musical Modes is a React 19 single-page app built with Vite. It generates diaton
 
 - Read `CLAUDE.md` before changing code. It is the authoritative architecture reference, command list, and source of behavioural invariants.
 - Read `CONTEXT.md` when work involves the Embed Widget, Embed Snippet, Embed Preview, Host Page, or Size Contract. Its terms are canonical.
-- Read the relevant dated document in `docs/sdd/specs/` before changing a feature. Specs record intent, constraints, and out-of-scope decisions.
 - Read applicable ADRs in `docs/adr/` when a change touches their subject.
 
 ## Working rules
