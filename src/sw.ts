@@ -1,7 +1,7 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import { CacheFirst, ExpirationPlugin, Serwist } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -19,19 +19,17 @@ const serwist = new Serwist({
   runtimeCaching: [
     {
       matcher: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
-      handler: "CacheFirst",
-      options: {
+      handler: new CacheFirst({
         cacheName: "images",
-        expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
-      },
+        plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 })],
+      }),
     },
     {
       matcher: /\.(?:woff|woff2|ttf|eot)$/,
-      handler: "CacheFirst",
-      options: {
+      handler: new CacheFirst({
         cacheName: "fonts",
-        expiration: { maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 },
-      },
+        plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 })],
+      }),
     },
   ],
 });

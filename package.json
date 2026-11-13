@@ -24,15 +24,15 @@
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.29.7",
     "@testing-library/react": "^16.3.3",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.3.0",
     "esbuild": "^0.28.2",
     "i18n-unused": "^0.21.0",
     "jsdom": "^31.0.0",
-    "prettier": "2.8.7",
-    "typescript": "^5",
+    "prettier": "^3.10.1",
+    "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.1.0"
